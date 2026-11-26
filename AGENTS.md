@@ -11,7 +11,7 @@ Never put personal details in the repo: no addresses, account numbers, balances,
 - For simple choice questions, use clickable choice buttons rather than plain-text questions.
 - He uses an iPhone (Safari, and saved to the home screen as a web app), in **landscape orientation** for this app. Mobile-first.
 - When a choice is visual (icons, layouts, sounds), show a few options side by side before committing to one.
-- Once the app is live: do the work, test it, and push it; then say briefly what changed and anything he must do (for example, swipe the app away and reopen it). Always include the version number (`APP_VERSION`) whenever something is pushed.
+- Once the app is live: do the work, test it, and push it; then say briefly what changed and anything he must do (for example, swipe the app away and reopen it). Always put the version number (`APP_VERSION`) **at the very end** of that message so he can spot it easily, every time something is pushed.
 
 ## Start here
 
