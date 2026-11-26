@@ -141,11 +141,18 @@
     .hidden { display: none !important; }
 
     .status-text {
-      font-size: 13px;
+      font-size: 14px;
       color: var(--muted);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      transition: font-size 120ms ease, color 120ms ease;
+    }
+    .status-text.note-pop {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -0.02em;
     }
 
     .step-dots {
@@ -191,6 +198,19 @@
       overflow: hidden;
       box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.35), inset 0 2px 4px rgba(0, 0, 0, 0.45);
       touch-action: none;
+    }
+
+    /* Continuous 3-octave sliding track (C3..C6 = 22 white keys) showing 15 white keys at a time */
+    .kb-track {
+      position: relative;
+      width: 146.6667%;
+      height: 100%;
+      transform: translateX(0%);
+      transition: transform 1500ms cubic-bezier(0.25, 0.85, 0.35, 1);
+      will-change: transform;
+    }
+    .kb-track.high {
+      transform: translateX(-31.8182%); /* shifts 7 white keys left: C3-C5 -> C4-C6 */
     }
 
     .piano-shell.two-tier {
@@ -240,8 +260,7 @@
 
     .two-tier .wkey { padding-bottom: 5px; }
     .two-tier .bkey { height: 60%; padding-bottom: 4px; }
-    .two-tier .wkey .key-label { font-size: 13px; }
-    .two-tier .bkey .key-label { font-size: 9px; }
+    .two-tier .wkey .key-label { font-size: 15px; }
 
     .white-keys {
       display: flex;
@@ -427,21 +446,24 @@
       background: linear-gradient(180deg, #a66742 0%, #985c39 40%, #7d4a2d 90%);
     }
 
-    /* Larger, subtle note labels (Free Play only) */
+    /* GarageBand-style larger, subtle C-key labels only */
     .key-label {
       position: relative;
       z-index: 2;
-      font-size: 16px;
+      font-size: 20px;
       font-weight: 600;
-      letter-spacing: -0.02em;
+      letter-spacing: -0.03em;
+      color: #5b554e;
       pointer-events: none;
       opacity: 0;
-      transition: opacity 150ms ease;
+      transition: opacity 380ms ease, transform 380ms ease, color 380ms ease;
     }
-    .wkey .key-label { color: #5b5046; }
-    .bkey .key-label { color: #f0ebe4; font-size: 10.5px; }
-    .show-labels .wkey .key-label { opacity: 0.40; }
-    .show-labels .bkey .key-label { opacity: 0.56; }
+    .show-labels .key-label { opacity: 0.34; }
+    .show-labels .key-label.pulse {
+      opacity: 0.90;
+      color: #4a76e2;
+      transform: scale(1.14);
+    }
 
     /* Portrait screen: instructions, progress, settings, and documentation */
     .rotate-overlay {
@@ -738,9 +760,9 @@
         </label>
       </div>
       <div class="p-row">
-        <label for="labelsToggle">Key labels</label>
+        <label for="labelsToggle">C key labels</label>
         <label class="switch">
-          <input id="labelsToggle" type="checkbox" />
+          <input id="labelsToggle" type="checkbox" checked />
           <span class="slider"></span>
         </label>
       </div>
@@ -859,7 +881,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-26.14';
+    const APP_VERSION = '2026-11-26.15';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -1209,10 +1231,8 @@
     window.addEventListener('pointerup', releasePointer);
     window.addEventListener('pointercancel', releasePointer);
 
-    function noteLabel(midi, withOctaveOnC = false) {
-      const n = NOTE_NAMES[midi % 12];
-      if (withOctaveOnC && n === 'C') return `C${Math.floor(midi / 12) - 1}`;
-      return n;
+    function noteLabel(midi) {
+      return NOTE_NAMES[midi % 12] + (Math.floor(midi / 12) - 1);
     }
 
     function registerKeyEl(midi, el) {
@@ -1220,7 +1240,7 @@
       keyEls.get(midi).push(el);
     }
 
-    function createKeyEl(midi, isBlack, leftPct, widthPct, withOctaveOnC) {
+    function createKeyEl(midi, isBlack, leftPct, widthPct) {
       const el = document.createElement('div');
       el.className = isBlack ? 'bkey' : 'wkey';
       if (isBlack) {
@@ -1229,47 +1249,52 @@
       }
       el.dataset.midi = midi;
 
-      const lbl = document.createElement('span');
-      lbl.className = 'key-label';
-      lbl.textContent = noteLabel(midi, withOctaveOnC);
-      el.appendChild(lbl);
+      // Label ONLY C keys (C2, C3, C4, C5, C6) like GarageBand
+      if (!isBlack && midi % 12 === 0) {
+        const lbl = document.createElement('span');
+        lbl.className = 'key-label';
+        lbl.textContent = 'C' + (Math.floor(midi / 12) - 1);
+        el.appendChild(lbl);
+      }
 
       registerKeyEl(midi, el);
       return el;
     }
 
-    function buildTierDom(startOctave, includeTopC, tagText, withOctaveOnC) {
+    function buildTierDom(startOctave, numOctaves, includeTopC, tagText) {
       const whites = document.createElement('div');
       whites.className = 'white-keys';
 
       const whiteMidis = [];
-      for (let o = startOctave; o < startOctave + 2; o++) {
+      for (let o = startOctave; o < startOctave + numOctaves; o++) {
         WHITE_OFFSETS.forEach(s => whiteMidis.push(12 * (o + 1) + s));
       }
-      if (includeTopC) whiteMidis.push(12 * (startOctave + 3));
+      if (includeTopC) whiteMidis.push(12 * (startOctave + numOctaves + 1));
 
       const numW = whiteMidis.length;
       const wPct = 100 / numW;
-      const bWidthPct = wPct * 0.637;
+      const bWidthPct = wPct * 0.65;
 
-      whiteMidis.forEach(m => whites.appendChild(createKeyEl(m, false, 0, 0, withOctaveOnC)));
+      whiteMidis.forEach(m => whites.appendChild(createKeyEl(m, false, 0, 0)));
 
       const blacks = document.createElement('div');
-      for (let octIdx = 0; octIdx < 2; octIdx++) {
+      for (let octIdx = 0; octIdx < numOctaves; octIdx++) {
         const oct = startOctave + octIdx;
         BLACK_AFTER_WHITE.forEach(wIdx => {
           const globalW = octIdx * 7 + wIdx;
           const m = 12 * (oct + 1) + WHITE_OFFSETS[wIdx] + 1;
           const leftPct = (globalW + 1) * wPct - bWidthPct / 2;
-          blacks.appendChild(createKeyEl(m, true, leftPct, bWidthPct, withOctaveOnC));
+          blacks.appendChild(createKeyEl(m, true, leftPct, bWidthPct));
         });
       }
 
       if (!tagText) {
-        const frag = document.createDocumentFragment();
-        frag.appendChild(whites);
-        frag.appendChild(blacks);
-        return frag;
+        const track = document.createElement('div');
+        track.id = 'kbTrack';
+        track.className = 'kb-track' + (currentOctave >= 5 ? ' high' : '');
+        track.appendChild(whites);
+        track.appendChild(blacks);
+        return track;
       }
 
       const wrap = document.createElement('div');
@@ -1299,10 +1324,11 @@
 
       if (!isTwoTier) {
         singleStartOctave = currentOctave >= 5 ? 4 : 3;
-        pianoEl.appendChild(buildTierDom(singleStartOctave, true, null, true));
+        // Continuous 3-octave track (C3..C6) clipped to 2 octaves so octave shifts glide smoothly
+        pianoEl.appendChild(buildTierDom(3, 3, true, null));
       } else {
-        const lowTier = buildTierDom(2, sharedC, sharedC ? 'C2 – C4' : 'C2 – B3', true);
-        const highTier = buildTierDom(4, sharedC, sharedC ? 'C4 – C6' : 'C4 – B5', true);
+        const lowTier = buildTierDom(2, 2, sharedC, sharedC ? 'C2 – C4' : 'C2 – B3');
+        const highTier = buildTierDom(4, 2, sharedC, sharedC ? 'C4 – C6' : 'C4 – B5');
         if (kbMode === 'two-high') {
           pianoEl.appendChild(highTier);
           pianoEl.appendChild(lowTier);
@@ -1482,7 +1508,7 @@
       skill: 0,
       lastPlayed: 0,
       stats: {}, // specId -> { tries, clean }
-      settings: { backing: true, warmup: true, varyOctaves: true, keyboard: 'single', sharedC: false, labels: false, showActive: true }
+      settings: { backing: true, warmup: true, varyOctaves: true, keyboard: 'single', sharedC: false, cLabels: true, showActive: true }
     };
     try {
       const saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
@@ -1491,7 +1517,7 @@
           skill: saved.skill,
           lastPlayed: saved.lastPlayed || 0,
           stats: saved.stats || {},
-          settings: Object.assign({ backing: true, warmup: true, varyOctaves: true, keyboard: 'single', sharedC: false, labels: false, showActive: true }, saved.settings || {})
+          settings: Object.assign({ backing: true, warmup: true, varyOctaves: true, keyboard: 'single', sharedC: false, cLabels: true, showActive: true }, saved.settings || {})
         };
       }
     } catch (e) {}
@@ -1541,7 +1567,7 @@
     keyboardSelect.value = state.settings.keyboard;
     sharedCToggle.checked = state.settings.sharedC;
     sharedCRow.classList.toggle('hidden', state.settings.keyboard === 'single');
-    labelsToggle.checked = !!state.settings.labels;
+    labelsToggle.checked = state.settings.cLabels !== false;
     activeKeysToggle.checked = state.settings.showActive !== false;
     backingToggle.checked = state.settings.backing;
     warmupToggle.checked = state.settings.warmup;
@@ -1555,6 +1581,7 @@
     let currentRoot = 60;
     let currentActiveNotes = [60];
     let promptsInOctave = 0;
+    let pendingOctaveShift = null; // { fromOct, toOct } when an octave slide animation should run before the prompt
     let freePlay = false;
     let jamActive = false;
     let paused = false;
@@ -1562,17 +1589,21 @@
     let phase = 'idle'; // 'idle' | 'playing' | 'listening' | 'feedback' | 'jam'
     let promptNotes = [];
     let promptTimes = [];
-    let promptChords = []; // array of chords (each an array of MIDI notes) for chord stages
-    let foundChordNotes = new Set(); // for chord-build (any order, one-at-a-time or simultaneous)
+    let promptChords = [];
+    let foundChordNotes = new Set();
     let stepIndex = 0;
     let missesThisPrompt = 0;
     let timers = [];
     let jamInterval = null;
     let jamBeat = 0;
 
-    // Warm-up ramp if returning after > 10 minutes (or a new session) and warmup is enabled
     const isReturnSession = state.skill >= 1.5 && (Date.now() - state.lastPlayed > 10 * 60 * 1000 || state.lastPlayed === 0);
     let warmupStepsLeft = (state.settings.warmup && isReturnSession) ? 3 : 0;
+
+    function setStatus(text, isNotePop = false) {
+      statusText.textContent = text;
+      statusText.classList.toggle('note-pop', !!isNotePop);
+    }
 
     function octaveShift() {
       return (currentOctave - 4) * 12;
@@ -1593,28 +1624,50 @@
       return out.sort((a, b) => a - b);
     }
 
+    function syncTrackPosition() {
+      singleStartOctave = currentOctave >= 5 ? 4 : 3;
+      const track = document.getElementById('kbTrack');
+      if (track) track.classList.toggle('high', currentOctave >= 5);
+    }
+
+    function playOctaveShiftCue(fromOct, toOct) {
+      const goingUp = toOct > fromOct;
+      const lowC = Math.min(fromOct, toOct) * 12 + 12; // e.g., C4=60, C3=48
+      const sweepNotes = goingUp
+        ? [lowC, lowC + 4, lowC + 7, lowC + 12]
+        : [lowC + 12, lowC + 7, lowC + 4, lowC];
+
+      const ctx = AudioEngine.ensure();
+      const base = ctx.currentTime + 0.06;
+      sweepNotes.forEach((m, i) => AudioEngine.note(m, base + i * 0.20, 0.85, 0.34));
+
+      // Slide the continuous 3-octave track over 1.5s and pulse the C labels
+      syncTrackPosition();
+      const lbls = document.querySelectorAll('#piano .key-label');
+      lbls.forEach(l => l.classList.add('pulse'));
+      setStatus(goingUp ? `Higher octave · C${toOct}` : `Lower octave · C${toOct}`, false);
+      timers.push(setTimeout(() => lbls.forEach(l => l.classList.remove('pulse')), 1500));
+    }
+
     function maybeRotateOctave() {
+      pendingOctaveShift = null;
       if (state.settings.varyOctaves === false) {
-        if (currentOctave !== 4) { currentOctave = 4; buildKeyboard(); }
+        if (currentOctave !== 4) { currentOctave = 4; syncTrackPosition(); }
         return;
       }
-      // Keep brand-new learners anchored on Middle C4 first; start rotating octaves once moving into 2-note play
       if (selectedMode === 'auto' && state.skill < 1.0) {
-        if (currentOctave !== 4) { currentOctave = 4; buildKeyboard(); }
+        if (currentOctave !== 4) { currentOctave = 4; syncTrackPosition(); }
         return;
       }
       if (promptsInOctave >= PROMPTS_PER_OCTAVE) {
+        const prevOct = currentOctave;
         const others = GOLDEN_OCTAVES.filter(o => o !== currentOctave);
         currentOctave = others[Math.floor(Math.random() * others.length)];
         promptsInOctave = 0;
-        // Quick 2-prompt warm-up to tune the ear to the new octave
         if (state.settings.warmup !== false && selectedMode === 'auto' && state.skill >= 1.5) {
           warmupStepsLeft = Math.max(warmupStepsLeft, 2);
         }
-        const neededStart = currentOctave >= 5 ? 4 : 3;
-        if ((state.settings.keyboard || 'single') === 'single' && singleStartOctave !== neededStart) {
-          buildKeyboard();
-        }
+        pendingOctaveShift = { fromOct: prevOct, toOct: currentOctave };
       }
     }
 
@@ -1744,7 +1797,7 @@
     }
 
     function applySpotlight() {
-      pianoEl.classList.toggle('show-labels', !!state.settings.labels);
+      pianoEl.classList.toggle('show-labels', state.settings.cLabels !== false);
       const showActive = !freePlay && state.settings.showActive !== false;
       const activeSet = showActive ? new Set(currentActiveNotes) : null;
       const hideStart = freePlay || !!currentSpec.noLitStart;
@@ -2074,14 +2127,30 @@
       if (freePlay || jamActive || paused) return;
       clearTimers();
       buildPrompt();
-      playPromptSequence(() => {
-        phase = 'listening';
-        stepIndex = 0;
-        foundChordNotes.clear();
+
+      const launch = () => {
+        playPromptSequence(() => {
+          phase = 'listening';
+          stepIndex = 0;
+          foundChordNotes.clear();
+          renderDots();
+          updateActionButtons();
+          setStatus(currentSpec.mode === 'rhythm-echo' ? 'Echo it' : 'Your turn', false);
+        });
+      };
+
+      if (pendingOctaveShift) {
+        const { fromOct, toOct } = pendingOctaveShift;
+        pendingOctaveShift = null;
+        phase = 'playing';
+        applySpotlight();
         renderDots();
         updateActionButtons();
-        statusText.textContent = currentSpec.mode === 'rhythm-echo' ? 'Echo it' : 'Your turn';
-      });
+        playOctaveShiftCue(fromOct, toOct);
+        timers.push(setTimeout(() => { if (!paused) launch(); }, 1750));
+      } else {
+        launch();
+      }
     }
 
     // =========================================================================
@@ -2146,7 +2215,7 @@
     // =========================================================================
     function handleKeyTap(midi) {
       if (freePlay) {
-        statusText.textContent = noteLabel(midi);
+        setStatus(noteLabel(midi), true);
         return;
       }
 
@@ -2354,14 +2423,14 @@
           lastPlayed: incoming.lastPlayed || Date.now(),
           stats: incoming.stats || {},
           settings: Object.assign(
-            { backing: true, warmup: true, varyOctaves: true, keyboard: 'single', sharedC: false, labels: false, showActive: true },
+            { backing: true, warmup: true, varyOctaves: true, keyboard: 'single', sharedC: false, cLabels: true, showActive: true },
             incoming.settings || {}
           )
         };
         keyboardSelect.value = state.settings.keyboard;
         sharedCToggle.checked = !!state.settings.sharedC;
         sharedCRow.classList.toggle('hidden', state.settings.keyboard === 'single');
-        labelsToggle.checked = !!state.settings.labels;
+        labelsToggle.checked = state.settings.cLabels !== false;
         activeKeysToggle.checked = state.settings.showActive !== false;
         backingToggle.checked = state.settings.backing !== false;
         warmupToggle.checked = state.settings.warmup !== false;
@@ -2390,7 +2459,7 @@
       buildKeyboard();
     });
     labelsToggle.addEventListener('change', () => {
-      state.settings.labels = labelsToggle.checked;
+      state.settings.cLabels = labelsToggle.checked;
       saveState();
       applySpotlight();
     });
@@ -2503,7 +2572,7 @@
       applySpotlight();
       renderDots();
       updateActionButtons();
-      statusText.textContent = freePlay ? 'Free Play' : 'Tap Play';
+      setStatus(freePlay ? 'Free Play' : 'Tap Play', false);
     });
 
     lockBtn.addEventListener('click', () => {
