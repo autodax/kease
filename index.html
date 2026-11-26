@@ -838,7 +838,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-26.12';
+    const APP_VERSION = '2026-11-26.13';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -1314,36 +1314,118 @@
 
     const STAGE_BY_ID = Object.fromEntries(FRONTIER.map(s => [s.id, s]));
 
-    // Familiar short melody fragments as semitone offsets from the starting note
+    // Deep library of recognizable short melody fragments (semitone offsets from the lit starting note)
+    // Automatically filtered to fit whichever keys are currently active, in any octave.
     const HOOKS_3 = [
-      [0, 4, 7],   // bright major triad rise
-      [0, 2, 4],   // Frere Jacques / Do-Re-Mi rise
-      [0, 7, 9],   // Twinkle opening (C-G-A)
-      [0, 4, 2],   // Mary Had a Little Lamb / gentle arch
-      [0, 5, 4],   // warm 4-3 sigh
-      [0, 7, 4]    // arpeggio skip
+      [0, 4, 7],     // bright major triad rise (Blue Danube / bugle)
+      [0, 7, 4],     // triad skip & settle
+      [0, 2, 4],     // Frere Jacques / Do-Re-Mi rise
+      [0, -2, -4],   // Three Blind Mice / gentle descent
+      [0, 7, 9],     // Twinkle opening (1-5-6)
+      [0, 4, 2],     // Mary Had a Little Lamb arch
+      [0, -2, 0],    // neighbor dip & return
+      [0, 2, 0],     // upper neighbor & return
+      [0, 5, 4],     // warm 4-3 sigh
+      [0, 5, 7],     // Amazing Grace / folk lift
+      [0, -3, 0],    // pentatonic dip (6-5-6 / 3-1-3)
+      [0, -5, -3],   // warm low pickup
+      [0, 0, 7],     // repeated-note fifth leap (Star Wars / Twinkle)
+      [0, 0, 4],     // repeated-note triad bounce
+      [0, 0, 2],     // repeated-note step (Jingle Bells)
+      [0, -2, -5],   // pentatonic cascade down
+      [0, 3, 5],     // minor/folk climb
+      [0, 3, 7],     // minor triad rise
+      [0, 7, 12],    // heroic fifth-to-octave rise
+      [0, -5, 0],    // fourth dip & bounce
+      [0, 4, 5],     // Ode to Joy / Saints climb
+      [0, -1, -3],   // descending scale sigh
+      [0, 2, 7],     // wide open leap after step
+      [0, 9, 7]      // sixth leap & gentle step down
     ];
+
     const HOOKS_4 = [
-      [0, 2, 4, 0], // Frere Jacques
-      [0, 4, 5, 7], // When the Saints
-      [0, 2, 4, 7], // Pentatonic lift
-      [0, 7, 9, 7], // Twinkle arch
-      [0, 4, 7, 4]  // Triad bounce
+      [0, 2, 4, 0],     // Frere Jacques
+      [0, 4, 5, 7],     // When the Saints
+      [0, 2, 4, 7],     // Pentatonic sunrise
+      [0, 7, 9, 7],     // Twinkle arch
+      [0, 4, 7, 4],     // Triad bounce
+      [0, -2, -4, -2],  // Mary Had a Little Lamb
+      [0, -2, -4, -7],  // Joy to the World pentatonic fall
+      [0, 0, 2, 4],     // Lean on Me / pickup climb
+      [0, 0, 7, 7],     // Twinkle full start
+      [0, 2, 4, 5],     // Ode to Joy rise
+      [0, -1, -3, -5],  // Canon in D / smooth descent
+      [0, 4, 7, 9],     // My Girl / soul climb
+      [0, 7, 4, 0],     // Classic arpeggio down
+      [0, 5, 4, 2],     // Gentle lyrical fall
+      [0, 2, 0, -3],    // Folk turn
+      [0, 4, 2, 0],     // Arch home
+      [0, -3, -5, -3],  // Valley bounce
+      [0, 0, 4, 7],     // Bugle pickup
+      [0, 3, 5, 7],     // Soul / blues rise
+      [0, 7, 5, 4],     // Leap & stepwise fall
+      [0, 2, 5, 4],     // Step, jump, resolve
+      [0, -2, 0, 4],    // Dip & bloom
+      [0, 4, 5, 4],     // Gentle wave
+      [0, 9, 7, 4]      // High spark cascading down
     ];
 
+    // 24 varied musical rhythm-echo grooves (seconds at 1.0x tempo; subtly tempo-varied each prompt)
     const RHYTHM_ECHO_PATTERNS = [
-      [0, 0.42, 0.84],
-      [0, 0.32, 0.64, 1.12],
-      [0, 0.50, 0.78, 1.06],
-      [0, 0.36, 0.90, 1.24]
+      [0, 0.44, 0.88],                     // steady 3
+      [0, 0.30, 0.60, 1.08],               // quick-quick-quick … hold
+      [0, 0.52, 0.80, 1.08],               // long … quick-quick-quick
+      [0, 0.34, 0.88, 1.22],               // pair … pair
+      [0, 0.58, 0.86],                     // dotted bounce (long-short)
+      [0, 0.28, 0.82],                     // crisp pickup … land
+      [0, 0.40, 0.80, 1.20],               // steady 4
+      [0, 0.26, 0.52, 0.78, 1.26],         // 4-step pickup + landing
+      [0, 0.48, 0.72, 1.20],               // syncopated swing
+      [0, 0.32, 0.64, 0.96, 1.28],         // upbeat 5
+      [0, 0.56, 1.12, 1.40],               // waltz + pickup
+      [0, 0.28, 0.56, 1.04, 1.32],         // triplet-feel + echo
+      [0, 0.62, 0.90, 1.44],               // heartbeat groove
+      [0, 0.30, 0.78, 1.08, 1.38],         // short-long-short-short
+      [0, 0.46, 0.92, 1.16, 1.40],         // march + double tap
+      [0, 0.34, 0.68, 1.24],               // three & rest-hit
+      [0, 0.54, 0.82, 1.10, 1.62],         // call groove
+      [0, 0.26, 0.66, 0.92],               // funky two-pair
+      [0, 0.42, 0.64, 1.06],               // light skip
+      [0, 0.60, 0.84, 1.08, 1.32],         // slow start, lively run
+      [0, 0.36, 0.72],                     // brisk trio
+      [0, 0.50, 1.00, 1.25, 1.50],         // ballad pulse
+      [0, 0.28, 0.56, 0.98, 1.26, 1.54],   // double triplet feel
+      [0, 0.44, 0.88, 1.42]                // calm 3 + accent
     ];
 
-    // Natural rhythmic timings for 2-, 3-, and 4-note melodic phrases
+    // Deep bank of natural rhythmic timings for 2-, 3-, and 4-note melodic phrases
     const MELODY_RHYTHMS = {
-      2: [[0, 0.42], [0, 0.54], [0, 0.34]],
-      3: [[0, 0.38, 0.76], [0, 0.52, 0.82], [0, 0.32, 0.68]],
-      4: [[0, 0.36, 0.72, 1.12], [0, 0.48, 0.78, 1.08], [0, 0.32, 0.64, 0.96]]
+      2: [
+        [0, 0.36], [0, 0.46], [0, 0.58], [0, 0.28],
+        [0, 0.68], [0, 0.40], [0, 0.52], [0, 0.32]
+      ],
+      3: [
+        [0, 0.38, 0.76], [0, 0.54, 0.84], [0, 0.30, 0.66], [0, 0.46, 0.96],
+        [0, 0.28, 0.56], [0, 0.58, 0.86], [0, 0.36, 0.86], [0, 0.48, 0.74],
+        [0, 0.32, 0.78], [0, 0.52, 1.04], [0, 0.26, 0.68], [0, 0.42, 0.84]
+      ],
+      4: [
+        [0, 0.36, 0.72, 1.12], [0, 0.48, 0.78, 1.08], [0, 0.30, 0.62, 0.94],
+        [0, 0.52, 0.80, 1.24], [0, 0.34, 0.68, 1.20], [0, 0.44, 0.88, 1.16],
+        [0, 0.28, 0.56, 1.02], [0, 0.50, 0.96, 1.24], [0, 0.38, 0.64, 1.08],
+        [0, 0.32, 0.78, 1.10], [0, 0.46, 0.74, 1.20], [0, 0.40, 0.80, 1.20]
+      ]
     };
+
+    // Smart shuffle memory: prevents back-to-back repeats & cycles fresh material
+    const recentSignatures = [];
+    const missedQueue = [];
+    let backingStep = 0;
+
+    function rememberSignature(sig) {
+      recentSignatures.push(sig);
+      if (recentSignatures.length > 14) recentSignatures.shift();
+    }
 
     const STORE_KEY = 'keys.state.v2';
     let state = {
@@ -1579,6 +1661,10 @@
 
     function recordOutcome(misses) {
       promptsInOctave++;
+      if (misses > 0 && currentSpec.mode !== 'rhythm-echo' && promptNotes.length >= 2) {
+        missedQueue.push(promptNotes.slice());
+        if (missedQueue.length > 8) missedQueue.shift();
+      }
       // Record per-skill stats in both Auto and targeted Practice so Progress stays accurate
       if (!state.stats[currentSpec.id]) state.stats[currentSpec.id] = { tries: 0, clean: 0 };
       state.stats[currentSpec.id].tries++;
@@ -1651,23 +1737,58 @@
     // =========================================================================
     // 4. Prompt Generation, Backing Chords & Playback
     // =========================================================================
-    function pickStartNote(spec) {
+    function pickStartNote(spec, activeNotes) {
       const shift = octaveShift();
       const minMidi = currentOctave >= 5 ? 60 : 48;
       const maxMidi = minMidi + 24;
-      let base;
-      if (typeof spec.root === 'number') {
-        base = spec.root + shift;
-      } else if (spec.root === 'move-white') {
-        const whites = [57, 60, 62, 64, 65, 67];
-        base = whites[Math.floor(Math.random() * whites.length)] + shift;
-      } else {
-        const roots = [58, 60, 62, 63, 65, 67];
-        base = roots[Math.floor(Math.random() * roots.length)] + shift;
+      let home = (typeof spec.root === 'number' ? spec.root : 60) + shift;
+      while (home < minMidi) home += 12;
+      while (home > maxMidi) home -= 12;
+
+      if (spec.mode === 'rhythm-echo' || activeNotes.length <= 1) return home;
+
+      // ~50% start on any active key (enabling upward AND downward phrases!) so variety multiplies 3-5x
+      if (Math.random() < 0.52 || typeof spec.root !== 'number') {
+        return activeNotes[Math.floor(Math.random() * activeNotes.length)];
       }
-      while (base < minMidi) base += 12;
-      while (base > maxMidi) base -= 12;
-      return base;
+      return activeNotes.includes(home) ? home : activeNotes[0];
+    }
+
+    function generateContourPhrase(activeNotes, startMidi, len) {
+      const idxOf = m => activeNotes.indexOf(m);
+      const startIdx = Math.max(0, idxOf(startMidi));
+      const maxIdx = activeNotes.length - 1;
+      const contours = ['up', 'down', 'arch', 'valley', 'leap-step', 'repeat-jump'];
+      const contour = contours[Math.floor(Math.random() * contours.length)];
+      const seq = [activeNotes[startIdx]];
+
+      for (let i = 1; i < len; i++) {
+        const curIdx = idxOf(seq[i - 1]);
+        let candidates = [];
+        if (contour === 'up') {
+          candidates = activeNotes.filter((_, k) => k > curIdx);
+        } else if (contour === 'down') {
+          candidates = activeNotes.filter((_, k) => k < curIdx);
+        } else if (contour === 'arch') {
+          candidates = i <= Math.floor(len / 2)
+            ? activeNotes.filter((_, k) => k > curIdx)
+            : activeNotes.filter((_, k) => k < curIdx);
+        } else if (contour === 'valley') {
+          candidates = i <= Math.floor(len / 2)
+            ? activeNotes.filter((_, k) => k < curIdx)
+            : activeNotes.filter((_, k) => k > curIdx);
+        } else if (contour === 'leap-step') {
+          candidates = i === 1
+            ? activeNotes.filter((_, k) => Math.abs(k - curIdx) >= 2)
+            : activeNotes.filter((_, k) => Math.abs(k - curIdx) === 1);
+        } else if (contour === 'repeat-jump') {
+          candidates = i === 1 ? [activeNotes[curIdx]] : activeNotes.filter((_, k) => k !== curIdx);
+        }
+        if (!candidates.length) candidates = activeNotes.filter(n => n !== seq[i - 1]);
+        if (!candidates.length) candidates = activeNotes;
+        seq.push(candidates[Math.floor(Math.random() * candidates.length)]);
+      }
+      return seq;
     }
 
     function buildPrompt() {
@@ -1675,11 +1796,24 @@
       currentSpec = pickSpecForPrompt();
       missesThisPrompt = 0;
       currentActiveNotes = transposeForCurrentOctave(currentSpec.active);
-      currentRoot = pickStartNote(currentSpec);
-      if (!currentActiveNotes.includes(currentRoot)) currentRoot = currentActiveNotes[0];
+
+      // Subtle natural tempo variation (0.90x to 1.12x) so phrases feel alive
+      const tempoScale = 0.90 + Math.random() * 0.22;
 
       if (currentSpec.mode === 'rhythm-echo') {
-        const pat = RHYTHM_ECHO_PATTERNS[Math.floor(Math.random() * RHYTHM_ECHO_PATTERNS.length)];
+        currentRoot = pickStartNote(currentSpec, currentActiveNotes);
+        // Pick a rhythm pattern not played recently
+        let chosenIdx = 0;
+        for (let attempt = 0; attempt < 12; attempt++) {
+          const idx = Math.floor(Math.random() * RHYTHM_ECHO_PATTERNS.length);
+          const sig = `r:${idx}`;
+          if (!recentSignatures.includes(sig) || attempt === 11) {
+            chosenIdx = idx;
+            rememberSignature(sig);
+            break;
+          }
+        }
+        const pat = RHYTHM_ECHO_PATTERNS[chosenIdx].map(t => +(t * tempoScale).toFixed(3));
         promptNotes = pat.map(() => currentRoot);
         promptTimes = pat;
         stepIndex = 0;
@@ -1687,40 +1821,82 @@
       }
 
       const activeSet = new Set(currentActiveNotes);
-      let seq = null;
 
-      // ~35% chance of a familiar tiny melody hook when 3+ notes are active
-      if (currentSpec.hooks && Math.random() < 0.35) {
-        const bank = currentSpec.len === 4 ? HOOKS_4 : HOOKS_3;
-        const valid = bank
-          .map(h => h.map(off => currentRoot + off))
-          .filter(notes => notes.every(n => activeSet.has(n)));
-        if (valid.length) {
-          seq = valid[Math.floor(Math.random() * valid.length)];
+      // ~20% chance to gently revisit a previously missed phrase that fits the current active keys
+      if (missedQueue.length > 0 && Math.random() < 0.22) {
+        const matchIdx = missedQueue.findIndex(q =>
+          q.length === currentSpec.len &&
+          q.every(n => activeSet.has(n)) &&
+          recentSignatures[recentSignatures.length - 1] !== `m:${q.join('-')}`
+        );
+        if (matchIdx !== -1) {
+          const revisit = missedQueue.splice(matchIdx, 1)[0];
+          currentRoot = revisit[0];
+          promptNotes = revisit;
+          const rBank = MELODY_RHYTHMS[revisit.length] || MELODY_RHYTHMS[3];
+          promptTimes = rBank[Math.floor(Math.random() * rBank.length)].map(t => +(t * tempoScale).toFixed(3));
+          rememberSignature(`m:${revisit.join('-')}`);
+          stepIndex = 0;
+          return;
         }
       }
 
-      if (!seq) {
-        seq = [currentRoot];
-        const choices = currentActiveNotes.filter(n => n !== currentRoot);
-        for (let i = 1; i < currentSpec.len; i++) {
-          let pool = currentActiveNotes.filter(n => n !== seq[i - 1]);
-          if (i === 1 && choices.length) pool = choices;
-          if (!pool.length) pool = currentActiveNotes;
-          seq.push(pool[Math.floor(Math.random() * pool.length)]);
+      let bestSeq = null;
+      for (let attempt = 0; attempt < 14; attempt++) {
+        const startNote = pickStartNote(currentSpec, currentActiveNotes);
+        let seq = null;
+
+        // ~40% chance of a recognizable melody hook when 3+ notes are active
+        if (currentSpec.hooks && Math.random() < 0.42) {
+          const bank = currentSpec.len === 4 ? HOOKS_4 : HOOKS_3;
+          const valid = bank
+            .map(h => h.map(off => startNote + off))
+            .filter(notes => notes.every(n => activeSet.has(n)));
+          if (valid.length) {
+            seq = valid[Math.floor(Math.random() * valid.length)];
+          }
+        }
+
+        if (!seq) {
+          seq = generateContourPhrase(currentActiveNotes, startNote, currentSpec.len);
+        }
+
+        const sig = `m:${seq.join('-')}`;
+        bestSeq = seq;
+        // Strictly avoid back-to-back repeat, and prefer phrases not in recent 14
+        const lastSig = recentSignatures[recentSignatures.length - 1];
+        if (sig !== lastSig && (!recentSignatures.includes(sig) || attempt >= 8)) {
+          break;
         }
       }
 
-      promptNotes = seq;
-      const rBank = MELODY_RHYTHMS[seq.length] || MELODY_RHYTHMS[3];
-      promptTimes = rBank[Math.floor(Math.random() * rBank.length)];
+      currentRoot = bestSeq[0];
+      promptNotes = bestSeq;
+      rememberSignature(`m:${bestSeq.join('-')}`);
+      const rBank = MELODY_RHYTHMS[bestSeq.length] || MELODY_RHYTHMS[3];
+      promptTimes = rBank[Math.floor(Math.random() * rBank.length)].map(t => +(t * tempoScale).toFixed(3));
       stepIndex = 0;
     }
 
-    function backingTriadFor(rootMidi) {
-      // Keep warm backing triad clear on phone speakers (never muddy below C3=48)
+    function playLivingBacking(rootMidi, when) {
+      // Keep warm harmony clear on phone speakers (never muddy below C3=48)
       const base = rootMidi - 12 >= 48 ? rootMidi - 12 : rootMidi;
-      return [base, base + 4, base + 7];
+      const style = backingStep % 4;
+      backingStep++;
+
+      if (style === 0) {
+        // Warm major triad
+        AudioEngine.chord([base, base + 4, base + 7], when, 1.9, 0.20);
+      } else if (style === 1) {
+        // Open fifth (spacious, works under any melodic contour)
+        AudioEngine.chord([base, base + 7], when, 2.0, 0.21);
+      } else if (style === 2) {
+        // Gentle rolled arpeggio
+        [base, base + 4, base + 7].forEach((m, i) => AudioEngine.note(m, when + i * 0.045, 1.8, 0.18));
+      } else {
+        // Warm add-9 / lush voicing
+        AudioEngine.chord([base, base + 7, base + 12], when, 1.9, 0.17);
+      }
     }
 
     function playPromptSequence(onDone) {
@@ -1736,9 +1912,9 @@
       const ctx = AudioEngine.ensure();
       const base = ctx.currentTime + 0.08;
 
-      // Soft warm backing chord under melody prompts (when enabled in portrait settings)
+      // Soft living backing chord under melody prompts (when enabled in portrait settings)
       if (state.settings.backing && currentSpec.mode !== 'rhythm-echo') {
-        AudioEngine.chord(backingTriadFor(promptNotes[0]), base, 1.9, 0.20);
+        playLivingBacking(promptNotes[0], base);
       }
 
       promptNotes.forEach((midi, idx) => {
@@ -1900,7 +2076,7 @@
       const ctx = AudioEngine.ensure();
       const base = ctx.currentTime + 0.05;
       if (state.settings.backing && currentSpec.mode !== 'rhythm-echo') {
-        AudioEngine.chord(backingTriadFor(promptNotes[0]), base, 1.8, 0.18);
+        playLivingBacking(promptNotes[0], base);
       }
       promptNotes.forEach((midi, idx) => {
         const dt = promptTimes[idx];
@@ -1938,7 +2114,7 @@
         ? FRONTIER[Math.min(FRONTIER.length - 1, Math.floor(state.skill))]
         : (STAGE_BY_ID[selectedMode] || FRONTIER[0]);
       currentActiveNotes = transposeForCurrentOctave(currentSpec.active);
-      currentRoot = pickStartNote(currentSpec);
+      currentRoot = pickStartNote(currentSpec, currentActiveNotes);
       if (!currentActiveNotes.includes(currentRoot)) currentRoot = currentActiveNotes[0];
       applySpotlight();
       renderDots();
