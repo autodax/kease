@@ -8,7 +8,7 @@ Companion to Steve's Ear Trainer (`autodax/ear`), but a clean-slate standalone a
 - `index.html`: standalone landscape iPhone web app (`APP_VERSION` in script).
 - `manifest.json`: landscape home-screen web app settings (`scope: /keys/`).
 - `keys-sw.js`: offline service worker caching the page, icons, and Salamander piano samples for the four-octave range.
-- `icon-180.png`, `icon-512.png`: Option B chosen by Steve Nov 26 2026 — periwinkle piano keys with one burnt orange lit home key and deep indigo sharp keys on a pure black background (`?v=1`).
+- `icon-180.png`, `icon-512.png`: Option B chosen by Steve Nov 26 2026 — periwinkle piano keys with one burnt orange lit home key and deep indigo sharp keys on a pure black background (`?v=1`). Also set as `MediaMetadata` artwork in `AudioEngine` for the Dynamic Island and lock screen while playing.
 - `piano/`: Salamander Grand Piano `.m4a` samples (CC BY 3.0, Alexander Holm, copied from `autodax/ear`).
 - `assets/piano-warm-ivory.png`: reference keyboard artwork showing two keys pressed (one white, one black).
 - `assets/piano-warm-ivory-template.png`: clean two-octave warm ivory template (15 white keys, 10 black keys, aspect ratio ~3.02:1).

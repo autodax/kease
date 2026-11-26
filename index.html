@@ -717,7 +717,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-26.3';
+    const APP_VERSION = '2026-11-26.4';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -748,8 +748,25 @@
         return this.ctx;
       },
 
+      setMediaSession() {
+        try {
+          if (navigator.mediaSession && window.MediaMetadata) {
+            navigator.mediaSession.metadata = new MediaMetadata({
+              title: 'Keys',
+              artist: 'Play by ear',
+              artwork: [
+                { src: new URL('icon-512.png?v=1', location.href).href, sizes: '512x512', type: 'image/png' },
+                { src: new URL('icon-180.png?v=1', location.href).href, sizes: '180x180', type: 'image/png' }
+              ]
+            });
+            navigator.mediaSession.playbackState = 'playing';
+          }
+        } catch (e) {}
+      },
+
       unlockIOS() {
         try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+        this.setMediaSession();
         if (!this.silentEl) {
           try {
             const sr = 8000, n = sr / 2, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
@@ -768,7 +785,7 @@
           } catch (e) {}
         }
         if (this.silentEl && this.silentEl.paused) {
-          this.silentEl.play().catch(() => {});
+          this.silentEl.play().then(() => this.setMediaSession()).catch(() => {});
         }
       },
 
@@ -785,6 +802,12 @@
         this.ctx = null;
         this.master = null;
         try { if (navigator.audioSession) navigator.audioSession.type = 'auto'; } catch (e) {}
+        try {
+          if (navigator.mediaSession) {
+            navigator.mediaSession.playbackState = 'none';
+            navigator.mediaSession.metadata = null;
+          }
+        } catch (e) {}
       },
 
       preload() {
