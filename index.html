@@ -714,6 +714,12 @@
           <option value="s9">8 · Moving Home Key</option>
           <option value="s10">9 · Black Keys</option>
           <option value="s11">10 · Four-Note Melodies</option>
+          <option value="s12">11 · Five-Note Melodies</option>
+          <option value="s14">12 · Pure-Ear Melodies</option>
+          <option value="s15">13 · Chord Roots</option>
+          <option value="s17">14 · Two-Note Blend</option>
+          <option value="s18">15 · Build the Chord</option>
+          <option value="s20">16 · Chord Changes</option>
         </select>
       </div>
       <div class="p-row">
@@ -766,6 +772,15 @@
           <span class="slider"></span>
         </label>
       </div>
+      <div class="p-row">
+        <span class="p-muted">Progress backup</span>
+        <div style="display:flex;gap:6px;">
+          <button id="exportBtn" type="button" class="btn btn-mini">Export</button>
+          <button id="importBtn" type="button" class="btn btn-mini">Import</button>
+          <input id="importFile" type="file" accept="application/json,.json" class="hidden" />
+        </div>
+      </div>
+      <div id="backupMsg" class="p-muted hidden" style="text-align:right;"></div>
       <div id="resetRow" class="p-row">
         <span id="progressSummary" class="p-muted">Adaptive progress: starting out</span>
         <button id="resetProgressBtn" type="button" class="btn p-btn-danger">Reset</button>
@@ -802,6 +817,12 @@
           <option value="s9">8 · Moving Home Key</option>
           <option value="s10">9 · Black Keys</option>
           <option value="s11">10 · Four-Note Melodies</option>
+          <option value="s12">11 · Five-Note Melodies</option>
+          <option value="s14">12 · Pure-Ear Melodies</option>
+          <option value="s15">13 · Chord Roots</option>
+          <option value="s17">14 · Two-Note Blend</option>
+          <option value="s18">15 · Build the Chord</option>
+          <option value="s20">16 · Chord Changes</option>
         </select>
         <button id="jamBtn" type="button" class="btn">Jam</button>
       </div>
@@ -838,7 +859,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-26.13';
+    const APP_VERSION = '2026-11-26.14';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -1309,7 +1330,16 @@
       { id: 's8',  label: 'All White Keys · Clean', mode: 'oneshot',     root: 60, active: [60, 62, 64, 65, 67, 69, 71, 72],             len: 3, hooks: true },
       { id: 's9',  label: 'Moving Home Key',        mode: 'hunt',        root: 'move-white', active: [55, 57, 59, 60, 62, 64, 65, 67, 69, 71, 72], len: 3, hooks: true },
       { id: 's10', label: 'Black Keys',             mode: 'hunt',        root: 'move-any',   active: [55, 57, 58, 60, 62, 63, 64, 65, 66, 67, 69, 70, 72], len: 3, hooks: true },
-      { id: 's11', label: 'Four-Note Melodies',     mode: 'oneshot',     root: 'move-any',   active: [53, 55, 56, 57, 58, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 72], len: 4, hooks: true }
+      { id: 's11', label: 'Four-Note Melodies',     mode: 'oneshot',     root: 'move-any',   active: [53, 55, 56, 57, 58, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 72], len: 4, hooks: true },
+      { id: 's12', label: 'Five-Note Melodies',     mode: 'hunt',        root: 'move-any',   active: [55, 57, 59, 60, 62, 64, 65, 67, 69, 71, 72], len: 5, hooks: true },
+      { id: 's13', label: 'Five-Note · One-Shot',   mode: 'oneshot',     root: 'move-any',   active: [55, 57, 59, 60, 62, 64, 65, 67, 69, 71, 72], len: 5, hooks: true },
+      { id: 's14', label: 'Pure-Ear Melodies',      mode: 'hunt',        root: 'move-white', active: [60, 62, 64, 65, 67, 69, 71, 72], len: 3, hooks: true, noLitStart: true },
+      { id: 's15', label: 'Chord Roots · Hunt',     mode: 'hunt',        kind: 'chord-root',  root: 60, active: [55, 57, 60, 62, 64, 65, 67], len: 1, noLitStart: true },
+      { id: 's16', label: 'Chord Roots · Clean',    mode: 'oneshot',     kind: 'chord-root',  root: 60, active: [55, 57, 60, 62, 64, 65, 67], len: 1, noLitStart: true },
+      { id: 's17', label: 'Two-Note Blend',         mode: 'hunt',        kind: 'chord-build', root: 'move-white', active: [55, 57, 59, 60, 62, 64, 65, 67, 69, 71, 72], len: 2 },
+      { id: 's18', label: 'Build the Chord · Hunt', mode: 'hunt',        kind: 'chord-build', root: 'move-white', active: [55, 57, 59, 60, 62, 64, 65, 67, 69, 71, 72], len: 3 },
+      { id: 's19', label: 'Build the Chord · Clean',mode: 'oneshot',     kind: 'chord-build', root: 'move-white', active: [55, 57, 59, 60, 62, 64, 65, 67, 69, 71, 72], len: 3 },
+      { id: 's20', label: 'Chord Changes',          mode: 'hunt',        kind: 'chord-change',root: 60, active: [55, 57, 60, 62, 64, 65, 67], len: 2, noLitStart: true }
     ];
 
     const STAGE_BY_ID = Object.fromEntries(FRONTIER.map(s => [s.id, s]));
@@ -1370,6 +1400,21 @@
       [0, 9, 7, 4]      // High spark cascading down
     ];
 
+    const HOOKS_5 = [
+      [0, 0, 2, 4, 2],       // Ode to Joy / gentle peak
+      [0, 2, 4, 7, 4],       // Pentatonic arch
+      [0, 4, 7, 9, 7],       // Bright lift & settle
+      [0, -2, -4, -2, 0],    // Mary Had a Little Lamb full
+      [0, 4, 5, 7, 5],       // When the Saints wave
+      [0, 2, 4, 2, 0],       // Classic 5-note arch
+      [0, 7, 9, 7, 4],       // Twinkle cascade
+      [0, 0, 7, 9, 7],       // Twinkle full phrase
+      [0, 5, 4, 2, 0],       // Descending scale home
+      [0, 2, 0, -3, 0],      // Folk turnaround
+      [0, 4, 7, 4, 0],       // Triad up & down
+      [0, 0, 2, 0, 5]        // Happy Birthday motif
+    ];
+
     // 24 varied musical rhythm-echo grooves (seconds at 1.0x tempo; subtly tempo-varied each prompt)
     const RHYTHM_ECHO_PATTERNS = [
       [0, 0.44, 0.88],                     // steady 3
@@ -1398,7 +1443,7 @@
       [0, 0.44, 0.88, 1.42]                // calm 3 + accent
     ];
 
-    // Deep bank of natural rhythmic timings for 2-, 3-, and 4-note melodic phrases
+    // Deep bank of natural rhythmic timings for 2-, 3-, 4-, and 5-note melodic phrases
     const MELODY_RHYTHMS = {
       2: [
         [0, 0.36], [0, 0.46], [0, 0.58], [0, 0.28],
@@ -1414,6 +1459,11 @@
         [0, 0.52, 0.80, 1.24], [0, 0.34, 0.68, 1.20], [0, 0.44, 0.88, 1.16],
         [0, 0.28, 0.56, 1.02], [0, 0.50, 0.96, 1.24], [0, 0.38, 0.64, 1.08],
         [0, 0.32, 0.78, 1.10], [0, 0.46, 0.74, 1.20], [0, 0.40, 0.80, 1.20]
+      ],
+      5: [
+        [0, 0.34, 0.68, 1.02, 1.40], [0, 0.44, 0.72, 1.00, 1.38],
+        [0, 0.30, 0.60, 1.02, 1.32], [0, 0.46, 0.88, 1.16, 1.44],
+        [0, 0.32, 0.64, 0.96, 1.28], [0, 0.42, 0.70, 1.12, 1.44]
       ]
     };
 
@@ -1471,6 +1521,10 @@
     const resetProgressBtn = document.getElementById('resetProgressBtn');
     const resetCancelBtn = document.getElementById('resetCancelBtn');
     const resetConfirmBtn = document.getElementById('resetConfirmBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    const importBtn = document.getElementById('importBtn');
+    const importFile = document.getElementById('importFile');
+    const backupMsg = document.getElementById('backupMsg');
     const versionLabel = document.getElementById('versionLabel');
     const playBtn = document.getElementById('playBtn');
     const pauseBtn = document.getElementById('pauseBtn');
@@ -1508,6 +1562,8 @@
     let phase = 'idle'; // 'idle' | 'playing' | 'listening' | 'feedback' | 'jam'
     let promptNotes = [];
     let promptTimes = [];
+    let promptChords = []; // array of chords (each an array of MIDI notes) for chord stages
+    let foundChordNotes = new Set(); // for chord-build (any order, one-at-a-time or simultaneous)
     let stepIndex = 0;
     let missesThisPrompt = 0;
     let timers = [];
@@ -1691,13 +1747,16 @@
       pianoEl.classList.toggle('show-labels', !!state.settings.labels);
       const showActive = !freePlay && state.settings.showActive !== false;
       const activeSet = showActive ? new Set(currentActiveNotes) : null;
-      const startMidi = freePlay ? null : (promptNotes.length > 0 ? promptNotes[0] : currentRoot);
+      const hideStart = freePlay || !!currentSpec.noLitStart;
+      const startMidi = hideStart ? null : (promptNotes.length > 0 ? promptNotes[0] : currentRoot);
 
       keyEls.forEach((arr, midi) => {
         const isLit = startMidi !== null && midi === startMidi;
         const isActive = activeSet !== null && activeSet.has(midi) && !isLit;
+        const isFound = foundChordNotes.has(midi);
         arr.forEach(el => {
-          el.classList.remove('hit', 'nudge');
+          el.classList.remove('nudge');
+          el.classList.toggle('hit', isFound);
           el.classList.toggle('active-key', isActive);
           el.classList.toggle('lit', isLit);
         });
@@ -1791,18 +1850,29 @@
       return seq;
     }
 
+    function buildChordFromRoot(rootMidi, len, activeSet) {
+      const templates = len === 2
+        ? [[0, 7], [0, 4], [0, 3]]
+        : [[0, 4, 7], [0, 3, 7]];
+      const valid = templates
+        .map(t => t.map(off => rootMidi + off))
+        .filter(notes => notes.every(n => activeSet.has(n)));
+      if (valid.length) return valid[Math.floor(Math.random() * valid.length)];
+      return len === 2 ? [rootMidi, rootMidi + 7] : [rootMidi, rootMidi + 4, rootMidi + 7];
+    }
+
     function buildPrompt() {
       maybeRotateOctave();
       currentSpec = pickSpecForPrompt();
       missesThisPrompt = 0;
+      promptChords = [];
+      foundChordNotes.clear();
       currentActiveNotes = transposeForCurrentOctave(currentSpec.active);
 
-      // Subtle natural tempo variation (0.90x to 1.12x) so phrases feel alive
       const tempoScale = 0.90 + Math.random() * 0.22;
 
       if (currentSpec.mode === 'rhythm-echo') {
         currentRoot = pickStartNote(currentSpec, currentActiveNotes);
-        // Pick a rhythm pattern not played recently
         let chosenIdx = 0;
         for (let attempt = 0; attempt < 12; attempt++) {
           const idx = Math.floor(Math.random() * RHYTHM_ECHO_PATTERNS.length);
@@ -1821,6 +1891,71 @@
       }
 
       const activeSet = new Set(currentActiveNotes);
+
+      // CHORD STAGES
+      if (currentSpec.kind === 'chord-root') {
+        const roots = currentActiveNotes.filter(r => r + 7 <= (currentOctave >= 5 ? 84 : 72));
+        const pool = roots.length ? roots : currentActiveNotes;
+        let root = pool[0];
+        for (let a = 0; a < 10; a++) {
+          const cand = pool[Math.floor(Math.random() * pool.length)];
+          if (`cr:${cand}` !== recentSignatures[recentSignatures.length - 1] || a === 9) { root = cand; break; }
+        }
+        const isMinor = [2, 4, 9].includes(root % 12);
+        const chord = isMinor ? [root, root + 3, root + 7] : [root, root + 4, root + 7];
+        currentRoot = root;
+        promptChords = [chord];
+        promptNotes = [root];
+        promptTimes = [0];
+        rememberSignature(`cr:${root}`);
+        stepIndex = 0;
+        return;
+      }
+
+      if (currentSpec.kind === 'chord-build') {
+        const viableRoots = currentActiveNotes.filter(r =>
+          (activeSet.has(r + 4) && activeSet.has(r + 7)) ||
+          (activeSet.has(r + 3) && activeSet.has(r + 7))
+        );
+        const pool = viableRoots.length ? viableRoots : [currentActiveNotes[0]];
+        let chord = null;
+        for (let a = 0; a < 12; a++) {
+          const r = pool[Math.floor(Math.random() * pool.length)];
+          const c = buildChordFromRoot(r, currentSpec.len, activeSet);
+          const sig = `cb:${c.join('-')}`;
+          chord = c;
+          if (sig !== recentSignatures[recentSignatures.length - 1] && (!recentSignatures.includes(sig) || a >= 8)) break;
+        }
+        currentRoot = chord[0];
+        promptChords = [chord];
+        promptNotes = chord;
+        promptTimes = [0];
+        rememberSignature(`cb:${chord.join('-')}`);
+        stepIndex = 0;
+        return;
+      }
+
+      if (currentSpec.kind === 'chord-change') {
+        const roots = currentActiveNotes.filter(r => r + 7 <= (currentOctave >= 5 ? 84 : 72));
+        const pool = roots.length >= 2 ? roots : currentActiveNotes;
+        let r1 = pool[0], r2 = pool[pool.length - 1];
+        for (let a = 0; a < 12; a++) {
+          const c1 = pool[Math.floor(Math.random() * pool.length)];
+          const others = pool.filter(x => x !== c1);
+          const c2 = others[Math.floor(Math.random() * others.length)];
+          const sig = `cc:${c1}-${c2}`;
+          r1 = c1; r2 = c2;
+          if (sig !== recentSignatures[recentSignatures.length - 1] && (!recentSignatures.includes(sig) || a >= 8)) break;
+        }
+        const mkTriad = r => ([2, 4, 9].includes(r % 12) ? [r, r + 3, r + 7] : [r, r + 4, r + 7]);
+        currentRoot = r1;
+        promptChords = [mkTriad(r1), mkTriad(r2)];
+        promptNotes = [r1, r2];
+        promptTimes = [0, 0.95];
+        rememberSignature(`cc:${r1}-${r2}`);
+        stepIndex = 0;
+        return;
+      }
 
       // ~20% chance to gently revisit a previously missed phrase that fits the current active keys
       if (missedQueue.length > 0 && Math.random() < 0.22) {
@@ -1846,9 +1981,8 @@
         const startNote = pickStartNote(currentSpec, currentActiveNotes);
         let seq = null;
 
-        // ~40% chance of a recognizable melody hook when 3+ notes are active
         if (currentSpec.hooks && Math.random() < 0.42) {
-          const bank = currentSpec.len === 4 ? HOOKS_4 : HOOKS_3;
+          const bank = currentSpec.len === 5 ? HOOKS_5 : (currentSpec.len === 4 ? HOOKS_4 : HOOKS_3);
           const valid = bank
             .map(h => h.map(off => startNote + off))
             .filter(notes => notes.every(n => activeSet.has(n)));
@@ -1863,7 +1997,6 @@
 
         const sig = `m:${seq.join('-')}`;
         bestSeq = seq;
-        // Strictly avoid back-to-back repeat, and prefer phrases not in recent 14
         const lastSig = recentSignatures[recentSignatures.length - 1];
         if (sig !== lastSig && (!recentSignatures.includes(sig) || attempt >= 8)) {
           break;
@@ -1879,22 +2012,17 @@
     }
 
     function playLivingBacking(rootMidi, when) {
-      // Keep warm harmony clear on phone speakers (never muddy below C3=48)
       const base = rootMidi - 12 >= 48 ? rootMidi - 12 : rootMidi;
       const style = backingStep % 4;
       backingStep++;
 
       if (style === 0) {
-        // Warm major triad
         AudioEngine.chord([base, base + 4, base + 7], when, 1.9, 0.20);
       } else if (style === 1) {
-        // Open fifth (spacious, works under any melodic contour)
         AudioEngine.chord([base, base + 7], when, 2.0, 0.21);
       } else if (style === 2) {
-        // Gentle rolled arpeggio
         [base, base + 4, base + 7].forEach((m, i) => AudioEngine.note(m, when + i * 0.045, 1.8, 0.18));
       } else {
-        // Warm add-9 / lush voicing
         AudioEngine.chord([base, base + 7, base + 12], when, 1.9, 0.17);
       }
     }
@@ -1903,6 +2031,7 @@
       clearTimers();
       phase = 'playing';
       paused = false;
+      foundChordNotes.clear();
       applySpotlight();
       renderDots();
       updateActionButtons();
@@ -1912,7 +2041,19 @@
       const ctx = AudioEngine.ensure();
       const base = ctx.currentTime + 0.08;
 
-      // Soft living backing chord under melody prompts (when enabled in portrait settings)
+      if (promptChords.length > 0) {
+        promptChords.forEach((ch, idx) => {
+          const dt = promptTimes[idx] || 0;
+          AudioEngine.chord(ch, base + dt, 1.5, 0.62);
+          if (!currentSpec.noLitStart && idx === 0) {
+            timers.push(setTimeout(() => flashKey(ch[0], 'hit', 280), dt * 1000 + 50));
+          }
+        });
+        const endMs = ((promptTimes[promptTimes.length - 1] || 0) + 1.15) * 1000;
+        timers.push(setTimeout(() => { if (onDone) onDone(); }, endMs));
+        return;
+      }
+
       if (state.settings.backing && currentSpec.mode !== 'rhythm-echo') {
         playLivingBacking(promptNotes[0], base);
       }
@@ -1920,7 +2061,7 @@
       promptNotes.forEach((midi, idx) => {
         const dt = promptTimes[idx];
         AudioEngine.note(midi, base + dt, 0.72, 0.86);
-        if (idx === 0 || currentSpec.mode === 'rhythm-echo') {
+        if ((!currentSpec.noLitStart && idx === 0) || currentSpec.mode === 'rhythm-echo') {
           timers.push(setTimeout(() => flashKey(midi, 'hit', 240), dt * 1000 + 50));
         }
       });
@@ -1936,6 +2077,7 @@
       playPromptSequence(() => {
         phase = 'listening';
         stepIndex = 0;
+        foundChordNotes.clear();
         renderDots();
         updateActionButtons();
         statusText.textContent = currentSpec.mode === 'rhythm-echo' ? 'Echo it' : 'Your turn';
@@ -1954,9 +2096,11 @@
       jamBtn.classList.add('btn-active');
       playBtn.textContent = 'Play';
       currentSpec = pickSpecForPrompt();
-      if (currentSpec.active.length === 1) currentSpec = FRONTIER[3]; // give cozy 5 keys if still on 1 key
+      if (currentSpec.active.length === 1) currentSpec = FRONTIER[3];
       currentActiveNotes = transposeForCurrentOctave(currentSpec.active);
       promptNotes = [currentActiveNotes[0]];
+      promptChords = [];
+      foundChordNotes.clear();
       applySpotlight();
       updateActionButtons();
       stepDots.innerHTML = '<span id="beatDot" class="step-dot active"></span>';
@@ -1998,7 +2142,7 @@
     }
 
     // =========================================================================
-    // 6. Key Tap Handling (Pure-Ear Hunting + One-Shot)
+    // 6. Key Tap Handling (Pure-Ear Hunting, One-Shot & Chords)
     // =========================================================================
     function handleKeyTap(midi) {
       if (freePlay) {
@@ -2020,6 +2164,38 @@
 
       if (phase !== 'listening') return;
 
+      // Chord-build mode: accept chord tones in ANY order (one-at-a-time OR pressed simultaneously!)
+      if (currentSpec.kind === 'chord-build') {
+        if (promptNotes.includes(midi)) {
+          if (!foundChordNotes.has(midi)) {
+            foundChordNotes.add(midi);
+            stepIndex = foundChordNotes.size;
+            applySpotlight();
+            renderDots();
+            if (foundChordNotes.size >= promptNotes.length) {
+              phase = 'feedback';
+              recordOutcome(missesThisPrompt);
+              updateActionButtons();
+              statusText.textContent = 'Nice';
+              timers.push(setTimeout(() => { if (!paused) startNewRound(); }, 1850));
+            }
+          }
+          return;
+        }
+        missesThisPrompt++;
+        if (currentSpec.mode === 'hunt') {
+          flashKey(midi, 'nudge', 300);
+        } else {
+          phase = 'feedback';
+          recordOutcome(2);
+          updateActionButtons();
+          flashKey(midi, 'nudge', 360);
+          statusText.textContent = 'Watch & listen';
+          timers.push(setTimeout(() => revealAndRetry(), 440));
+        }
+        return;
+      }
+
       const expected = promptNotes[stepIndex];
 
       if (midi === expected) {
@@ -2032,13 +2208,12 @@
           recordOutcome(missesThisPrompt);
           updateActionButtons();
           statusText.textContent = 'Nice';
-          // No repeat after a correct answer — calm 1.85s pause straight into the next test
           timers.push(setTimeout(() => { if (!paused) startNewRound(); }, 1850));
         } else {
           statusText.textContent = currentSpec.mode === 'rhythm-echo' ? 'Keep going' : '';
         }
       } else {
-        if (stepIndex === 0) {
+        if (stepIndex === 0 && !currentSpec.noLitStart) {
           flashKey(expected, 'lit', 300);
           return;
         }
@@ -2046,7 +2221,6 @@
         missesThisPrompt++;
 
         if (currentSpec.mode === 'hunt') {
-          // Pure ear + soft key flash (no Higher/Lower text)
           flashKey(midi, 'nudge', 300);
         } else if (currentSpec.mode === 'oneshot') {
           phase = 'feedback';
@@ -2059,22 +2233,31 @@
       }
     }
 
-    function replayAndAdvance() {
-      const ctx = AudioEngine.ensure();
-      const base = ctx.currentTime + 0.05;
-      promptNotes.forEach((midi, idx) => {
-        const dt = promptTimes[idx] * 0.84;
-        AudioEngine.note(midi, base + dt, 0.65, 0.78);
-        timers.push(setTimeout(() => flashKey(midi, 'hit', 250), dt * 1000 + 30));
-      });
-      // Calm unhurried pause (~1.25s) before the next test
-      const endMs = (promptTimes[promptTimes.length - 1] * 0.84 + 1.25) * 1000;
-      timers.push(setTimeout(() => { if (!paused) startNewRound(); }, endMs));
-    }
-
     function revealAndRetry() {
       const ctx = AudioEngine.ensure();
       const base = ctx.currentTime + 0.05;
+      foundChordNotes.clear();
+
+      if (promptChords.length > 0) {
+        promptChords.forEach((ch, idx) => {
+          const dt = promptTimes[idx] || 0;
+          AudioEngine.chord(ch, base + dt, 1.4, 0.62);
+          const toLight = currentSpec.kind === 'chord-build' ? ch : [ch[0]];
+          toLight.forEach(m => timers.push(setTimeout(() => flashKey(m, 'hit', 520), dt * 1000 + 30)));
+        });
+        const endMs = ((promptTimes[promptTimes.length - 1] || 0) + 1.2) * 1000;
+        timers.push(setTimeout(() => {
+          if (paused) return;
+          phase = 'listening';
+          stepIndex = 0;
+          applySpotlight();
+          renderDots();
+          updateActionButtons();
+          statusText.textContent = 'Try again';
+        }, endMs));
+        return;
+      }
+
       if (state.settings.backing && currentSpec.mode !== 'rhythm-echo') {
         playLivingBacking(promptNotes[0], base);
       }
@@ -2109,6 +2292,8 @@
       clearTimers();
       phase = 'idle';
       promptNotes = [];
+      promptChords = [];
+      foundChordNotes.clear();
       stepIndex = 0;
       currentSpec = selectedMode === 'auto'
         ? FRONTIER[Math.min(FRONTIER.length - 1, Math.floor(state.skill))]
@@ -2123,6 +2308,72 @@
       playBtn.textContent = 'Play';
       statusText.textContent = 'Tap Play';
     }
+
+    function flashBackupMsg(msg) {
+      backupMsg.textContent = msg;
+      backupMsg.classList.remove('hidden');
+      setTimeout(() => backupMsg.classList.add('hidden'), 3200);
+    }
+
+    exportBtn.addEventListener('click', () => {
+      const payload = {
+        app: 'keys',
+        version: APP_VERSION,
+        exportedAt: new Date().toISOString(),
+        state
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const fileName = `keys-progress-${dateStr}.json`;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+      flashBackupMsg('Backup exported');
+    });
+
+    importBtn.addEventListener('click', () => importFile.click());
+
+    importFile.addEventListener('change', async () => {
+      const file = importFile.files && importFile.files[0];
+      importFile.value = '';
+      if (!file) return;
+      try {
+        const parsed = JSON.parse(await file.text());
+        const incoming = parsed && parsed.state ? parsed.state : parsed;
+        if (!incoming || typeof incoming.skill !== 'number') {
+          flashBackupMsg('Not a valid Keys backup file');
+          return;
+        }
+        state = {
+          skill: Math.max(0, Math.min(FRONTIER.length - 0.05, incoming.skill)),
+          lastPlayed: incoming.lastPlayed || Date.now(),
+          stats: incoming.stats || {},
+          settings: Object.assign(
+            { backing: true, warmup: true, varyOctaves: true, keyboard: 'single', sharedC: false, labels: false, showActive: true },
+            incoming.settings || {}
+          )
+        };
+        keyboardSelect.value = state.settings.keyboard;
+        sharedCToggle.checked = !!state.settings.sharedC;
+        sharedCRow.classList.toggle('hidden', state.settings.keyboard === 'single');
+        labelsToggle.checked = !!state.settings.labels;
+        activeKeysToggle.checked = state.settings.showActive !== false;
+        backingToggle.checked = state.settings.backing !== false;
+        warmupToggle.checked = state.settings.warmup !== false;
+        varyOctavesToggle.checked = state.settings.varyOctaves !== false;
+        saveState();
+        buildKeyboard();
+        applyModeSelection(selectedMode);
+        flashBackupMsg('Backup restored');
+      } catch (e) {
+        flashBackupMsg('Could not read backup file');
+      }
+    });
 
     stageSelect.addEventListener('change', () => applyModeSelection(stageSelect.value));
     portraitStageSelect.addEventListener('change', () => applyModeSelection(portraitStageSelect.value));

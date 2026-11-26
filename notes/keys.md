@@ -37,7 +37,9 @@ Companion to Steve's Ear Trainer (`autodax/ear`), but a clean-slate standalone a
 - **Portrait = guide, progress, settings & docs:** Turning the phone upright shows instructions, a Progress breakdown (per-skill accuracy bars using the Ear Trainer periwinkle/indigo/orange palette, a "Needs work" section, and one-tap Practice buttons to target any skill), settings (including two-step Reset confirmation), and documentation—keeping landscape completely clean and focused on the keyboard.
 - **Drag across keys & hold-to-sustain:** Sliding a finger across the piano plays each key it crosses smoothly; holding a key sustains the full natural ring of the piano note until released, with a gentle damper fade-out on lift.
 - **Two-octave key height & width:** Side margin (`max(12px, 36% safe-area)`) confirmed good; 2-octave key height sits at `302px` (a touch taller than 272px, shorter than full stretch).
-- **Chords after melodies:** Focus purely on melodies across all white and black keys first, then introduce chords afterward. When chords arrive, start by tapping the chord's keys one at a time (easy on a phone), then support pressing all keys together later (accepting either).
+- **Chords after melodies (built in `v2026-11-26.14`):** Seamless progression runs through 5-note melodies (`s12`–`s13`) and pure-ear melodies with no lit starting key (`s14`), then enters chords: Chord Roots (`s15`–`s16`), Two-Note Blend (`s17`), Build the 3-Note Chord (`s18`–`s19`, accepting keys in any order, one at a time or pressed together simultaneously), and Chord Changes (`s20`).
+- **Progress backup:** Portrait → Settings includes **Export** and **Import** JSON backup buttons so progress is safe before removing/re-adding the home-screen icon.
+- **Keep mode picker in Landscape:** Steve chose to keep the mode dropdown accessible in the landscape top bar for now.
 - **Color preferences (carried over from `ear`):** Blue/periwinkle accent palette (`#7eabff`, `#5a86ee`, `#bfe3ff`), muted orange (`#d9895a`) for gentle miss cues, **no green anywhere**.
 
 ## Brainstormed progression (ideas, not yet finalized)
