@@ -20,7 +20,7 @@ Companion to Steve's Ear Trainer (`autodax/ear`), but a clean-slate standalone a
 - **GarageBand-style 3D keys:** Clean ivory-white keys with a subtle top cast shadow and recessed grey pressed state, paired with sculpted 3D black keys (raised satin top face, angled glossy bottom bevel, darker flattened pressed state) modeled after Steve's GarageBand reference screenshot.
 - **Full 2-octave keyboard always visible:** Keep the full two-octave keyboard on screen from the start, with the starting key illuminated and active keys gently spotlighted (inactive keys subtly dimmed).
 - **Clean illumination (no dot):** Do not put a dot on the illuminated home/starting key unless it serves a real purpose; the soft glow on the key itself is cleaner.
-- **Note names only in Free Play:** Keep the keys completely clean (no letters or numbers) during challenges; show note names only in Free Play, with larger but more subtle text.
+- **Key labels switch:** Controlled by a **Key labels** toggle in Portrait → Settings (default Off; larger, subtle text when On).
 - **Orientation lock:** Include a lock toggle so playing while lying down does not accidentally flip out of the keyboard into portrait mode.
 - **Two-tier 4-octave keyboard:** Available to test live in Portrait → Settings (High on top / Low on top, plus optional Shared Middle C for 15 keys/tier) using all 4 octaves of Salamander piano samples (`C2`–`C6`).
 - **No replay on correct answers & calm pause:** When an answer is correct (rhythm echo or melodic phrase), do not repeat the phrase back—leave a calm ~1.85 s pause before the next test starts (with a Pause button in the top strip anytime).

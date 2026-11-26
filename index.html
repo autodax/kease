@@ -41,6 +41,8 @@
       background: var(--bg);
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
       overflow: hidden;
       overscroll-behavior: none;
     }
@@ -723,6 +725,13 @@
         </label>
       </div>
       <div class="p-row">
+        <label for="labelsToggle">Key labels</label>
+        <label class="switch">
+          <input id="labelsToggle" type="checkbox" />
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="p-row">
         <label for="backingToggle">Soft backing chord</label>
         <label class="switch">
           <input id="backingToggle" type="checkbox" checked />
@@ -808,7 +817,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-26.7';
+    const APP_VERSION = '2026-11-26.8';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -1230,7 +1239,7 @@
       skill: 0,
       lastPlayed: 0,
       stats: {}, // specId -> { tries, clean }
-      settings: { backing: true, warmup: true, keyboard: 'single', sharedC: false }
+      settings: { backing: true, warmup: true, keyboard: 'single', sharedC: false, labels: false }
     };
     try {
       const saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
@@ -1239,7 +1248,7 @@
           skill: saved.skill,
           lastPlayed: saved.lastPlayed || 0,
           stats: saved.stats || {},
-          settings: Object.assign({ backing: true, warmup: true, keyboard: 'single', sharedC: false }, saved.settings || {})
+          settings: Object.assign({ backing: true, warmup: true, keyboard: 'single', sharedC: false, labels: false }, saved.settings || {})
         };
       }
     } catch (e) {}
@@ -1256,6 +1265,7 @@
     const keyboardSelect = document.getElementById('keyboardSelect');
     const sharedCRow = document.getElementById('sharedCRow');
     const sharedCToggle = document.getElementById('sharedCToggle');
+    const labelsToggle = document.getElementById('labelsToggle');
     const backingToggle = document.getElementById('backingToggle');
     const warmupToggle = document.getElementById('warmupToggle');
     const progressSummary = document.getElementById('progressSummary');
@@ -1282,6 +1292,7 @@
     keyboardSelect.value = state.settings.keyboard;
     sharedCToggle.checked = state.settings.sharedC;
     sharedCRow.classList.toggle('hidden', state.settings.keyboard === 'single');
+    labelsToggle.checked = !!state.settings.labels;
     backingToggle.checked = state.settings.backing;
     warmupToggle.checked = state.settings.warmup;
 
@@ -1431,11 +1442,10 @@
 
     function applySpotlight() {
       clearKeyStates();
+      pianoEl.classList.toggle('show-labels', !!state.settings.labels);
       if (freePlay) {
-        pianoEl.classList.add('show-labels');
         return;
       }
-      pianoEl.classList.remove('show-labels');
       const activeSet = new Set(currentSpec.active);
       keyEls.forEach((arr, midi) => {
         if (!activeSet.has(midi)) arr.forEach(el => el.classList.add('dimmed'));
@@ -1775,6 +1785,11 @@
       state.settings.sharedC = sharedCToggle.checked;
       saveState();
       buildKeyboard();
+    });
+    labelsToggle.addEventListener('change', () => {
+      state.settings.labels = labelsToggle.checked;
+      saveState();
+      applySpotlight();
     });
 
     backingToggle.addEventListener('change', () => {
