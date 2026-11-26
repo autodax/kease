@@ -349,7 +349,7 @@
     .show-labels .wkey .key-label { opacity: 0.42; }
     .show-labels .bkey .key-label { opacity: 0.52; }
 
-    /* Portrait screen: instructions, settings, and documentation */
+    /* Portrait screen: instructions, progress, settings, and documentation */
     .rotate-overlay {
       display: none;
       position: fixed;
@@ -360,23 +360,23 @@
       flex-direction: column;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
-      padding: max(20px, env(safe-area-inset-top)) 20px max(28px, env(safe-area-inset-bottom));
-      gap: 16px;
+      padding: max(12px, env(safe-area-inset-top)) 10px max(24px, env(safe-area-inset-bottom));
+      gap: 12px;
     }
     .portrait-hero {
       display: flex;
       align-items: center;
-      gap: 14px;
-      padding: 14px 16px;
+      gap: 12px;
+      padding: 12px 14px;
       background: var(--panel);
       border: 1px solid var(--border);
-      border-radius: 14px;
+      border-radius: 12px;
     }
     .rotate-icon {
       flex: 0 0 auto;
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
+      width: 42px;
+      height: 42px;
+      border-radius: 11px;
       background: var(--panel-hi);
       border: 1px solid var(--border);
       display: flex;
@@ -384,35 +384,41 @@
       justify-content: center;
       color: var(--accent);
     }
-    .rotate-title { font-size: 17px; font-weight: 600; margin: 0 0 2px; }
-    .rotate-sub { font-size: 13px; color: var(--muted); margin: 0; line-height: 1.35; }
+    .rotate-title { font-size: 18px; font-weight: 600; margin: 0 0 2px; }
+    .rotate-sub { font-size: 14px; color: var(--muted); margin: 0; line-height: 1.35; }
     .p-card {
       background: var(--panel);
       border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 16px;
+      border-radius: 12px;
+      padding: 13px 14px;
       display: flex;
       flex-direction: column;
       gap: 12px;
     }
     .p-card h2 {
       margin: 0;
-      font-size: 13px;
+      font-size: 13.5px;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.05em;
       color: var(--accent);
     }
-    .p-card p, .p-card li { margin: 0; font-size: 14px; line-height: 1.48; color: var(--text); }
+    .p-card p, .p-card li { margin: 0; font-size: 15.5px; line-height: 1.48; color: var(--text); }
     .p-card ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 8px; }
-    .p-muted { color: var(--muted) !important; font-size: 13px !important; }
+    .p-muted { color: var(--muted) !important; font-size: 14px !important; }
+    .p-about {
+      padding: 11px 14px;
+      gap: 6px;
+    }
+    .p-about h2 { font-size: 11.5px; }
+    .p-about p, .p-about .p-muted { font-size: 12px !important; line-height: 1.4; }
     .p-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      gap: 10px;
     }
-    .p-row label { font-size: 15px; color: var(--text); }
+    .p-row label { font-size: 16px; color: var(--text); }
     .p-btn-danger {
       background: transparent;
       border: 1px solid rgba(217, 137, 90, 0.55);
@@ -423,8 +429,8 @@
     .switch {
       position: relative;
       display: inline-block;
-      width: 46px;
-      height: 27px;
+      width: 48px;
+      height: 28px;
       flex: 0 0 auto;
     }
     .switch input { opacity: 0; width: 0; height: 0; }
@@ -440,8 +446,8 @@
     .slider::before {
       content: "";
       position: absolute;
-      width: 21px;
-      height: 21px;
+      width: 22px;
+      height: 22px;
       left: 2px;
       top: 2px;
       background: #eef3ff;
@@ -453,14 +459,14 @@
       border-color: transparent;
     }
     .switch input:checked + .slider::before {
-      transform: translateX(19px);
+      transform: translateX(20px);
     }
 
     /* Progress breakdown in portrait (matching Steve's Ear Trainer palette — no green) */
     .prog-list {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 11px;
     }
     .prog-item {
       display: flex;
@@ -472,7 +478,7 @@
       align-items: center;
       justify-content: space-between;
       gap: 8px;
-      font-size: 13px;
+      font-size: 15px;
     }
     .prog-name {
       color: var(--text);
@@ -489,10 +495,10 @@
       flex: 0 0 auto;
     }
     .prog-pct {
-      font-size: 12px;
+      font-size: 13.5px;
       color: var(--muted);
       font-variant-numeric: tabular-nums;
-      min-width: 34px;
+      min-width: 36px;
       text-align: right;
     }
     .prog-track {
@@ -513,8 +519,8 @@
     .prog-fill.none   { background: var(--border); }
 
     .btn-mini {
-      padding: 4px 9px;
-      font-size: 12px;
+      padding: 5px 10px;
+      font-size: 13px;
       border-radius: 8px;
     }
     .trouble-box {
@@ -602,7 +608,7 @@
       <h2>Settings</h2>
       <div class="p-row">
         <label for="portraitStageSelect">Mode</label>
-        <select id="portraitStageSelect" class="stage-select" style="max-width:210px;">
+        <select id="portraitStageSelect" class="stage-select" style="max-width:230px;">
           <option value="auto">Auto · Adaptive</option>
           <option value="s0">1 · One-Note Echo</option>
           <option value="s1">2 · Two Notes (2 Keys)</option>
@@ -618,7 +624,7 @@
       </div>
       <div class="p-row">
         <label for="keyboardSelect">Keyboard</label>
-        <select id="keyboardSelect" class="stage-select" style="max-width:210px;">
+        <select id="keyboardSelect" class="stage-select" style="max-width:230px;">
           <option value="single">2 Octaves (Single tier)</option>
           <option value="two-high">4 Octaves (High on top)</option>
           <option value="two-low">4 Octaves (Low on top)</option>
@@ -658,7 +664,7 @@
       </div>
     </section>
 
-    <section class="p-card">
+    <section class="p-card p-about">
       <h2>About Keys</h2>
       <p class="p-muted">Play-by-ear piano trainer built for landscape iPhone. Add to your Home Screen from Safari's Share menu for full-height keys and offline play.</p>
       <p class="p-muted">Piano sound: Salamander Grand Piano (Alexander Holm, CC BY 3.0).</p>
@@ -717,7 +723,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-26.5';
+    const APP_VERSION = '2026-11-26.6';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
