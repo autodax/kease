@@ -676,25 +676,7 @@
     }
 
     @media (orientation: portrait) {
-      body:not(.orient-locked) .rotate-overlay { display: flex; }
-      body.orient-locked .app {
-        position: fixed;
-        top: 0;
-        left: 100vw;
-        width: 100dvh;
-        height: 100vw;
-        transform: rotate(90deg);
-        transform-origin: top left;
-        padding-top: 6px;
-      }
-      body.orient-locked .topbar {
-        padding-left: max(66px, calc(env(safe-area-inset-top) + 8px));
-        padding-right: max(14px, env(safe-area-inset-bottom));
-      }
-      body.orient-locked .stage {
-        padding-left: max(66px, calc(env(safe-area-inset-top) + 8px));
-        padding-right: 12px;
-      }
+      .rotate-overlay { display: flex; }
     }
   </style>
 </head>
@@ -709,7 +691,7 @@
       </div>
       <div>
         <p class="rotate-title">Turn sideways to play</p>
-        <p class="rotate-sub">Landscape is the pure keyboard. Portrait holds your guide &amp; settings.</p>
+        <p class="rotate-sub">Landscape is the pure keyboard. Portrait holds your guide &amp; settings. Lying down? Hold the phone upside down (cameras at the bottom) to stay in keyboard mode.</p>
       </div>
     </div>
 
@@ -719,7 +701,7 @@
         <li><strong>Seamless progress:</strong> In <em>Auto · Adaptive</em>, new keys, rhythms, and longer phrases join smoothly as your ear gets surer—with easier review sprinkled in for momentum.</li>
         <li><strong>Hunt by ear on new skills:</strong> Whenever a new key or phrase length arrives, tap around freely to find the sound by ear. Once it clicks, it gently tightens to one-shot guesses.</li>
         <li><strong>Jam &amp; Free Play:</strong> Tap <em>Jam</em> for a warm backing groove over the active keys, or <em>Free Play</em> to open all two octaves with subtle note names.</li>
-        <li><strong>Playing lying down:</strong> Tap the lock icon in landscape to keep the keyboard open if your phone tilts.</li>
+        <li><strong>Playing lying down:</strong> Hold the phone upside down (cameras at the bottom) and iPhone keeps the full-size landscape keyboard open on either side.</li>
       </ul>
     </section>
 
@@ -876,16 +858,6 @@
         <button id="pauseBtn" type="button" class="btn btn-subtle hidden">Pause</button>
         <button id="playBtn" type="button" class="btn btn-primary">Play</button>
         <button id="freeBtn" type="button" class="btn">Free Play</button>
-        <button id="lockBtn" type="button" class="btn btn-icon" aria-label="Keep keyboard open" title="Lock keyboard open when lying down">
-          <svg id="lockIconOpen" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="5" y="11" width="14" height="10" rx="2"></rect>
-            <path d="M8 11V7a4 4 0 0 1 7.6-1.7"></path>
-          </svg>
-          <svg id="lockIconClosed" class="hidden" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="5" y="11" width="14" height="10" rx="2"></rect>
-            <path d="M8 11V7a4 4 0 0 1 8 0v4"></path>
-          </svg>
-        </button>
       </div>
     </header>
 
@@ -898,7 +870,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-26.18';
+    const APP_VERSION = '2026-11-26.19';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -1605,9 +1577,6 @@
     const octShiftGroup = document.getElementById('octShiftGroup');
     const octDownBtn = document.getElementById('octDownBtn');
     const octUpBtn = document.getElementById('octUpBtn');
-    const lockBtn = document.getElementById('lockBtn');
-    const lockIconOpen = document.getElementById('lockIconOpen');
-    const lockIconClosed = document.getElementById('lockIconClosed');
     const statusText = document.getElementById('statusText');
     const stepDots = document.getElementById('stepDots');
 
@@ -1634,7 +1603,6 @@
     let freePlay = false;
     let jamActive = false;
     let paused = false;
-    let orientLocked = false;
     let phase = 'idle'; // 'idle' | 'playing' | 'listening' | 'feedback' | 'jam'
     let promptNotes = [];
     let promptTimes = [];
@@ -2654,14 +2622,6 @@
       renderDots();
       updateActionButtons();
       setStatus(freePlay ? 'Free Play' : 'Tap Play', false);
-    });
-
-    lockBtn.addEventListener('click', () => {
-      orientLocked = !orientLocked;
-      document.body.classList.toggle('orient-locked', orientLocked);
-      lockBtn.classList.toggle('btn-active', orientLocked);
-      lockIconOpen.classList.toggle('hidden', orientLocked);
-      lockIconClosed.classList.toggle('hidden', !orientLocked);
     });
 
     // Initial render
