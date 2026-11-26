@@ -1,10 +1,15 @@
-const CACHE = 'keys-cache-v21';
+const CACHE = 'keys-cache-v22';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
   './icon-180.png?v=1',
   './icon-512.png?v=1',
+  './piano/21.m4a',
+  './piano/24.m4a',
+  './piano/27.m4a',
+  './piano/30.m4a',
+  './piano/33.m4a',
   './piano/36.m4a',
   './piano/39.m4a',
   './piano/42.m4a',
@@ -25,7 +30,11 @@ const ASSETS = [
   './piano/87.m4a',
   './piano/90.m4a',
   './piano/93.m4a',
-  './piano/96.m4a'
+  './piano/96.m4a',
+  './piano/99.m4a',
+  './piano/102.m4a',
+  './piano/105.m4a',
+  './piano/108.m4a'
 ];
 
 self.addEventListener('install', (e) => {

@@ -200,12 +200,12 @@
       touch-action: none;
     }
 
-    /* Continuous 5-octave sliding track (C2..C7 = 36 white keys) showing 15 white keys at a time */
+    /* Continuous full 88-key sliding track (A0..C8 = 52 white keys) showing 15 white keys at a time */
     .kb-track {
       position: relative;
-      width: 240%;
+      width: 346.6667%;
       height: 100%;
-      transform: translateX(-19.4444%); /* default window C3..C5 */
+      transform: translateX(-30.7692%); /* centered on Middle C4 */
       transition: transform 1500ms cubic-bezier(0.25, 0.85, 0.35, 1);
       will-change: transform;
     }
@@ -878,12 +878,12 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-26.16';
+    const APP_VERSION = '2026-11-26.17';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
     // =========================================================================
-    const SAMPLE_MIDIS = [36, 39, 42, 45, 48, 51, 54, 57, 60, 63, 66, 69, 72, 75, 78, 81, 84, 87, 90, 93, 96];
+    const SAMPLE_MIDIS = [21, 24, 27, 30, 33, 36, 39, 42, 45, 48, 51, 54, 57, 60, 63, 66, 69, 72, 75, 78, 81, 84, 87, 90, 93, 96, 99, 102, 105, 108];
     const AudioEngine = {
       ctx: null,
       master: null,
@@ -1285,15 +1285,6 @@
         });
       }
 
-      if (!tagText) {
-        const track = document.createElement('div');
-        track.id = 'kbTrack';
-        track.className = 'kb-track';
-        track.appendChild(whites);
-        track.appendChild(blacks);
-        return track;
-      }
-
       const wrap = document.createElement('div');
       wrap.className = 'tier-wrap';
       const tag = document.createElement('span');
@@ -1308,15 +1299,45 @@
       return wrap;
     }
 
-    let currentOctave = 4; // 5 octaves: C2 (2), C3 (3), C4 (4), C5 (5), C6 (6)
-    let singleStartOctave = 3; // visible 2-octave window start: 2 (C2-C4), 3 (C3-C5), 4 (C4-C6), 5 (C5-C7)
-
-    function windowStartForOctave(oct) {
-      if (oct <= 2) return 2;
-      if (oct === 3 || oct === 4) return 3;
-      if (oct === 5) return 4;
-      return 5;
+    const FULL_WHITE_MIDIS = [];
+    const FULL_BLACK_MIDIS = [];
+    for (let m = 21; m <= 108; m++) {
+      if (WHITE_OFFSETS.includes(m % 12)) FULL_WHITE_MIDIS.push(m);
+      else FULL_BLACK_MIDIS.push(m);
     }
+
+    function midiToWhitePos(midi) {
+      const idx = FULL_WHITE_MIDIS.indexOf(midi);
+      if (idx !== -1) return idx;
+      const leftIdx = FULL_WHITE_MIDIS.indexOf(midi - 1);
+      return leftIdx !== -1 ? leftIdx + 0.5 : 23; // 23 = Middle C4
+    }
+
+    function buildFull88Track() {
+      const whites = document.createElement('div');
+      whites.className = 'white-keys';
+      const numW = FULL_WHITE_MIDIS.length; // 52
+      const wPct = 100 / numW;
+      const bWidthPct = wPct * 0.65;
+
+      FULL_WHITE_MIDIS.forEach(m => whites.appendChild(createKeyEl(m, false, 0, 0)));
+
+      const blacks = document.createElement('div');
+      FULL_BLACK_MIDIS.forEach(m => {
+        const wIdx = FULL_WHITE_MIDIS.indexOf(m - 1);
+        const leftPct = (wIdx + 1) * wPct - bWidthPct / 2;
+        blacks.appendChild(createKeyEl(m, true, leftPct, bWidthPct));
+      });
+
+      const track = document.createElement('div');
+      track.id = 'kbTrack';
+      track.className = 'kb-track';
+      track.appendChild(whites);
+      track.appendChild(blacks);
+      return track;
+    }
+
+    let currentOctave = 4; // Lesson octaves: C2 (2) through C6 (6), spanning C2..C7 (36..96)
 
     function buildKeyboard() {
       keyEls.clear();
@@ -1327,9 +1348,8 @@
       pianoEl.classList.toggle('two-tier', isTwoTier);
 
       if (!isTwoTier) {
-        singleStartOctave = windowStartForOctave(currentOctave);
-        // Continuous 5-octave track (C2..C7 = 36 white keys) clipped to 2 octaves so shifts glide smoothly
-        pianoEl.appendChild(buildTierDom(2, 5, true, null));
+        // Full 88-key piano (A0..C8) on a continuous track so any C2..C7 active spread centers cleanly
+        pianoEl.appendChild(buildFull88Track());
         if (typeof syncTrackPosition === 'function') syncTrackPosition();
       } else {
         const lowTier = buildTierDom(2, 2, sharedC, sharedC ? 'C2 – C4' : 'C2 – B3');
@@ -1618,9 +1638,8 @@
       if ((state.settings.keyboard || 'single') !== 'single') {
         return { minMidi: 36, maxMidi: state.settings.sharedC ? 84 : 83 }; // two-tier C2..B5/C6
       }
-      const win = windowStartForOctave(currentOctave);
-      const minMidi = 12 * (win + 1);
-      return { minMidi, maxMidi: minMidi + 24 };
+      // Lessons stay strictly inside C2..C7 (36..96), while the full 88-key track centers any spread
+      return { minMidi: 36, maxMidi: 96 };
     }
 
     function transposeForCurrentOctave(midis) {
@@ -1638,12 +1657,16 @@
     }
 
     function syncTrackPosition() {
-      singleStartOctave = windowStartForOctave(currentOctave);
       const track = document.getElementById('kbTrack');
-      if (track) {
-        const offsetPct = -((singleStartOctave - 2) * 7 / 36) * 100;
-        track.style.transform = `translateX(${offsetPct.toFixed(4)}%)`;
-      }
+      if (!track) return;
+      const notes = (currentActiveNotes && currentActiveNotes.length) ? currentActiveNotes : [60];
+      const minPos = midiToWhitePos(Math.min(...notes));
+      const maxPos = midiToWhitePos(Math.max(...notes));
+      const midPos = (minPos + maxPos) / 2;
+      // Center midPos inside the 15-white-key viewport (fractional-octave smooth positioning)
+      const leftKey = Math.max(0, Math.min(FULL_WHITE_MIDIS.length - 15, midPos - 7.0));
+      const offsetPct = -(leftKey / FULL_WHITE_MIDIS.length) * 100;
+      track.style.transform = `translateX(${offsetPct.toFixed(4)}%)`;
     }
 
     function playOctaveShiftCue(fromOct, toOct) {
@@ -1817,6 +1840,7 @@
 
     function applySpotlight() {
       pianoEl.classList.toggle('show-labels', state.settings.cLabels !== false);
+      if (!freePlay) syncTrackPosition();
       const showActive = !freePlay && state.settings.showActive !== false;
       const activeSet = showActive ? new Set(currentActiveNotes) : null;
       const hideStart = freePlay || !!currentSpec.noLitStart;
