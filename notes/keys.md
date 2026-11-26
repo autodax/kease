@@ -32,7 +32,9 @@ Companion to Steve's Ear Trainer (`autodax/ear`), but a clean-slate standalone a
 - **Confidence-building review & warm-up/recap:** Sprinkle easier review prompts (~20–25%) into sessions to build confidence, and run an automatic quick warm-up/recap (3–5 prompts ramping up to the current frontier) after a break, with a toggle in portrait settings to turn it off.
 - **Musical prompts:** Use natural, gentle rhythms in phrases (not robotic equal spacing), play a soft warm backing chord under prompts (with a toggle in portrait settings), and sprinkle in short recognizable melody snippets once 3+ notes are active.
 - **On-demand Jam groove:** Offer play-along jam grooves via an optional button/toggle when Steve feels like jamming, rather than interrupting automatically.
-- **Portrait = guide, settings & docs:** Turning the phone upright shows instructions, settings, and documentation—keeping landscape completely clean and focused on the keyboard.
+- **Portrait = guide, progress, settings & docs:** Turning the phone upright shows instructions, a Progress breakdown (per-skill accuracy bars using the Ear Trainer periwinkle/indigo/orange palette, a "Needs work" section, and one-tap Practice buttons to target any skill), settings (including two-step Reset confirmation), and documentation—keeping landscape completely clean and focused on the keyboard.
+- **Drag across keys (glissando):** Sliding a finger across the piano plays each key it crosses smoothly.
+- **Two-octave key height & width:** Side margin (`max(12px, 36% safe-area)`) confirmed good; 2-octave key height sits at `302px` (a touch taller than 272px, shorter than full stretch).
 - **Chords after melodies:** Focus purely on melodies across all white and black keys first, then introduce chords afterward. When chords arrive, start by tapping the chord's keys one at a time (easy on a phone), then support pressing all keys together later (accepting either).
 - **Color preferences (carried over from `ear`):** Blue/periwinkle accent palette (`#7eabff`, `#5a86ee`, `#bfe3ff`), muted orange (`#d9895a`) for gentle miss cues, **no green anywhere**.
 

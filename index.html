@@ -181,7 +181,7 @@
     .piano-shell {
       position: relative;
       width: 100%;
-      height: min(100%, 272px);
+      height: min(100%, 302px);
       background: #1b1817;
       border-radius: 10px 10px 0 0;
       overflow: hidden;
@@ -454,6 +454,94 @@
       transform: translateX(19px);
     }
 
+    /* Progress breakdown in portrait (matching Steve's Ear Trainer palette — no green) */
+    .prog-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .prog-item {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .prog-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 13px;
+    }
+    .prog-name {
+      color: var(--text);
+      font-weight: 500;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .prog-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 0 0 auto;
+    }
+    .prog-pct {
+      font-size: 12px;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+      min-width: 34px;
+      text-align: right;
+    }
+    .prog-track {
+      width: 100%;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--panel-hi);
+      overflow: hidden;
+    }
+    .prog-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 200ms ease;
+    }
+    .prog-fill.strong { background: #b4b9ff; } /* 90%+ */
+    .prog-fill.mid    { background: #7f86e8; } /* 70-89% */
+    .prog-fill.weak   { background: #d9895a; } /* <70% */
+    .prog-fill.none   { background: var(--border); }
+
+    .btn-mini {
+      padding: 4px 9px;
+      font-size: 12px;
+      border-radius: 8px;
+    }
+    .trouble-box {
+      background: rgba(217, 137, 90, 0.12);
+      border: 1px solid rgba(217, 137, 90, 0.35);
+      border-radius: 10px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .trouble-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--nudge);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .confirm-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: rgba(217, 137, 90, 0.12);
+      border: 1px solid rgba(217, 137, 90, 0.4);
+    }
+
     @media (orientation: portrait) {
       body:not(.orient-locked) .rotate-overlay { display: flex; }
       body.orient-locked .app {
@@ -503,6 +591,12 @@
     </section>
 
     <section class="p-card">
+      <h2>Progress</h2>
+      <div id="troubleBox" class="trouble-box hidden"></div>
+      <div id="progressList" class="prog-list"></div>
+    </section>
+
+    <section class="p-card">
       <h2>Settings</h2>
       <div class="p-row">
         <label for="portraitStageSelect">Mode</label>
@@ -549,9 +643,16 @@
           <span class="slider"></span>
         </label>
       </div>
-      <div class="p-row">
+      <div id="resetRow" class="p-row">
         <span id="progressSummary" class="p-muted">Adaptive progress: starting out</span>
         <button id="resetProgressBtn" type="button" class="btn p-btn-danger">Reset</button>
+      </div>
+      <div id="resetConfirmRow" class="confirm-row hidden">
+        <span class="p-muted" style="color:var(--text) !important;">Reset all progress?</span>
+        <div style="display:flex;gap:6px;">
+          <button id="resetCancelBtn" type="button" class="btn btn-mini">Cancel</button>
+          <button id="resetConfirmBtn" type="button" class="btn btn-mini p-btn-danger">Yes, reset</button>
+        </div>
       </div>
     </section>
 
@@ -614,7 +715,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-26.1';
+    const APP_VERSION = '2026-11-26.2';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -802,6 +903,7 @@
 
     const keyEls = new Map(); // midi -> Element[]
     const pianoEl = document.getElementById('piano');
+    const activePointers = new Map(); // pointerId -> { midi, el }
 
     // Stop iOS Safari's long-press magnifying glass / text-selection loupe on the keyboard
     pianoEl.addEventListener('touchstart', (e) => {
@@ -809,6 +911,50 @@
       e.preventDefault();
     }, { passive: false });
     pianoEl.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    function refreshPressedVisual(el) {
+      if (!el) return;
+      let stillHeld = false;
+      activePointers.forEach(p => { if (p.el === el) stillHeld = true; });
+      el.classList.toggle('pressed', stillHeld);
+    }
+
+    function keyAtPoint(x, y) {
+      const hit = document.elementFromPoint(x, y);
+      return hit ? hit.closest('.wkey, .bkey') : null;
+    }
+
+    pianoEl.addEventListener('pointerdown', (e) => {
+      const keyEl = e.target.closest('.wkey, .bkey');
+      if (!keyEl) return;
+      e.preventDefault();
+      const midi = Number(keyEl.dataset.midi);
+      activePointers.set(e.pointerId, { midi, el: keyEl });
+      keyEl.classList.add('pressed');
+      handleKeyTap(midi);
+    });
+
+    pianoEl.addEventListener('pointermove', (e) => {
+      const cur = activePointers.get(e.pointerId);
+      if (!cur) return;
+      const nextEl = keyAtPoint(e.clientX, e.clientY);
+      if (!nextEl || nextEl === cur.el) return;
+      const prevEl = cur.el;
+      const nextMidi = Number(nextEl.dataset.midi);
+      activePointers.set(e.pointerId, { midi: nextMidi, el: nextEl });
+      refreshPressedVisual(prevEl);
+      nextEl.classList.add('pressed');
+      handleKeyTap(nextMidi);
+    });
+
+    function releasePointer(e) {
+      const cur = activePointers.get(e.pointerId);
+      if (!cur) return;
+      activePointers.delete(e.pointerId);
+      refreshPressedVisual(cur.el);
+    }
+    window.addEventListener('pointerup', releasePointer);
+    window.addEventListener('pointercancel', releasePointer);
 
     function noteLabel(midi, withOctaveOnC = false) {
       const n = NOTE_NAMES[midi % 12];
@@ -834,16 +980,6 @@
       lbl.className = 'key-label';
       lbl.textContent = noteLabel(midi, withOctaveOnC);
       el.appendChild(lbl);
-
-      el.addEventListener('pointerdown', (e) => {
-        e.preventDefault();
-        el.classList.add('pressed');
-        handleKeyTap(midi);
-      });
-      const release = () => el.classList.remove('pressed');
-      el.addEventListener('pointerup', release);
-      el.addEventListener('pointerleave', release);
-      el.addEventListener('pointercancel', release);
 
       registerKeyEl(midi, el);
       return el;
@@ -926,18 +1062,18 @@
     // =========================================================================
     // Every new skill briefly re-enables hunting before tightening to one-shot.
     const FRONTIER = [
-      { id: 's0',  mode: 'rhythm-echo', root: 60, active: [60],                                         len: 1 },
-      { id: 's1',  mode: 'hunt',        root: 60, active: [60, 62, 67],                                 len: 2 },
-      { id: 's2',  mode: 'hunt',        root: 60, active: [60, 64, 67],                                 len: 2 },
-      { id: 's3',  mode: 'hunt',        root: 60, active: [60, 62, 64, 67, 69],                         len: 2 },
-      { id: 's4',  mode: 'oneshot',     root: 60, active: [60, 62, 64, 67, 69],                         len: 2 },
-      { id: 's5',  mode: 'hunt',        root: 60, active: [60, 62, 64, 67, 69],                         len: 3, hooks: true },
-      { id: 's6',  mode: 'oneshot',     root: 60, active: [60, 62, 64, 67, 69],                         len: 3, hooks: true },
-      { id: 's7',  mode: 'hunt',        root: 60, active: [60, 62, 64, 65, 67, 69, 71, 72],             len: 3, hooks: true },
-      { id: 's8',  mode: 'oneshot',     root: 60, active: [60, 62, 64, 65, 67, 69, 71, 72],             len: 3, hooks: true },
-      { id: 's9',  mode: 'hunt',        root: 'move-white', active: [55, 57, 59, 60, 62, 64, 65, 67, 69, 71, 72], len: 3, hooks: true },
-      { id: 's10', mode: 'hunt',        root: 'move-any',   active: [55, 57, 58, 60, 62, 63, 64, 65, 66, 67, 69, 70, 72], len: 3, hooks: true },
-      { id: 's11', mode: 'oneshot',     root: 'move-any',   active: [53, 55, 56, 57, 58, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 72], len: 4, hooks: true }
+      { id: 's0',  label: 'One-Note Echo',          mode: 'rhythm-echo', root: 60, active: [60],                                         len: 1 },
+      { id: 's1',  label: 'Two Notes · 2 Keys',     mode: 'hunt',        root: 60, active: [60, 62, 67],                                 len: 2 },
+      { id: 's2',  label: 'Two Notes · Trio',       mode: 'hunt',        root: 60, active: [60, 64, 67],                                 len: 2 },
+      { id: 's3',  label: 'Two Notes · 5 Keys',     mode: 'hunt',        root: 60, active: [60, 62, 64, 67, 69],                         len: 2 },
+      { id: 's4',  label: 'Two Notes · One-Shot',   mode: 'oneshot',     root: 60, active: [60, 62, 64, 67, 69],                         len: 2 },
+      { id: 's5',  label: 'Three Notes · Hunt',     mode: 'hunt',        root: 60, active: [60, 62, 64, 67, 69],                         len: 3, hooks: true },
+      { id: 's6',  label: 'Three Notes · One-Shot', mode: 'oneshot',     root: 60, active: [60, 62, 64, 67, 69],                         len: 3, hooks: true },
+      { id: 's7',  label: 'All White Keys · Hunt',  mode: 'hunt',        root: 60, active: [60, 62, 64, 65, 67, 69, 71, 72],             len: 3, hooks: true },
+      { id: 's8',  label: 'All White Keys · Clean', mode: 'oneshot',     root: 60, active: [60, 62, 64, 65, 67, 69, 71, 72],             len: 3, hooks: true },
+      { id: 's9',  label: 'Moving Home Key',        mode: 'hunt',        root: 'move-white', active: [55, 57, 59, 60, 62, 64, 65, 67, 69, 71, 72], len: 3, hooks: true },
+      { id: 's10', label: 'Black Keys',             mode: 'hunt',        root: 'move-any',   active: [55, 57, 58, 60, 62, 63, 64, 65, 66, 67, 69, 70, 72], len: 3, hooks: true },
+      { id: 's11', label: 'Four-Note Melodies',     mode: 'oneshot',     root: 'move-any',   active: [53, 55, 56, 57, 58, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 72], len: 4, hooks: true }
     ];
 
     const STAGE_BY_ID = Object.fromEntries(FRONTIER.map(s => [s.id, s]));
@@ -977,6 +1113,7 @@
     let state = {
       skill: 0,
       lastPlayed: 0,
+      stats: {}, // specId -> { tries, clean }
       settings: { backing: true, warmup: true, keyboard: 'single', sharedC: false }
     };
     try {
@@ -985,6 +1122,7 @@
         state = {
           skill: saved.skill,
           lastPlayed: saved.lastPlayed || 0,
+          stats: saved.stats || {},
           settings: Object.assign({ backing: true, warmup: true, keyboard: 'single', sharedC: false }, saved.settings || {})
         };
       }
@@ -1005,7 +1143,13 @@
     const backingToggle = document.getElementById('backingToggle');
     const warmupToggle = document.getElementById('warmupToggle');
     const progressSummary = document.getElementById('progressSummary');
+    const progressList = document.getElementById('progressList');
+    const troubleBox = document.getElementById('troubleBox');
+    const resetRow = document.getElementById('resetRow');
+    const resetConfirmRow = document.getElementById('resetConfirmRow');
     const resetProgressBtn = document.getElementById('resetProgressBtn');
+    const resetCancelBtn = document.getElementById('resetCancelBtn');
+    const resetConfirmBtn = document.getElementById('resetConfirmBtn');
     const versionLabel = document.getElementById('versionLabel');
     const playBtn = document.getElementById('playBtn');
     const pauseBtn = document.getElementById('pauseBtn');
@@ -1050,6 +1194,81 @@
       progressSummary.textContent = state.skill <= 0.05
         ? 'Adaptive progress: starting out'
         : `Adaptive progress: ${Math.min(100, pct)}%`;
+
+      // Render per-skill breakdown & "Needs work" list in Portrait
+      const tried = FRONTIER.map(spec => {
+        const st = state.stats[spec.id] || { tries: 0, clean: 0 };
+        const acc = st.tries > 0 ? Math.round((st.clean / st.tries) * 100) : null;
+        return { spec, tries: st.tries, clean: st.clean, acc };
+      });
+
+      const weakSpots = tried
+        .filter(x => x.tries >= 2 && x.acc < 80)
+        .sort((a, b) => a.acc - b.acc)
+        .slice(0, 3);
+
+      if (weakSpots.length > 0) {
+        troubleBox.classList.remove('hidden');
+        troubleBox.innerHTML = '<div class="trouble-title">Needs work</div>';
+        weakSpots.forEach(w => {
+          const row = document.createElement('div');
+          row.className = 'p-row';
+          row.innerHTML = `<span style="font-size:13px;">${w.spec.label} <span class="p-muted">(${w.acc}%)</span></span>`;
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'btn btn-mini';
+          btn.textContent = 'Practice';
+          btn.addEventListener('click', () => applyModeSelection(w.spec.id));
+          row.appendChild(btn);
+          troubleBox.appendChild(row);
+        });
+      } else {
+        troubleBox.classList.add('hidden');
+        troubleBox.innerHTML = '';
+      }
+
+      progressList.innerHTML = '';
+      tried.forEach(item => {
+        const wrap = document.createElement('div');
+        wrap.className = 'prog-item';
+        const barCls = item.acc === null ? 'none' : (item.acc >= 90 ? 'strong' : (item.acc >= 70 ? 'mid' : 'weak'));
+        const fillW = item.acc === null ? 0 : Math.max(6, item.acc);
+        const pctLabel = item.acc === null ? '—' : `${item.acc}%`;
+
+        const head = document.createElement('div');
+        head.className = 'prog-head';
+        const name = document.createElement('span');
+        name.className = 'prog-name';
+        name.textContent = item.spec.label;
+
+        const meta = document.createElement('div');
+        meta.className = 'prog-meta';
+        const pctEl = document.createElement('span');
+        pctEl.className = 'prog-pct';
+        pctEl.textContent = pctLabel;
+
+        const prac = document.createElement('button');
+        prac.type = 'button';
+        prac.className = 'btn btn-mini' + (selectedMode === item.spec.id ? ' btn-active' : '');
+        prac.textContent = selectedMode === item.spec.id ? 'Selected' : 'Practice';
+        prac.addEventListener('click', () => applyModeSelection(item.spec.id));
+
+        meta.appendChild(pctEl);
+        meta.appendChild(prac);
+        head.appendChild(name);
+        head.appendChild(meta);
+
+        const track = document.createElement('div');
+        track.className = 'prog-track';
+        const fill = document.createElement('div');
+        fill.className = `prog-fill ${barCls}`;
+        fill.style.width = `${fillW}%`;
+        track.appendChild(fill);
+
+        wrap.appendChild(head);
+        wrap.appendChild(track);
+        progressList.appendChild(wrap);
+      });
     }
 
     function pickSpecForPrompt() {
@@ -1068,14 +1287,19 @@
     }
 
     function recordOutcome(misses) {
-      if (selectedMode !== 'auto') return;
-      if (misses === 0) {
-        state.skill = Math.min(FRONTIER.length - 0.05, state.skill + 0.26);
-      } else if (misses === 1) {
-        // 2-try hunt: hold steady, almost there
-        state.skill = Math.min(FRONTIER.length - 0.05, state.skill + 0.04);
-      } else {
-        state.skill = Math.max(0, state.skill - 0.18);
+      // Record per-skill stats in both Auto and targeted Practice so Progress stays accurate
+      if (!state.stats[currentSpec.id]) state.stats[currentSpec.id] = { tries: 0, clean: 0 };
+      state.stats[currentSpec.id].tries++;
+      if (misses === 0) state.stats[currentSpec.id].clean++;
+
+      if (selectedMode === 'auto') {
+        if (misses === 0) {
+          state.skill = Math.min(FRONTIER.length - 0.05, state.skill + 0.26);
+        } else if (misses === 1) {
+          state.skill = Math.min(FRONTIER.length - 0.05, state.skill + 0.04);
+        } else {
+          state.skill = Math.max(0, state.skill - 0.18);
+        }
       }
       saveState();
     }
@@ -1417,6 +1641,7 @@
       applySpotlight();
       renderDots();
       updateActionButtons();
+      updateProgressSummary();
       playBtn.textContent = 'Play';
       statusText.textContent = 'Tap Play';
     }
@@ -1446,8 +1671,19 @@
     });
 
     resetProgressBtn.addEventListener('click', () => {
+      resetRow.classList.add('hidden');
+      resetConfirmRow.classList.remove('hidden');
+    });
+    resetCancelBtn.addEventListener('click', () => {
+      resetConfirmRow.classList.add('hidden');
+      resetRow.classList.remove('hidden');
+    });
+    resetConfirmBtn.addEventListener('click', () => {
       state.skill = 0;
+      state.stats = {};
       warmupStepsLeft = 0;
+      resetConfirmRow.classList.add('hidden');
+      resetRow.classList.remove('hidden');
       saveState();
       if (selectedMode === 'auto') applyModeSelection('auto');
     });
