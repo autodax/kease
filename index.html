@@ -209,6 +209,9 @@
       transition: transform 1500ms cubic-bezier(0.25, 0.85, 0.35, 1);
       will-change: transform;
     }
+    .kb-track.quick-slide {
+      transition-duration: 600ms;
+    }
 
     .piano-shell.two-tier {
       height: 100%;
@@ -663,6 +666,15 @@
       border: 1px solid rgba(217, 137, 90, 0.4);
     }
 
+    .oct-pair {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .oct-pair .btn-icon {
+      padding: 7px 10px;
+    }
+
     @media (orientation: portrait) {
       body:not(.orient-locked) .rotate-overlay { display: flex; }
       body.orient-locked .app {
@@ -676,12 +688,12 @@
         padding-top: 6px;
       }
       body.orient-locked .topbar {
-        padding-left: max(20px, env(safe-area-inset-top));
-        padding-right: max(20px, env(safe-area-inset-bottom));
+        padding-left: max(66px, calc(env(safe-area-inset-top) + 8px));
+        padding-right: max(14px, env(safe-area-inset-bottom));
       }
       body.orient-locked .stage {
-        padding-left: max(12px, calc(env(safe-area-inset-top) * 0.36));
-        padding-right: max(12px, calc(env(safe-area-inset-bottom) * 0.36));
+        padding-left: max(66px, calc(env(safe-area-inset-top) + 8px));
+        padding-right: 12px;
       }
     }
   </style>
@@ -844,6 +856,14 @@
           <option value="s20">16 · Chord Changes</option>
         </select>
         <button id="jamBtn" type="button" class="btn">Jam</button>
+        <div id="octShiftGroup" class="oct-pair hidden">
+          <button id="octDownBtn" type="button" class="btn btn-icon" aria-label="Octave down">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </button>
+          <button id="octUpBtn" type="button" class="btn btn-icon" aria-label="Octave up">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
+        </div>
       </div>
 
       <div class="top-center">
@@ -878,7 +898,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-26.17';
+    const APP_VERSION = '2026-11-26.18';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -1582,6 +1602,9 @@
     const showBtn = document.getElementById('showBtn');
     const freeBtn = document.getElementById('freeBtn');
     const jamBtn = document.getElementById('jamBtn');
+    const octShiftGroup = document.getElementById('octShiftGroup');
+    const octDownBtn = document.getElementById('octDownBtn');
+    const octUpBtn = document.getElementById('octUpBtn');
     const lockBtn = document.getElementById('lockBtn');
     const lockIconOpen = document.getElementById('lockIconOpen');
     const lockIconClosed = document.getElementById('lockIconClosed');
@@ -1605,6 +1628,7 @@
     let currentSpec = FRONTIER[0];
     let currentRoot = 60;
     let currentActiveNotes = [60];
+    let currentLeftKey = 16; // leftmost visible white key index on the 52-white-key track (16 = C3)
     let promptsInOctave = 0;
     let pendingOctaveShift = null; // { fromOct, toOct } when an octave slide animation should run before the prompt
     let freePlay = false;
@@ -1656,17 +1680,26 @@
       return out.sort((a, b) => a - b);
     }
 
-    function syncTrackPosition() {
+    function setTrackLeftKey(leftKey, quick = false) {
       const track = document.getElementById('kbTrack');
       if (!track) return;
+      currentLeftKey = Math.max(0, Math.min(FULL_WHITE_MIDIS.length - 15, leftKey));
+      track.classList.toggle('quick-slide', !!quick);
+      const offsetPct = -(currentLeftKey / FULL_WHITE_MIDIS.length) * 100;
+      track.style.transform = `translateX(${offsetPct.toFixed(4)}%)`;
+    }
+
+    function syncTrackPosition() {
       const notes = (currentActiveNotes && currentActiveNotes.length) ? currentActiveNotes : [60];
       const minPos = midiToWhitePos(Math.min(...notes));
       const maxPos = midiToWhitePos(Math.max(...notes));
       const midPos = (minPos + maxPos) / 2;
       // Center midPos inside the 15-white-key viewport (fractional-octave smooth positioning)
-      const leftKey = Math.max(0, Math.min(FULL_WHITE_MIDIS.length - 15, midPos - 7.0));
-      const offsetPct = -(leftKey / FULL_WHITE_MIDIS.length) * 100;
-      track.style.transform = `translateX(${offsetPct.toFixed(4)}%)`;
+      setTrackLeftKey(midPos - 7.0, false);
+    }
+
+    function shiftFreePlayOctave(deltaOct) {
+      setTrackLeftKey(currentLeftKey + deltaOct * 7, true);
     }
 
     function playOctaveShiftCue(fromOct, toOct) {
@@ -1873,6 +1906,8 @@
       pauseBtn.classList.toggle('hidden', !showPause);
       pauseBtn.textContent = paused ? 'Resume' : 'Pause';
       pauseBtn.classList.toggle('btn-active', paused);
+      const showOctBtns = freePlay && (state.settings.keyboard || 'single') === 'single';
+      octShiftGroup.classList.toggle('hidden', !showOctBtns);
     }
 
     function renderDots() {
@@ -2602,6 +2637,9 @@
       if (jamActive) stopJam();
       else startJam();
     });
+
+    octDownBtn.addEventListener('click', () => shiftFreePlayOctave(-1));
+    octUpBtn.addEventListener('click', () => shiftFreePlayOctave(1));
 
     freeBtn.addEventListener('click', () => {
       AudioEngine.ensure();
