@@ -200,17 +200,14 @@
       touch-action: none;
     }
 
-    /* Continuous 3-octave sliding track (C3..C6 = 22 white keys) showing 15 white keys at a time */
+    /* Continuous 5-octave sliding track (C2..C7 = 36 white keys) showing 15 white keys at a time */
     .kb-track {
       position: relative;
-      width: 146.6667%;
+      width: 240%;
       height: 100%;
-      transform: translateX(0%);
+      transform: translateX(-19.4444%); /* default window C3..C5 */
       transition: transform 1500ms cubic-bezier(0.25, 0.85, 0.35, 1);
       will-change: transform;
-    }
-    .kb-track.high {
-      transform: translateX(-31.8182%); /* shifts 7 white keys left: C3-C5 -> C4-C6 */
     }
 
     .piano-shell.two-tier {
@@ -788,7 +785,7 @@
         </label>
       </div>
       <div class="p-row">
-        <label for="varyOctavesToggle">Vary octaves (C3 – C5)</label>
+        <label for="varyOctavesToggle">Vary octaves (C2 – C6)</label>
         <label class="switch">
           <input id="varyOctavesToggle" type="checkbox" checked />
           <span class="slider"></span>
@@ -881,12 +878,12 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-26.15';
+    const APP_VERSION = '2026-11-26.16';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
     // =========================================================================
-    const SAMPLE_MIDIS = [36, 39, 42, 45, 48, 51, 54, 57, 60, 63, 66, 69, 72, 75, 78, 81, 84];
+    const SAMPLE_MIDIS = [36, 39, 42, 45, 48, 51, 54, 57, 60, 63, 66, 69, 72, 75, 78, 81, 84, 87, 90, 93, 96];
     const AudioEngine = {
       ctx: null,
       master: null,
@@ -1291,7 +1288,7 @@
       if (!tagText) {
         const track = document.createElement('div');
         track.id = 'kbTrack';
-        track.className = 'kb-track' + (currentOctave >= 5 ? ' high' : '');
+        track.className = 'kb-track';
         track.appendChild(whites);
         track.appendChild(blacks);
         return track;
@@ -1311,8 +1308,15 @@
       return wrap;
     }
 
-    let currentOctave = 4; // Golden middle octaves: 3 (C3-B3), 4 (C4-B4), 5 (C5-B5)
-    let singleStartOctave = 3; // 3 => C3-C5, 4 => C4-C6
+    let currentOctave = 4; // 5 octaves: C2 (2), C3 (3), C4 (4), C5 (5), C6 (6)
+    let singleStartOctave = 3; // visible 2-octave window start: 2 (C2-C4), 3 (C3-C5), 4 (C4-C6), 5 (C5-C7)
+
+    function windowStartForOctave(oct) {
+      if (oct <= 2) return 2;
+      if (oct === 3 || oct === 4) return 3;
+      if (oct === 5) return 4;
+      return 5;
+    }
 
     function buildKeyboard() {
       keyEls.clear();
@@ -1323,9 +1327,10 @@
       pianoEl.classList.toggle('two-tier', isTwoTier);
 
       if (!isTwoTier) {
-        singleStartOctave = currentOctave >= 5 ? 4 : 3;
-        // Continuous 3-octave track (C3..C6) clipped to 2 octaves so octave shifts glide smoothly
-        pianoEl.appendChild(buildTierDom(3, 3, true, null));
+        singleStartOctave = windowStartForOctave(currentOctave);
+        // Continuous 5-octave track (C2..C7 = 36 white keys) clipped to 2 octaves so shifts glide smoothly
+        pianoEl.appendChild(buildTierDom(2, 5, true, null));
+        if (typeof syncTrackPosition === 'function') syncTrackPosition();
       } else {
         const lowTier = buildTierDom(2, 2, sharedC, sharedC ? 'C2 – C4' : 'C2 – B3');
         const highTier = buildTierDom(4, 2, sharedC, sharedC ? 'C4 – C6' : 'C4 – B5');
@@ -1573,7 +1578,7 @@
     warmupToggle.checked = state.settings.warmup;
     varyOctavesToggle.checked = state.settings.varyOctaves !== false;
 
-    const GOLDEN_OCTAVES = [3, 4, 5]; // C3-B3, C4-B4, C5-B5 (avoids lowest 2 & highest 2 piano octaves)
+    const GOLDEN_OCTAVES = [2, 3, 4, 5, 6]; // 5 full octaves: C2..C6 (skipping only lowest 1 & highest 1)
     const PROMPTS_PER_OCTAVE = 10;
 
     let selectedMode = 'auto';
@@ -1609,10 +1614,18 @@
       return (currentOctave - 4) * 12;
     }
 
+    function visibleRangeBounds() {
+      if ((state.settings.keyboard || 'single') !== 'single') {
+        return { minMidi: 36, maxMidi: state.settings.sharedC ? 84 : 83 }; // two-tier C2..B5/C6
+      }
+      const win = windowStartForOctave(currentOctave);
+      const minMidi = 12 * (win + 1);
+      return { minMidi, maxMidi: minMidi + 24 };
+    }
+
     function transposeForCurrentOctave(midis) {
       const shift = octaveShift();
-      const minMidi = currentOctave >= 5 ? 60 : 48; // C4..C6 or C3..C5
-      const maxMidi = minMidi + 24;
+      const { minMidi, maxMidi } = visibleRangeBounds();
       const out = [];
       const seen = new Set();
       midis.forEach(m => {
@@ -1625,23 +1638,28 @@
     }
 
     function syncTrackPosition() {
-      singleStartOctave = currentOctave >= 5 ? 4 : 3;
+      singleStartOctave = windowStartForOctave(currentOctave);
       const track = document.getElementById('kbTrack');
-      if (track) track.classList.toggle('high', currentOctave >= 5);
+      if (track) {
+        const offsetPct = -((singleStartOctave - 2) * 7 / 36) * 100;
+        track.style.transform = `translateX(${offsetPct.toFixed(4)}%)`;
+      }
     }
 
     function playOctaveShiftCue(fromOct, toOct) {
       const goingUp = toOct > fromOct;
-      const lowC = Math.min(fromOct, toOct) * 12 + 12; // e.g., C4=60, C3=48
-      const sweepNotes = goingUp
-        ? [lowC, lowC + 4, lowC + 7, lowC + 12]
-        : [lowC + 12, lowC + 7, lowC + 4, lowC];
+      const startC = (fromOct + 1) * 12;
+      const endC = (toOct + 1) * 12;
+      const dir = goingUp ? 1 : -1;
+      const mid1 = startC + dir * 4;
+      const mid2 = startC + dir * 7;
+      const sweepNotes = [startC, mid1, mid2, endC];
 
       const ctx = AudioEngine.ensure();
       const base = ctx.currentTime + 0.06;
       sweepNotes.forEach((m, i) => AudioEngine.note(m, base + i * 0.20, 0.85, 0.34));
 
-      // Slide the continuous 3-octave track over 1.5s and pulse the C labels
+      // Slide the continuous 5-octave track over 1.5s and pulse the C labels
       syncTrackPosition();
       const lbls = document.querySelectorAll('#piano .key-label');
       lbls.forEach(l => l.classList.add('pulse'));
@@ -1661,7 +1679,8 @@
       }
       if (promptsInOctave >= PROMPTS_PER_OCTAVE) {
         const prevOct = currentOctave;
-        const others = GOLDEN_OCTAVES.filter(o => o !== currentOctave);
+        const pool = (state.settings.keyboard || 'single') === 'single' ? GOLDEN_OCTAVES : [2, 3, 4, 5];
+        const others = pool.filter(o => o !== currentOctave);
         currentOctave = others[Math.floor(Math.random() * others.length)];
         promptsInOctave = 0;
         if (state.settings.warmup !== false && selectedMode === 'auto' && state.skill >= 1.5) {
@@ -1851,8 +1870,7 @@
     // =========================================================================
     function pickStartNote(spec, activeNotes) {
       const shift = octaveShift();
-      const minMidi = currentOctave >= 5 ? 60 : 48;
-      const maxMidi = minMidi + 24;
+      const { minMidi, maxMidi } = visibleRangeBounds();
       let home = (typeof spec.root === 'number' ? spec.root : 60) + shift;
       while (home < minMidi) home += 12;
       while (home > maxMidi) home -= 12;
@@ -1946,8 +1964,9 @@
       const activeSet = new Set(currentActiveNotes);
 
       // CHORD STAGES
+      const { maxMidi: maxVis } = visibleRangeBounds();
       if (currentSpec.kind === 'chord-root') {
-        const roots = currentActiveNotes.filter(r => r + 7 <= (currentOctave >= 5 ? 84 : 72));
+        const roots = currentActiveNotes.filter(r => r + 7 <= maxVis);
         const pool = roots.length ? roots : currentActiveNotes;
         let root = pool[0];
         for (let a = 0; a < 10; a++) {
@@ -1989,7 +2008,7 @@
       }
 
       if (currentSpec.kind === 'chord-change') {
-        const roots = currentActiveNotes.filter(r => r + 7 <= (currentOctave >= 5 ? 84 : 72));
+        const roots = currentActiveNotes.filter(r => r + 7 <= maxVis);
         const pool = roots.length >= 2 ? roots : currentActiveNotes;
         let r1 = pool[0], r2 = pool[pool.length - 1];
         for (let a = 0; a < 12; a++) {

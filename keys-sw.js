@@ -1,4 +1,4 @@
-const CACHE = 'keys-cache-v20';
+const CACHE = 'keys-cache-v21';
 const ASSETS = [
   './',
   './index.html',
@@ -21,7 +21,11 @@ const ASSETS = [
   './piano/75.m4a',
   './piano/78.m4a',
   './piano/81.m4a',
-  './piano/84.m4a'
+  './piano/84.m4a',
+  './piano/87.m4a',
+  './piano/90.m4a',
+  './piano/93.m4a',
+  './piano/96.m4a'
 ];
 
 self.addEventListener('install', (e) => {
