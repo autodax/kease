@@ -759,6 +759,13 @@
           <span class="slider"></span>
         </label>
       </div>
+      <div class="p-row">
+        <label for="varyOctavesToggle">Vary octaves (C3 – C5)</label>
+        <label class="switch">
+          <input id="varyOctavesToggle" type="checkbox" checked />
+          <span class="slider"></span>
+        </label>
+      </div>
       <div id="resetRow" class="p-row">
         <span id="progressSummary" class="p-muted">Adaptive progress: starting out</span>
         <button id="resetProgressBtn" type="button" class="btn p-btn-danger">Reset</button>
@@ -831,7 +838,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-26.11';
+    const APP_VERSION = '2026-11-26.12';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -1258,6 +1265,9 @@
       return wrap;
     }
 
+    let currentOctave = 4; // Golden middle octaves: 3 (C3-B3), 4 (C4-B4), 5 (C5-B5)
+    let singleStartOctave = 3; // 3 => C3-C5, 4 => C4-C6
+
     function buildKeyboard() {
       keyEls.clear();
       pianoEl.innerHTML = '';
@@ -1267,7 +1277,8 @@
       pianoEl.classList.toggle('two-tier', isTwoTier);
 
       if (!isTwoTier) {
-        pianoEl.appendChild(buildTierDom(3, true, null, false));
+        singleStartOctave = currentOctave >= 5 ? 4 : 3;
+        pianoEl.appendChild(buildTierDom(singleStartOctave, true, null, true));
       } else {
         const lowTier = buildTierDom(2, sharedC, sharedC ? 'C2 – C4' : 'C2 – B3', true);
         const highTier = buildTierDom(4, sharedC, sharedC ? 'C4 – C6' : 'C4 – B5', true);
@@ -1339,7 +1350,7 @@
       skill: 0,
       lastPlayed: 0,
       stats: {}, // specId -> { tries, clean }
-      settings: { backing: true, warmup: true, keyboard: 'single', sharedC: false, labels: false, showActive: true }
+      settings: { backing: true, warmup: true, varyOctaves: true, keyboard: 'single', sharedC: false, labels: false, showActive: true }
     };
     try {
       const saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
@@ -1348,7 +1359,7 @@
           skill: saved.skill,
           lastPlayed: saved.lastPlayed || 0,
           stats: saved.stats || {},
-          settings: Object.assign({ backing: true, warmup: true, keyboard: 'single', sharedC: false, labels: false, showActive: true }, saved.settings || {})
+          settings: Object.assign({ backing: true, warmup: true, varyOctaves: true, keyboard: 'single', sharedC: false, labels: false, showActive: true }, saved.settings || {})
         };
       }
     } catch (e) {}
@@ -1369,6 +1380,7 @@
     const activeKeysToggle = document.getElementById('activeKeysToggle');
     const backingToggle = document.getElementById('backingToggle');
     const warmupToggle = document.getElementById('warmupToggle');
+    const varyOctavesToggle = document.getElementById('varyOctavesToggle');
     const progressSummary = document.getElementById('progressSummary');
     const progressList = document.getElementById('progressList');
     const troubleBox = document.getElementById('troubleBox');
@@ -1397,10 +1409,16 @@
     activeKeysToggle.checked = state.settings.showActive !== false;
     backingToggle.checked = state.settings.backing;
     warmupToggle.checked = state.settings.warmup;
+    varyOctavesToggle.checked = state.settings.varyOctaves !== false;
+
+    const GOLDEN_OCTAVES = [3, 4, 5]; // C3-B3, C4-B4, C5-B5 (avoids lowest 2 & highest 2 piano octaves)
+    const PROMPTS_PER_OCTAVE = 10;
 
     let selectedMode = 'auto';
     let currentSpec = FRONTIER[0];
     let currentRoot = 60;
+    let currentActiveNotes = [60];
+    let promptsInOctave = 0;
     let freePlay = false;
     let jamActive = false;
     let paused = false;
@@ -1417,6 +1435,50 @@
     // Warm-up ramp if returning after > 10 minutes (or a new session) and warmup is enabled
     const isReturnSession = state.skill >= 1.5 && (Date.now() - state.lastPlayed > 10 * 60 * 1000 || state.lastPlayed === 0);
     let warmupStepsLeft = (state.settings.warmup && isReturnSession) ? 3 : 0;
+
+    function octaveShift() {
+      return (currentOctave - 4) * 12;
+    }
+
+    function transposeForCurrentOctave(midis) {
+      const shift = octaveShift();
+      const minMidi = currentOctave >= 5 ? 60 : 48; // C4..C6 or C3..C5
+      const maxMidi = minMidi + 24;
+      const out = [];
+      const seen = new Set();
+      midis.forEach(m => {
+        let n = m + shift;
+        while (n < minMidi) n += 12;
+        while (n > maxMidi) n -= 12;
+        if (!seen.has(n)) { seen.add(n); out.push(n); }
+      });
+      return out.sort((a, b) => a - b);
+    }
+
+    function maybeRotateOctave() {
+      if (state.settings.varyOctaves === false) {
+        if (currentOctave !== 4) { currentOctave = 4; buildKeyboard(); }
+        return;
+      }
+      // Keep brand-new learners anchored on Middle C4 first; start rotating octaves once moving into 2-note play
+      if (selectedMode === 'auto' && state.skill < 1.0) {
+        if (currentOctave !== 4) { currentOctave = 4; buildKeyboard(); }
+        return;
+      }
+      if (promptsInOctave >= PROMPTS_PER_OCTAVE) {
+        const others = GOLDEN_OCTAVES.filter(o => o !== currentOctave);
+        currentOctave = others[Math.floor(Math.random() * others.length)];
+        promptsInOctave = 0;
+        // Quick 2-prompt warm-up to tune the ear to the new octave
+        if (state.settings.warmup !== false && selectedMode === 'auto' && state.skill >= 1.5) {
+          warmupStepsLeft = Math.max(warmupStepsLeft, 2);
+        }
+        const neededStart = currentOctave >= 5 ? 4 : 3;
+        if ((state.settings.keyboard || 'single') === 'single' && singleStartOctave !== neededStart) {
+          buildKeyboard();
+        }
+      }
+    }
 
     function updateProgressSummary() {
       const pct = Math.round((state.skill / (FRONTIER.length - 0.1)) * 100);
@@ -1516,6 +1578,7 @@
     }
 
     function recordOutcome(misses) {
+      promptsInOctave++;
       // Record per-skill stats in both Auto and targeted Practice so Progress stays accurate
       if (!state.stats[currentSpec.id]) state.stats[currentSpec.id] = { tries: 0, clean: 0 };
       state.stats[currentSpec.id].tries++;
@@ -1541,7 +1604,7 @@
     function applySpotlight() {
       pianoEl.classList.toggle('show-labels', !!state.settings.labels);
       const showActive = !freePlay && state.settings.showActive !== false;
-      const activeSet = showActive ? new Set(currentSpec.active) : null;
+      const activeSet = showActive ? new Set(currentActiveNotes) : null;
       const startMidi = freePlay ? null : (promptNotes.length > 0 ? promptNotes[0] : currentRoot);
 
       keyEls.forEach((arr, midi) => {
@@ -1589,19 +1652,31 @@
     // 4. Prompt Generation, Backing Chords & Playback
     // =========================================================================
     function pickStartNote(spec) {
-      if (typeof spec.root === 'number') return spec.root;
-      if (spec.root === 'move-white') {
+      const shift = octaveShift();
+      const minMidi = currentOctave >= 5 ? 60 : 48;
+      const maxMidi = minMidi + 24;
+      let base;
+      if (typeof spec.root === 'number') {
+        base = spec.root + shift;
+      } else if (spec.root === 'move-white') {
         const whites = [57, 60, 62, 64, 65, 67];
-        return whites[Math.floor(Math.random() * whites.length)];
+        base = whites[Math.floor(Math.random() * whites.length)] + shift;
+      } else {
+        const roots = [58, 60, 62, 63, 65, 67];
+        base = roots[Math.floor(Math.random() * roots.length)] + shift;
       }
-      const roots = [58, 60, 62, 63, 65, 67];
-      return roots[Math.floor(Math.random() * roots.length)];
+      while (base < minMidi) base += 12;
+      while (base > maxMidi) base -= 12;
+      return base;
     }
 
     function buildPrompt() {
+      maybeRotateOctave();
       currentSpec = pickSpecForPrompt();
       missesThisPrompt = 0;
+      currentActiveNotes = transposeForCurrentOctave(currentSpec.active);
       currentRoot = pickStartNote(currentSpec);
+      if (!currentActiveNotes.includes(currentRoot)) currentRoot = currentActiveNotes[0];
 
       if (currentSpec.mode === 'rhythm-echo') {
         const pat = RHYTHM_ECHO_PATTERNS[Math.floor(Math.random() * RHYTHM_ECHO_PATTERNS.length)];
@@ -1611,7 +1686,7 @@
         return;
       }
 
-      const activeSet = new Set(currentSpec.active);
+      const activeSet = new Set(currentActiveNotes);
       let seq = null;
 
       // ~35% chance of a familiar tiny melody hook when 3+ notes are active
@@ -1627,11 +1702,11 @@
 
       if (!seq) {
         seq = [currentRoot];
-        const choices = currentSpec.active.filter(n => n !== currentRoot);
+        const choices = currentActiveNotes.filter(n => n !== currentRoot);
         for (let i = 1; i < currentSpec.len; i++) {
-          let pool = currentSpec.active.filter(n => n !== seq[i - 1]);
+          let pool = currentActiveNotes.filter(n => n !== seq[i - 1]);
           if (i === 1 && choices.length) pool = choices;
-          if (!pool.length) pool = currentSpec.active;
+          if (!pool.length) pool = currentActiveNotes;
           seq.push(pool[Math.floor(Math.random() * pool.length)]);
         }
       }
@@ -1643,8 +1718,8 @@
     }
 
     function backingTriadFor(rootMidi) {
-      // Soft major triad one octave lower for warm harmonic support
-      const base = rootMidi - 12 >= 45 ? rootMidi - 12 : rootMidi;
+      // Keep warm backing triad clear on phone speakers (never muddy below C3=48)
+      const base = rootMidi - 12 >= 48 ? rootMidi - 12 : rootMidi;
       return [base, base + 4, base + 7];
     }
 
@@ -1704,7 +1779,8 @@
       playBtn.textContent = 'Play';
       currentSpec = pickSpecForPrompt();
       if (currentSpec.active.length === 1) currentSpec = FRONTIER[3]; // give cozy 5 keys if still on 1 key
-      promptNotes = [currentSpec.active[0]];
+      currentActiveNotes = transposeForCurrentOctave(currentSpec.active);
+      promptNotes = [currentActiveNotes[0]];
       applySpotlight();
       updateActionButtons();
       stepDots.innerHTML = '<span id="beatDot" class="step-dot active"></span>';
@@ -1861,7 +1937,9 @@
       currentSpec = selectedMode === 'auto'
         ? FRONTIER[Math.min(FRONTIER.length - 1, Math.floor(state.skill))]
         : (STAGE_BY_ID[selectedMode] || FRONTIER[0]);
-      currentRoot = typeof currentSpec.root === 'number' ? currentSpec.root : 60;
+      currentActiveNotes = transposeForCurrentOctave(currentSpec.active);
+      currentRoot = pickStartNote(currentSpec);
+      if (!currentActiveNotes.includes(currentRoot)) currentRoot = currentActiveNotes[0];
       applySpotlight();
       renderDots();
       updateActionButtons();
@@ -1901,6 +1979,16 @@
     });
     warmupToggle.addEventListener('change', () => {
       state.settings.warmup = warmupToggle.checked;
+      saveState();
+    });
+    varyOctavesToggle.addEventListener('change', () => {
+      state.settings.varyOctaves = varyOctavesToggle.checked;
+      if (!state.settings.varyOctaves) {
+        currentOctave = 4;
+        promptsInOctave = 0;
+        buildKeyboard();
+        applyModeSelection(selectedMode);
+      }
       saveState();
     });
 
