@@ -24,12 +24,18 @@ Companion to Steve's Ear Trainer (`autodax/ear`), but a clean-slate standalone a
 - **Two-tier 4-octave keyboard (for later):** Steve liked the two-tier 4-octave layout (with options for High-on-Top vs. Low-on-Top and 14 vs. 15 keys per tier, and possibly wider on the phone) as a future expansion once wider range / chords + melodies come in.
 - **Stage 1 (one note repeated rhythmically):** Include both call-and-response (app plays a short rhythm on the lit key, user taps it back) and playing along with a gentle backing chord/groove. Do not replay the rhythm after echoing it—move straight to the next one.
 - **Keyboard sizing & Dynamic Island (from iPhone test):** Keep the keyboard slightly narrower than full edge-to-edge so the Dynamic Island may sit over the leftmost white key but never intrudes on the first black key. Keys do not need to be stretched full height—keeping them closer to natural piano proportion saves room at the top for a few TBD controls.
-- **Pause before next prompt:** Leave a calm, unhurried pause before the next test starts so it never feels rushed.
+- **Pause before next prompt:** Auto-advance after a calm pause (~1.2–1.5 s), with a Pause button in the top strip when Steve wants to take a breath.
+- **Pure-ear hunting:** During hunting, use only the real piano sound and soft key flash—no "Higher / Lower" text in the top strip.
+- **Show me rescue button:** Include a subtle "Show me" button in the top strip when stuck to calmly reveal and replay the answer.
 - **Play with iPhone on mute:** Must play even when the iPhone ringer/mute switch is on (`navigator.audioSession.type = 'playback'` before `AudioContext`, plus retrying the silent looping `<audio>` element on `touchstart`/`touchend`/`click` whenever `.paused`, since `pointerdown` alone does not always satisfy iOS media activation).
 - **Hunting early, one-shot later:** In the early stages, allow hunting by ear (keep tapping keys, hearing each real piano note, until landing on the right key). Later on, transition to one-shot guesses.
-- **No discrete levels (long-term goal):** Selectable levels are useful for testing while building, but the long-term goal is a **seamless, level-less adaptive progression** driven by successes and mistakes—gradually introducing new challenges without hard level walls.
-- **Confidence-building review & warm-up/recap:** Sprinkle easier review prompts into sessions to build confidence, and consider a quick warm-up/recap at the start of a session that ramps rapidly up to the current difficulty.
+- **No discrete levels (long-term goal):** Selectable levels are useful for testing while building, but the long-term goal is a **seamless, level-less adaptive progression** driven by successes and mistakes—gradually introducing one small new challenge at a time without hard level walls or pop-up announcements (a new key simply joins the lit zone and starts appearing).
+- **Temporary hunting for new skills:** When something brand new arrives (a new key, longer phrase, or black key), hunting by ear turns back on briefly until it clicks, then tightens smoothly to one-shot guesses.
+- **Confidence-building review & warm-up/recap:** Sprinkle easier review prompts (~20–25%) into sessions to build confidence, and run an automatic quick warm-up/recap (3–5 prompts ramping up to the current frontier) after a break, with a toggle in portrait settings to turn it off.
+- **Musical prompts:** Use natural, gentle rhythms in phrases (not robotic equal spacing), play a soft warm backing chord under prompts (with a toggle in portrait settings), and sprinkle in short recognizable melody snippets once 3+ notes are active.
+- **On-demand Jam groove:** Offer play-along jam grooves via an optional button/toggle when Steve feels like jamming, rather than interrupting automatically.
 - **Portrait = guide, settings & docs:** Turning the phone upright shows instructions, settings, and documentation—keeping landscape completely clean and focused on the keyboard.
+- **Chords after melodies:** Focus purely on melodies across all white and black keys first, then introduce chords afterward. When chords arrive, start by tapping the chord's keys one at a time (easy on a phone), then support pressing all keys together later (accepting either).
 - **Color preferences (carried over from `ear`):** Blue/periwinkle accent palette (`#7eabff`, `#5a86ee`, `#bfe3ff`), muted orange (`#d9895a`) for gentle miss cues, **no green anywhere**.
 
 ## Brainstormed progression (ideas, not yet finalized)
@@ -68,6 +74,4 @@ How the seamless adaptive engine could expand challenges gradually from zero kno
 
 ## Open questions to brainstorm next
 
-- In the hunting stage, should "higher / lower" text appear, or should the ear alone (plus the soft key flash) be the only feedback so the top strip stays ultra-minimal?
-- When moving into chords, should multi-touch (pressing 2–3 keys at once) be supported from the start, or arpeggiated (one key at a time) first and simultaneous later?
 - Should progress sync across devices (like `ear`'s private GitHub gist) or stay simple local storage at first?

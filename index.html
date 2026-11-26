@@ -47,34 +47,33 @@
     .app {
       display: flex;
       flex-direction: column;
+      justify-content: space-between;
       width: 100%;
       height: 100dvh;
-      padding-top: max(4px, env(safe-area-inset-top));
+      padding-top: max(6px, env(safe-area-inset-top));
       padding-bottom: 0;
-      padding-left: 0;
-      padding-right: 0;
-      gap: 4px;
+      gap: 6px;
     }
 
-    /* Ultra-minimal top strip above the keyboard */
+    /* Calm, uncluttered band above the keyboard */
     .topbar {
       flex: 0 0 auto;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 10px;
-      min-height: 40px;
-      padding-left: max(12px, env(safe-area-inset-left));
-      padding-right: max(12px, env(safe-area-inset-right));
+      gap: 8px;
+      min-height: 46px;
+      padding-left: max(18px, env(safe-area-inset-left));
+      padding-right: max(18px, env(safe-area-inset-right));
     }
 
     .top-left, .top-center, .top-right {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
     .top-left { flex: 0 1 auto; min-width: 0; }
-    .top-center { flex: 1 1 auto; justify-content: center; min-width: 0; }
+    .top-center { flex: 1 1 auto; justify-content: center; min-width: 0; gap: 8px; }
     .top-right { flex: 0 0 auto; }
 
     /* Keep select at 16px so iOS Safari never zooms on tap */
@@ -85,16 +84,16 @@
       color: var(--text);
       border: 1px solid var(--border);
       border-radius: 10px;
-      padding: 6px 28px 6px 11px;
+      padding: 6px 26px 6px 10px;
       font-size: 16px;
       font-weight: 500;
       line-height: 1.2;
-      max-width: 245px;
+      max-width: 185px;
       text-overflow: ellipsis;
       cursor: pointer;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2393a0c2' d='M2.5 4.2 6 7.8l3.5-3.6' stroke='%2393a0c2' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.2 6 7.8l3.5-3.6' stroke='%2393a0c2' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E");
       background-repeat: no-repeat;
-      background-position: right 9px center;
+      background-position: right 8px center;
     }
 
     .btn {
@@ -104,11 +103,16 @@
       background: var(--panel);
       color: var(--text);
       border-radius: 10px;
-      padding: 7px 13px;
-      font-size: 15px;
+      padding: 7px 11px;
+      font-size: 14px;
       font-weight: 600;
       line-height: 1.15;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      white-space: nowrap;
       transition: opacity 100ms ease, transform 80ms ease, background 120ms ease;
     }
     .btn:active { transform: scale(0.96); }
@@ -122,9 +126,18 @@
       border-color: transparent;
       color: #ffffff;
     }
+    .btn-subtle {
+      background: transparent;
+      border-color: var(--border);
+      color: var(--muted);
+    }
+    .btn-icon {
+      padding: 7px 9px;
+    }
+    .hidden { display: none !important; }
 
     .status-text {
-      font-size: 14px;
+      font-size: 13px;
       color: var(--muted);
       white-space: nowrap;
       overflow: hidden;
@@ -134,11 +147,11 @@
     .step-dots {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
     }
     .step-dot {
-      width: 8px;
-      height: 8px;
+      width: 7px;
+      height: 7px;
       border-radius: 999px;
       background: var(--border);
       transition: background 140ms ease, transform 140ms ease;
@@ -153,24 +166,26 @@
     }
     .beat-flash { animation: beatPulse 460ms ease-out; }
 
-    /* Keyboard stage — fills all remaining landscape space */
+    /* Keyboard stage: pulled in slightly to keep first black key clear of Dynamic Island,
+       and capped to a comfortable natural key height so the top stays open and airy */
     .stage {
       flex: 1 1 auto;
       min-height: 0;
       display: flex;
-      align-items: stretch;
+      align-items: flex-end;
       justify-content: center;
+      padding-left: max(20px, calc(env(safe-area-inset-left) * 0.54));
+      padding-right: max(20px, calc(env(safe-area-inset-right) * 0.54));
     }
 
     .piano-shell {
       position: relative;
       width: 100%;
-      height: 100%;
-      max-width: 100%;
+      height: min(100%, 272px);
       background: #1b1817;
-      border-radius: 0;
+      border-radius: 10px 10px 0 0;
       overflow: hidden;
-      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.45);
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.35), inset 0 2px 4px rgba(0, 0, 0, 0.45);
       touch-action: none;
     }
 
@@ -228,7 +243,7 @@
       position: absolute;
       top: 0;
       width: 4.25%;
-      height: 62.5%;
+      height: 62%;
       z-index: 3;
       background: linear-gradient(180deg, #47403c 0%, #3b3431 76%, #2f2927 89%, #141211 90%, #191615 100%);
       border-left: 1px solid #1d1917;
@@ -268,17 +283,19 @@
       box-shadow: inset 0 -4px 0 var(--nudge);
     }
 
+    /* Larger, subtle note labels (Free Play only) */
     .key-label {
-      font-size: 13px;
+      font-size: 16px;
       font-weight: 600;
       letter-spacing: -0.02em;
       pointer-events: none;
       opacity: 0;
       transition: opacity 150ms ease;
     }
-    .wkey .key-label { color: #6e6357; }
-    .bkey .key-label { color: #d8cfc4; font-size: 10px; }
-    .show-labels .key-label { opacity: 0.92; }
+    .wkey .key-label { color: #5b5046; }
+    .bkey .key-label { color: #ebe3d8; font-size: 11px; }
+    .show-labels .wkey .key-label { opacity: 0.42; }
+    .show-labels .bkey .key-label { opacity: 0.52; }
 
     /* Portrait screen: instructions, settings, and documentation */
     .rotate-overlay {
@@ -315,17 +332,8 @@
       justify-content: center;
       color: var(--accent);
     }
-    .rotate-title {
-      font-size: 17px;
-      font-weight: 600;
-      margin: 0 0 2px;
-    }
-    .rotate-sub {
-      font-size: 13px;
-      color: var(--muted);
-      margin: 0;
-      line-height: 1.35;
-    }
+    .rotate-title { font-size: 17px; font-weight: 600; margin: 0 0 2px; }
+    .rotate-sub { font-size: 13px; color: var(--muted); margin: 0; line-height: 1.35; }
     .p-card {
       background: var(--panel);
       border: 1px solid var(--border);
@@ -333,7 +341,7 @@
       padding: 16px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
     }
     .p-card h2 {
       margin: 0;
@@ -343,41 +351,61 @@
       letter-spacing: 0.05em;
       color: var(--accent);
     }
-    .p-card p, .p-card li {
-      margin: 0;
-      font-size: 14px;
-      line-height: 1.48;
-      color: var(--text);
-    }
-    .p-card ul {
-      margin: 0;
-      padding-left: 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .p-muted {
-      color: var(--muted) !important;
-      font-size: 13px !important;
-    }
+    .p-card p, .p-card li { margin: 0; font-size: 14px; line-height: 1.48; color: var(--text); }
+    .p-card ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 8px; }
+    .p-muted { color: var(--muted) !important; font-size: 13px !important; }
     .p-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
     }
-    .p-row label {
-      font-size: 14px;
-      color: var(--text);
-    }
+    .p-row label { font-size: 15px; color: var(--text); }
     .p-btn-danger {
       background: transparent;
       border: 1px solid rgba(217, 137, 90, 0.55);
       color: var(--nudge);
     }
 
+    /* Clean toggle switch for portrait settings */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 46px;
+      height: 27px;
+      flex: 0 0 auto;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+      inset: 0;
+      background: var(--panel-hi);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      transition: background 150ms ease;
+      cursor: pointer;
+    }
+    .slider::before {
+      content: "";
+      position: absolute;
+      width: 21px;
+      height: 21px;
+      left: 2px;
+      top: 2px;
+      background: #eef3ff;
+      border-radius: 50%;
+      transition: transform 150ms ease;
+    }
+    .switch input:checked + .slider {
+      background: var(--accent-deep);
+      border-color: transparent;
+    }
+    .switch input:checked + .slider::before {
+      transform: translateX(19px);
+    }
+
     @media (orientation: portrait) {
-      .rotate-overlay { display: flex; }
+      body:not(.orient-locked) .rotate-overlay { display: flex; }
     }
   </style>
 </head>
@@ -399,10 +427,10 @@
     <section class="p-card">
       <h2>How it works</h2>
       <ul>
-        <li><strong>Start with one key:</strong> Echo short rhythms on the glowing key, or jam along with the backing groove.</li>
-        <li><strong>Hunt by ear:</strong> When a second note is added, tap the glowing starting key, then feel your way to the next note by ear—every key plays its real piano sound.</li>
-        <li><strong>Seamless progress:</strong> In <em>Auto · Adaptive</em>, the app widens the keys and phrase length smoothly as your ear gets surer, sprinkling in easier review along the way.</li>
-        <li><strong>Free Play:</strong> Tap <em>Free Play</em> anytime to light up all two octaves and reveal note names.</li>
+        <li><strong>Seamless progress:</strong> In <em>Auto · Adaptive</em>, new keys, rhythms, and longer phrases join smoothly as your ear gets surer—with easier review sprinkled in for momentum.</li>
+        <li><strong>Hunt by ear on new skills:</strong> Whenever a new key or phrase length arrives, tap around freely to find the sound by ear. Once it clicks, it gently tightens to one-shot guesses.</li>
+        <li><strong>Jam &amp; Free Play:</strong> Tap <em>Jam</em> for a warm backing groove over the active keys, or <em>Free Play</em> to open all two octaves with subtle note names.</li>
+        <li><strong>Playing lying down:</strong> Tap the lock icon in landscape to keep the keyboard open if your phone tilts.</li>
       </ul>
     </section>
 
@@ -410,15 +438,33 @@
       <h2>Settings</h2>
       <div class="p-row">
         <label for="portraitStageSelect">Mode</label>
-        <select id="portraitStageSelect" class="stage-select">
+        <select id="portraitStageSelect" class="stage-select" style="max-width:210px;">
           <option value="auto">Auto · Adaptive</option>
-          <option value="s1a">1a · One-Note Echo</option>
-          <option value="s1b">1b · Play Along Groove</option>
-          <option value="s2">2 · Two Notes (2 Keys)</option>
-          <option value="s3">3 · Two Notes (Trio)</option>
-          <option value="s4">4 · Two Notes (5 Keys)</option>
-          <option value="s5">5 · Tiny Tunes (One-Shot)</option>
+          <option value="s0">1 · One-Note Echo</option>
+          <option value="s1">2 · Two Notes (2 Keys)</option>
+          <option value="s2">3 · Two Notes (Trio)</option>
+          <option value="s3">4 · Two Notes (5 Keys)</option>
+          <option value="s5">5 · Three Notes (Hunt)</option>
+          <option value="s6">6 · Three Notes (One-Shot)</option>
+          <option value="s7">7 · All White Keys</option>
+          <option value="s9">8 · Moving Home Key</option>
+          <option value="s10">9 · Black Keys</option>
+          <option value="s11">10 · Four-Note Melodies</option>
         </select>
+      </div>
+      <div class="p-row">
+        <label for="backingToggle">Soft backing chord</label>
+        <label class="switch">
+          <input id="backingToggle" type="checkbox" checked />
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="p-row">
+        <label for="warmupToggle">Quick warm-up on return</label>
+        <label class="switch">
+          <input id="warmupToggle" type="checkbox" checked />
+          <span class="slider"></span>
+        </label>
       </div>
       <div class="p-row">
         <span id="progressSummary" class="p-muted">Adaptive progress: starting out</span>
@@ -428,7 +474,7 @@
 
     <section class="p-card">
       <h2>About Keys</h2>
-      <p class="p-muted">Play-by-ear piano trainer built for landscape iPhone. Add to your Home Screen from Safari's Share menu for full-height edge-to-edge keys and offline play.</p>
+      <p class="p-muted">Play-by-ear piano trainer built for landscape iPhone. Add to your Home Screen from Safari's Share menu for full-height keys and offline play.</p>
       <p class="p-muted">Piano sound: Salamander Grand Piano (Alexander Holm, CC BY 3.0).</p>
       <p class="p-muted">Version <span id="versionLabel"></span></p>
     </section>
@@ -439,13 +485,18 @@
       <div class="top-left">
         <select id="stageSelect" class="stage-select" aria-label="Choose mode">
           <option value="auto">Auto · Adaptive</option>
-          <option value="s1a">1a · One-Note Echo</option>
-          <option value="s1b">1b · Play Along Groove</option>
-          <option value="s2">2 · Two Notes (2 Keys)</option>
-          <option value="s3">3 · Two Notes (Trio)</option>
-          <option value="s4">4 · Two Notes (5 Keys)</option>
-          <option value="s5">5 · Tiny Tunes (One-Shot)</option>
+          <option value="s0">1 · One-Note Echo</option>
+          <option value="s1">2 · Two Notes (2 Keys)</option>
+          <option value="s2">3 · Two Notes (Trio)</option>
+          <option value="s3">4 · Two Notes (5 Keys)</option>
+          <option value="s5">5 · Three Notes (Hunt)</option>
+          <option value="s6">6 · Three Notes (One-Shot)</option>
+          <option value="s7">7 · All White Keys</option>
+          <option value="s9">8 · Moving Home Key</option>
+          <option value="s10">9 · Black Keys</option>
+          <option value="s11">10 · Four-Note Melodies</option>
         </select>
+        <button id="jamBtn" type="button" class="btn">Jam</button>
       </div>
 
       <div class="top-center">
@@ -454,8 +505,20 @@
       </div>
 
       <div class="top-right">
+        <button id="showBtn" type="button" class="btn btn-subtle hidden">Show me</button>
+        <button id="pauseBtn" type="button" class="btn btn-subtle hidden">Pause</button>
         <button id="playBtn" type="button" class="btn btn-primary">Play</button>
         <button id="freeBtn" type="button" class="btn">Free Play</button>
+        <button id="lockBtn" type="button" class="btn btn-icon" aria-label="Keep keyboard open" title="Lock keyboard open when lying down">
+          <svg id="lockIconOpen" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="11" width="14" height="10" rx="2"></rect>
+            <path d="M8 11V7a4 4 0 0 1 7.6-1.7"></path>
+          </svg>
+          <svg id="lockIconClosed" class="hidden" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="11" width="14" height="10" rx="2"></rect>
+            <path d="M8 11V7a4 4 0 0 1 8 0v4"></path>
+          </svg>
+        </button>
       </div>
     </header>
 
@@ -468,7 +531,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-25.3';
+    const APP_VERSION = '2026-11-25.4';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -483,9 +546,7 @@
       silentUrl: null,
       loading: false,
 
-      midiToFreq(m) {
-        return 440 * Math.pow(2, (m - 69) / 12);
-      },
+      midiToFreq(m) { return 440 * Math.pow(2, (m - 69) / 12); },
 
       ensure() {
         this.unlockIOS();
@@ -599,7 +660,6 @@
           return;
         }
 
-        // Warm synth fallback while samples finish decoding
         const freq = this.midiToFreq(midi);
         const env = ctx.createGain();
         env.gain.setValueAtTime(0.0001, t0);
@@ -632,12 +692,10 @@
         env.connect(this.master);
       },
 
-      chord(midis, when = 0, duration = 1.7, velocity = 0.34) {
+      chord(midis, when = 0, duration = 1.8, velocity = 0.28) {
         const ctx = this.ensure();
         const t0 = when > 0 ? when : ctx.currentTime + 0.005;
-        midis.forEach((m, i) => {
-          this.note(m, t0 + i * 0.012, duration, velocity);
-        });
+        midis.forEach((m, i) => this.note(m, t0 + i * 0.014, duration, velocity));
       }
     };
 
@@ -647,7 +705,7 @@
     });
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
-        stopGroove();
+        stopJam();
         AudioEngine.release();
       }
     });
@@ -658,16 +716,10 @@
     const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
     const WHITE_OFFSETS = [0, 2, 4, 5, 7, 9, 11];
     const BLACK_KEYS = [
-      { midi: 49, left: 4.54 },
-      { midi: 51, left: 11.18 },
-      { midi: 54, left: 24.52 },
-      { midi: 56, left: 31.20 },
-      { midi: 58, left: 37.87 },
-      { midi: 61, left: 51.18 },
-      { midi: 63, left: 57.86 },
-      { midi: 66, left: 71.21 },
-      { midi: 68, left: 77.84 },
-      { midi: 70, left: 84.52 }
+      { midi: 49, left: 4.54 }, { midi: 51, left: 11.18 },
+      { midi: 54, left: 24.52 }, { midi: 56, left: 31.20 }, { midi: 58, left: 37.87 },
+      { midi: 61, left: 51.18 }, { midi: 63, left: 57.86 },
+      { midi: 66, left: 71.21 }, { midi: 68, left: 77.84 }, { midi: 70, left: 84.52 }
     ];
 
     const keyEls = new Map();
@@ -679,11 +731,9 @@
     for (let oct = 3; oct <= 4; oct++) {
       WHITE_OFFSETS.forEach(o => whiteMidis.push(12 * (oct + 1) + o));
     }
-    whiteMidis.push(72); // C5
+    whiteMidis.push(72);
 
-    function noteLabel(midi) {
-      return NOTE_NAMES[midi % 12];
-    }
+    function noteLabel(midi) { return NOTE_NAMES[midi % 12]; }
 
     function createKeyEl(midi, isBlack, leftPct) {
       const el = document.createElement('div');
@@ -714,93 +764,161 @@
     BLACK_KEYS.forEach(b => blackContainer.appendChild(createKeyEl(b.midi, true, b.left)));
 
     // =========================================================================
-    // 3. Stages & Seamless Adaptive Engine
+    // 3. Seamless 12-Step Adaptive Frontier + Musical Hooks & Rhythms
     // =========================================================================
-    const STAGES = {
-      s1a: { mode: 'rhythm-echo', active: [60] },
-      s1b: { mode: 'play-along',  active: [60] },
-      s2:  { mode: 'hunt',        active: [60, 62, 67],         start: 60, choices: [62, 67],             len: 2 },
-      s3:  { mode: 'hunt',        active: [60, 64, 67],         start: 60, choices: [64, 67],             len: 2 },
-      s4:  { mode: 'hunt',        active: [60, 62, 64, 67, 69], start: 60, choices: [62, 64, 67, 69],     len: 2 },
-      s5:  { mode: 'oneshot',     active: [60, 62, 64, 67, 69], start: 60, choices: [60, 62, 64, 67, 69], len: 3 }
-    };
-    const AUTO_LADDER = ['s1a', 's2', 's3', 's4', 's5'];
+    // Every new skill briefly re-enables hunting before tightening to one-shot.
+    const FRONTIER = [
+      { id: 's0',  mode: 'rhythm-echo', root: 60, active: [60],                                         len: 1 },
+      { id: 's1',  mode: 'hunt',        root: 60, active: [60, 62, 67],                                 len: 2 },
+      { id: 's2',  mode: 'hunt',        root: 60, active: [60, 64, 67],                                 len: 2 },
+      { id: 's3',  mode: 'hunt',        root: 60, active: [60, 62, 64, 67, 69],                         len: 2 },
+      { id: 's4',  mode: 'oneshot',     root: 60, active: [60, 62, 64, 67, 69],                         len: 2 },
+      { id: 's5',  mode: 'hunt',        root: 60, active: [60, 62, 64, 67, 69],                         len: 3, hooks: true },
+      { id: 's6',  mode: 'oneshot',     root: 60, active: [60, 62, 64, 67, 69],                         len: 3, hooks: true },
+      { id: 's7',  mode: 'hunt',        root: 60, active: [60, 62, 64, 65, 67, 69, 71, 72],             len: 3, hooks: true },
+      { id: 's8',  mode: 'oneshot',     root: 60, active: [60, 62, 64, 65, 67, 69, 71, 72],             len: 3, hooks: true },
+      { id: 's9',  mode: 'hunt',        root: 'move-white', active: [55, 57, 59, 60, 62, 64, 65, 67, 69, 71, 72], len: 3, hooks: true },
+      { id: 's10', mode: 'hunt',        root: 'move-any',   active: [55, 57, 58, 60, 62, 63, 64, 65, 66, 67, 69, 70, 72], len: 3, hooks: true },
+      { id: 's11', mode: 'oneshot',     root: 'move-any',   active: [53, 55, 56, 57, 58, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 72], len: 4, hooks: true }
+    ];
 
-    const RHYTHM_PATTERNS = [
+    const STAGE_BY_ID = Object.fromEntries(FRONTIER.map(s => [s.id, s]));
+
+    // Familiar short melody fragments as semitone offsets from the starting note
+    const HOOKS_3 = [
+      [0, 4, 7],   // bright major triad rise
+      [0, 2, 4],   // Frere Jacques / Do-Re-Mi rise
+      [0, 7, 9],   // Twinkle opening (C-G-A)
+      [0, 4, 2],   // Mary Had a Little Lamb / gentle arch
+      [0, 5, 4],   // warm 4-3 sigh
+      [0, 7, 4]    // arpeggio skip
+    ];
+    const HOOKS_4 = [
+      [0, 2, 4, 0], // Frere Jacques
+      [0, 4, 5, 7], // When the Saints
+      [0, 2, 4, 7], // Pentatonic lift
+      [0, 7, 9, 7], // Twinkle arch
+      [0, 4, 7, 4]  // Triad bounce
+    ];
+
+    const RHYTHM_ECHO_PATTERNS = [
       [0, 0.42, 0.84],
       [0, 0.32, 0.64, 1.12],
       [0, 0.50, 0.78, 1.06],
       [0, 0.36, 0.90, 1.24]
     ];
 
-    // Load saved adaptive progress
-    const STORE_KEY = 'keys.progress.v1';
-    let progress = { skill: 0, recent: [] };
+    // Natural rhythmic timings for 2-, 3-, and 4-note melodic phrases
+    const MELODY_RHYTHMS = {
+      2: [[0, 0.42], [0, 0.54], [0, 0.34]],
+      3: [[0, 0.38, 0.76], [0, 0.52, 0.82], [0, 0.32, 0.68]],
+      4: [[0, 0.36, 0.72, 1.12], [0, 0.48, 0.78, 1.08], [0, 0.32, 0.64, 0.96]]
+    };
+
+    const STORE_KEY = 'keys.state.v2';
+    let state = {
+      skill: 0,
+      lastPlayed: 0,
+      settings: { backing: true, warmup: true }
+    };
     try {
       const saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
-      if (saved && typeof saved.skill === 'number') progress = saved;
+      if (saved && typeof saved.skill === 'number') {
+        state = {
+          skill: saved.skill,
+          lastPlayed: saved.lastPlayed || 0,
+          settings: Object.assign({ backing: true, warmup: true }, saved.settings || {})
+        };
+      }
     } catch (e) {}
 
-    function saveProgress() {
-      try { localStorage.setItem(STORE_KEY, JSON.stringify(progress)); } catch (e) {}
-      if (typeof updateProgressSummary === 'function') updateProgressSummary();
+    function saveState() {
+      state.lastPlayed = Date.now();
+      try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) {}
+      updateProgressSummary();
     }
 
+    // Elements
     const stageSelect = document.getElementById('stageSelect');
+    const portraitStageSelect = document.getElementById('portraitStageSelect');
+    const backingToggle = document.getElementById('backingToggle');
+    const warmupToggle = document.getElementById('warmupToggle');
+    const progressSummary = document.getElementById('progressSummary');
+    const resetProgressBtn = document.getElementById('resetProgressBtn');
+    const versionLabel = document.getElementById('versionLabel');
     const playBtn = document.getElementById('playBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const showBtn = document.getElementById('showBtn');
     const freeBtn = document.getElementById('freeBtn');
+    const jamBtn = document.getElementById('jamBtn');
+    const lockBtn = document.getElementById('lockBtn');
+    const lockIconOpen = document.getElementById('lockIconOpen');
+    const lockIconClosed = document.getElementById('lockIconClosed');
     const statusText = document.getElementById('statusText');
     const stepDots = document.getElementById('stepDots');
 
+    versionLabel.textContent = APP_VERSION;
+    backingToggle.checked = state.settings.backing;
+    warmupToggle.checked = state.settings.warmup;
+
     let selectedMode = 'auto';
-    let activeStageKey = 's1a';
+    let currentSpec = FRONTIER[0];
+    let currentRoot = 60;
     let freePlay = false;
-    let phase = 'idle'; // 'idle' | 'playing' | 'listening' | 'feedback' | 'groove'
+    let jamActive = false;
+    let paused = false;
+    let orientLocked = false;
+    let phase = 'idle'; // 'idle' | 'playing' | 'listening' | 'feedback' | 'jam'
     let promptNotes = [];
     let promptTimes = [];
     let stepIndex = 0;
     let missesThisPrompt = 0;
-    let warmupStepsLeft = progress.skill >= 1 ? 3 : 0;
     let timers = [];
-    let grooveInterval = null;
-    let grooveBeat = 0;
+    let jamInterval = null;
+    let jamBeat = 0;
 
-    function pickStageForPrompt() {
-      if (selectedMode !== 'auto') return selectedMode;
-      const frontier = Math.max(0, Math.min(AUTO_LADDER.length - 1, Math.floor(progress.skill)));
-      // Quick warm-up ramp at start of session
-      if (warmupStepsLeft > 0 && frontier > 0) {
-        const idx = Math.max(0, frontier - warmupStepsLeft);
-        warmupStepsLeft--;
-        return AUTO_LADDER[idx];
-      }
-      // ~25% confidence-building review from earlier challenges
-      if (frontier > 0 && Math.random() < 0.25) {
-        const revIdx = Math.floor(Math.random() * frontier);
-        return AUTO_LADDER[revIdx];
-      }
-      return AUTO_LADDER[frontier];
+    // Warm-up ramp if returning after > 10 minutes (or a new session) and warmup is enabled
+    const isReturnSession = state.skill >= 1.5 && (Date.now() - state.lastPlayed > 10 * 60 * 1000 || state.lastPlayed === 0);
+    let warmupStepsLeft = (state.settings.warmup && isReturnSession) ? 3 : 0;
+
+    function updateProgressSummary() {
+      const pct = Math.round((state.skill / (FRONTIER.length - 0.1)) * 100);
+      progressSummary.textContent = state.skill <= 0.05
+        ? 'Adaptive progress: starting out'
+        : `Adaptive progress: ${Math.min(100, pct)}%`;
     }
 
-    function recordOutcome(cleanSuccess) {
-      if (selectedMode !== 'auto') return;
-      progress.recent.push(cleanSuccess ? 1 : 0);
-      if (progress.recent.length > 10) progress.recent.shift();
-      if (cleanSuccess) {
-        progress.skill = Math.min(AUTO_LADDER.length - 0.05, progress.skill + 0.28);
-      } else {
-        progress.skill = Math.max(0, progress.skill - 0.16);
+    function pickSpecForPrompt() {
+      if (selectedMode !== 'auto') return STAGE_BY_ID[selectedMode] || FRONTIER[0];
+      const frontierIdx = Math.max(0, Math.min(FRONTIER.length - 1, Math.floor(state.skill)));
+      if (warmupStepsLeft > 0 && frontierIdx >= 2) {
+        const idx = Math.max(1, frontierIdx - warmupStepsLeft);
+        warmupStepsLeft--;
+        return FRONTIER[idx];
       }
-      saveProgress();
+      if (frontierIdx > 0 && Math.random() < 0.25) {
+        const revIdx = Math.floor(Math.random() * frontierIdx);
+        return FRONTIER[revIdx];
+      }
+      return FRONTIER[frontierIdx];
+    }
+
+    function recordOutcome(misses) {
+      if (selectedMode !== 'auto') return;
+      if (misses === 0) {
+        state.skill = Math.min(FRONTIER.length - 0.05, state.skill + 0.26);
+      } else if (misses === 1) {
+        // 2-try hunt: hold steady, almost there
+        state.skill = Math.min(FRONTIER.length - 0.05, state.skill + 0.04);
+      } else {
+        state.skill = Math.max(0, state.skill - 0.18);
+      }
+      saveState();
     }
 
     function clearTimers() {
       timers.forEach(t => clearTimeout(t));
       timers = [];
-      if (grooveInterval) {
-        clearInterval(grooveInterval);
-        grooveInterval = null;
-      }
     }
 
     function clearKeyStates() {
@@ -814,18 +932,13 @@
         return;
       }
       pianoEl.classList.remove('show-labels');
-      const st = STAGES[activeStageKey];
-      const activeSet = new Set(st.active);
+      const activeSet = new Set(currentSpec.active);
       keyEls.forEach((el, midi) => {
         if (!activeSet.has(midi)) el.classList.add('dimmed');
       });
-      if (promptNotes.length > 0) {
-        const startEl = keyEls.get(promptNotes[0]);
-        if (startEl) startEl.classList.add('lit');
-      } else {
-        const el = keyEls.get(st.start || st.active[0]);
-        if (el) el.classList.add('lit');
-      }
+      const startMidi = promptNotes.length > 0 ? promptNotes[0] : currentRoot;
+      const startEl = keyEls.get(startMidi);
+      if (startEl) startEl.classList.add('lit');
     }
 
     function flashKey(midi, cls, ms = 300) {
@@ -835,9 +948,18 @@
       timers.push(setTimeout(() => el.classList.remove(cls), ms));
     }
 
+    function updateActionButtons() {
+      const showRescue = !freePlay && !jamActive && phase === 'listening' && currentSpec.mode !== 'rhythm-echo';
+      showBtn.classList.toggle('hidden', !showRescue);
+      const showPause = !freePlay && !jamActive && (phase === 'listening' || phase === 'feedback' || phase === 'playing' || paused);
+      pauseBtn.classList.toggle('hidden', !showPause);
+      pauseBtn.textContent = paused ? 'Resume' : 'Pause';
+      pauseBtn.classList.toggle('btn-active', paused);
+    }
+
     function renderDots() {
       stepDots.innerHTML = '';
-      if (freePlay || activeStageKey === 's1b') return;
+      if (freePlay || jamActive) return;
       const total = promptNotes.length || 0;
       for (let i = 0; i < total; i++) {
         const d = document.createElement('span');
@@ -850,122 +972,167 @@
     }
 
     // =========================================================================
-    // 4. Prompt Generation & Playback
+    // 4. Prompt Generation, Backing Chords & Playback
     // =========================================================================
-    function buildPrompt() {
-      activeStageKey = pickStageForPrompt();
-      const st = STAGES[activeStageKey];
-      missesThisPrompt = 0;
+    function pickStartNote(spec) {
+      if (typeof spec.root === 'number') return spec.root;
+      if (spec.root === 'move-white') {
+        const whites = [57, 60, 62, 64, 65, 67];
+        return whites[Math.floor(Math.random() * whites.length)];
+      }
+      const roots = [58, 60, 62, 63, 65, 67];
+      return roots[Math.floor(Math.random() * roots.length)];
+    }
 
-      if (st.mode === 'rhythm-echo') {
-        const pat = RHYTHM_PATTERNS[Math.floor(Math.random() * RHYTHM_PATTERNS.length)];
-        promptNotes = pat.map(() => 60);
+    function buildPrompt() {
+      currentSpec = pickSpecForPrompt();
+      missesThisPrompt = 0;
+      currentRoot = pickStartNote(currentSpec);
+
+      if (currentSpec.mode === 'rhythm-echo') {
+        const pat = RHYTHM_ECHO_PATTERNS[Math.floor(Math.random() * RHYTHM_ECHO_PATTERNS.length)];
+        promptNotes = pat.map(() => currentRoot);
         promptTimes = pat;
-      } else if (st.mode === 'hunt' || st.mode === 'oneshot') {
-        const seq = [st.start];
-        for (let i = 1; i < st.len; i++) {
-          let pool = st.choices.filter(n => n !== seq[i - 1]);
-          if (!pool.length) pool = st.choices;
+        stepIndex = 0;
+        return;
+      }
+
+      const activeSet = new Set(currentSpec.active);
+      let seq = null;
+
+      // ~35% chance of a familiar tiny melody hook when 3+ notes are active
+      if (currentSpec.hooks && Math.random() < 0.35) {
+        const bank = currentSpec.len === 4 ? HOOKS_4 : HOOKS_3;
+        const valid = bank
+          .map(h => h.map(off => currentRoot + off))
+          .filter(notes => notes.every(n => activeSet.has(n)));
+        if (valid.length) {
+          seq = valid[Math.floor(Math.random() * valid.length)];
+        }
+      }
+
+      if (!seq) {
+        seq = [currentRoot];
+        const choices = currentSpec.active.filter(n => n !== currentRoot);
+        for (let i = 1; i < currentSpec.len; i++) {
+          let pool = currentSpec.active.filter(n => n !== seq[i - 1]);
+          if (i === 1 && choices.length) pool = choices;
+          if (!pool.length) pool = currentSpec.active;
           seq.push(pool[Math.floor(Math.random() * pool.length)]);
         }
-        promptNotes = seq;
-        promptTimes = seq.map((_, i) => i * 0.48);
       }
+
+      promptNotes = seq;
+      const rBank = MELODY_RHYTHMS[seq.length] || MELODY_RHYTHMS[3];
+      promptTimes = rBank[Math.floor(Math.random() * rBank.length)];
       stepIndex = 0;
+    }
+
+    function backingTriadFor(rootMidi) {
+      // Soft major triad one octave lower for warm harmonic support
+      const base = rootMidi - 12 >= 45 ? rootMidi - 12 : rootMidi;
+      return [base, base + 4, base + 7];
     }
 
     function playPromptSequence(onDone) {
       clearTimers();
       phase = 'playing';
+      paused = false;
       applySpotlight();
       renderDots();
+      updateActionButtons();
       statusText.textContent = 'Listen…';
       playBtn.textContent = 'Replay';
 
       const ctx = AudioEngine.ensure();
-      const base = ctx.currentTime + 0.07;
-      const st = STAGES[activeStageKey];
+      const base = ctx.currentTime + 0.08;
+
+      // Soft warm backing chord under melody prompts (when enabled in portrait settings)
+      if (state.settings.backing && currentSpec.mode !== 'rhythm-echo') {
+        AudioEngine.chord(backingTriadFor(promptNotes[0]), base, 1.9, 0.20);
+      }
 
       promptNotes.forEach((midi, idx) => {
         const dt = promptTimes[idx];
-        AudioEngine.note(midi, base + dt, 0.72, 0.85);
-        if (idx === 0 || st.mode === 'rhythm-echo') {
-          timers.push(setTimeout(() => flashKey(midi, 'hit', 240), dt * 1000 + 45));
+        AudioEngine.note(midi, base + dt, 0.72, 0.86);
+        if (idx === 0 || currentSpec.mode === 'rhythm-echo') {
+          timers.push(setTimeout(() => flashKey(midi, 'hit', 240), dt * 1000 + 50));
         }
       });
 
-      const endMs = (promptTimes[promptTimes.length - 1] + 0.55) * 1000;
+      const endMs = (promptTimes[promptTimes.length - 1] + 0.56) * 1000;
       timers.push(setTimeout(() => { if (onDone) onDone(); }, endMs));
     }
 
     function startNewRound() {
-      if (freePlay) return;
+      if (freePlay || jamActive || paused) return;
       clearTimers();
-      if (selectedMode === 's1b') {
-        activeStageKey = 's1b';
-        startGroove();
-        return;
-      }
       buildPrompt();
-      const st = STAGES[activeStageKey];
       playPromptSequence(() => {
         phase = 'listening';
         stepIndex = 0;
         renderDots();
-        statusText.textContent = st.mode === 'rhythm-echo' ? 'Echo it' : 'Your turn';
+        updateActionButtons();
+        statusText.textContent = currentSpec.mode === 'rhythm-echo' ? 'Echo it' : 'Your turn';
       });
     }
 
-    function startGroove() {
+    // =========================================================================
+    // 5. On-Demand Jam Groove
+    // =========================================================================
+    function startJam() {
       clearTimers();
-      phase = 'groove';
-      promptNotes = [60];
+      if (freePlay) { freePlay = false; freeBtn.classList.remove('btn-active'); }
+      paused = false;
+      jamActive = true;
+      phase = 'jam';
+      jamBtn.classList.add('btn-active');
+      playBtn.textContent = 'Play';
+      currentSpec = pickSpecForPrompt();
+      if (currentSpec.active.length === 1) currentSpec = FRONTIER[3]; // give cozy 5 keys if still on 1 key
+      promptNotes = [currentSpec.active[0]];
       applySpotlight();
+      updateActionButtons();
       stepDots.innerHTML = '<span id="beatDot" class="step-dot active"></span>';
-      statusText.textContent = 'Play along';
-      playBtn.textContent = 'Stop';
+      statusText.textContent = 'Jam along';
 
       const chords = [
-        [48, 52, 55], // C
-        [45, 48, 52], // Am
-        [48, 53, 57], // F/C
-        [47, 50, 55]  // G/B
+        [48, 52, 55],
+        [45, 48, 52],
+        [48, 53, 57],
+        [47, 50, 55]
       ];
-      grooveBeat = 0;
-
+      jamBeat = 0;
       const tick = () => {
-        const bar = Math.floor(grooveBeat / 4) % chords.length;
-        const beatInBar = grooveBeat % 4;
-        if (beatInBar === 0) {
-          AudioEngine.chord(chords[bar], 0, 2.0, 0.34);
-        } else if (beatInBar === 2) {
-          AudioEngine.chord(chords[bar], 0, 0.95, 0.22);
-        }
+        const bar = Math.floor(jamBeat / 4) % chords.length;
+        const b = jamBeat % 4;
+        if (b === 0) AudioEngine.chord(chords[bar], 0, 2.0, 0.30);
+        else if (b === 2) AudioEngine.chord(chords[bar], 0, 0.95, 0.18);
         const dot = document.getElementById('beatDot');
         if (dot) {
           dot.classList.remove('beat-flash');
           void dot.offsetWidth;
           dot.classList.add('beat-flash');
         }
-        grooveBeat++;
+        jamBeat++;
       };
-
       tick();
-      grooveInterval = setInterval(tick, 520);
+      jamInterval = setInterval(tick, 520);
     }
 
-    function stopGroove() {
-      clearTimers();
-      if (phase === 'groove') {
-        phase = 'idle';
-        playBtn.textContent = 'Play';
-        statusText.textContent = 'Tap Play';
-        stepDots.innerHTML = '';
-      }
+    function stopJam() {
+      if (jamInterval) { clearInterval(jamInterval); jamInterval = null; }
+      if (!jamActive) return;
+      jamActive = false;
+      jamBtn.classList.remove('btn-active');
+      phase = 'idle';
+      stepDots.innerHTML = '';
+      statusText.textContent = 'Tap Play';
+      updateActionButtons();
     }
 
     // =========================================================================
-    // 5. Key Tap Handling
+    // 6. Key Tap Handling (Pure-Ear Hunting + One-Shot)
     // =========================================================================
     function handleKeyTap(midi) {
       AudioEngine.note(midi, 0, 0.9, 0.88);
@@ -975,15 +1142,12 @@
         return;
       }
 
-      const st = STAGES[activeStageKey];
-
-      if (st.mode === 'play-along') {
-        if (midi === 60) {
-          flashKey(midi, 'hit', 220);
-          if (phase !== 'groove') startGroove();
-        }
+      if (jamActive) {
+        flashKey(midi, 'hit', 220);
         return;
       }
+
+      if (paused) return;
 
       if (phase === 'idle') {
         startNewRound();
@@ -1001,34 +1165,36 @@
 
         if (stepIndex >= promptNotes.length) {
           phase = 'feedback';
-          recordOutcome(missesThisPrompt === 0);
+          recordOutcome(missesThisPrompt);
+          updateActionButtons();
           statusText.textContent = 'Nice';
-          if (st.mode === 'rhythm-echo') {
-            timers.push(setTimeout(() => startNewRound(), 620));
+          if (currentSpec.mode === 'rhythm-echo') {
+            // No repeat on rhythm echo — calm pause straight into the next test
+            timers.push(setTimeout(() => { if (!paused) startNewRound(); }, 1350));
           } else {
-            timers.push(setTimeout(() => replayAndAdvance(), 360));
+            timers.push(setTimeout(() => { if (!paused) replayAndAdvance(); }, 360));
           }
         } else {
-          statusText.textContent = st.mode === 'rhythm-echo' ? 'Keep going' : 'Next note';
+          statusText.textContent = currentSpec.mode === 'rhythm-echo' ? 'Keep going' : '';
         }
       } else {
         if (stepIndex === 0) {
           flashKey(expected, 'lit', 300);
-          statusText.textContent = 'Start on lit key';
           return;
         }
 
         missesThisPrompt++;
 
-        if (st.mode === 'hunt') {
+        if (currentSpec.mode === 'hunt') {
+          // Pure ear + soft key flash (no Higher/Lower text)
           flashKey(midi, 'nudge', 300);
-          statusText.textContent = midi < expected ? 'Higher…' : 'Lower…';
-        } else if (st.mode === 'oneshot') {
+        } else if (currentSpec.mode === 'oneshot') {
           phase = 'feedback';
-          recordOutcome(false);
+          recordOutcome(2);
+          updateActionButtons();
           flashKey(midi, 'nudge', 360);
           statusText.textContent = 'Watch & listen';
-          timers.push(setTimeout(() => revealAndRetry(), 420));
+          timers.push(setTimeout(() => revealAndRetry(), 440));
         }
       }
     }
@@ -1037,93 +1203,93 @@
       const ctx = AudioEngine.ensure();
       const base = ctx.currentTime + 0.05;
       promptNotes.forEach((midi, idx) => {
-        const dt = promptTimes[idx] * 0.82;
+        const dt = promptTimes[idx] * 0.84;
         AudioEngine.note(midi, base + dt, 0.65, 0.78);
         timers.push(setTimeout(() => flashKey(midi, 'hit', 250), dt * 1000 + 30));
       });
-      const endMs = (promptTimes[promptTimes.length - 1] * 0.82 + 0.88) * 1000;
-      timers.push(setTimeout(() => startNewRound(), endMs));
+      // Calm unhurried pause (~1.25s) before the next test
+      const endMs = (promptTimes[promptTimes.length - 1] * 0.84 + 1.25) * 1000;
+      timers.push(setTimeout(() => { if (!paused) startNewRound(); }, endMs));
     }
 
     function revealAndRetry() {
       const ctx = AudioEngine.ensure();
       const base = ctx.currentTime + 0.05;
+      if (state.settings.backing && currentSpec.mode !== 'rhythm-echo') {
+        AudioEngine.chord(backingTriadFor(promptNotes[0]), base, 1.8, 0.18);
+      }
       promptNotes.forEach((midi, idx) => {
         const dt = promptTimes[idx];
         AudioEngine.note(midi, base + dt, 0.72, 0.82);
         timers.push(setTimeout(() => flashKey(midi, 'hit', 340), dt * 1000 + 30));
       });
-      const endMs = (promptTimes[promptTimes.length - 1] + 0.85) * 1000;
+      const endMs = (promptTimes[promptTimes.length - 1] + 0.9) * 1000;
       timers.push(setTimeout(() => {
+        if (paused) return;
         phase = 'listening';
         stepIndex = 0;
         applySpotlight();
         renderDots();
+        updateActionButtons();
         statusText.textContent = 'Try again';
       }, endMs));
     }
 
     // =========================================================================
-    // 6. Controls & Service Worker
+    // 7. Controls, Portrait Settings & Service Worker
     // =========================================================================
-    function updateFreeBtn() {
-      freeBtn.classList.toggle('btn-active', freePlay);
-    }
-
-    const portraitStageSelect = document.getElementById('portraitStageSelect');
-    const progressSummary = document.getElementById('progressSummary');
-    const resetProgressBtn = document.getElementById('resetProgressBtn');
-    const versionLabel = document.getElementById('versionLabel');
-    if (versionLabel) versionLabel.textContent = APP_VERSION;
-
-    function updateProgressSummary() {
-      if (!progressSummary) return;
-      const pct = Math.round((progress.skill / (AUTO_LADDER.length - 0.05)) * 100);
-      progressSummary.textContent = progress.skill <= 0.05
-        ? 'Adaptive progress: starting out'
-        : `Adaptive progress: ${Math.min(100, pct)}%`;
-    }
-
     function applyModeSelection(val) {
       selectedMode = val;
       stageSelect.value = val;
-      if (portraitStageSelect) portraitStageSelect.value = val;
-      activeStageKey = selectedMode === 'auto' ? AUTO_LADDER[Math.min(AUTO_LADDER.length - 1, Math.floor(progress.skill))] : selectedMode;
+      portraitStageSelect.value = val;
+      stopJam();
       freePlay = false;
-      updateFreeBtn();
+      freeBtn.classList.remove('btn-active');
+      paused = false;
       clearTimers();
       phase = 'idle';
       promptNotes = [];
       stepIndex = 0;
+      currentSpec = selectedMode === 'auto'
+        ? FRONTIER[Math.min(FRONTIER.length - 1, Math.floor(state.skill))]
+        : (STAGE_BY_ID[selectedMode] || FRONTIER[0]);
+      currentRoot = typeof currentSpec.root === 'number' ? currentSpec.root : 60;
       applySpotlight();
       renderDots();
+      updateActionButtons();
       playBtn.textContent = 'Play';
       statusText.textContent = 'Tap Play';
     }
 
     stageSelect.addEventListener('change', () => applyModeSelection(stageSelect.value));
-    if (portraitStageSelect) {
-      portraitStageSelect.addEventListener('change', () => applyModeSelection(portraitStageSelect.value));
-    }
-    if (resetProgressBtn) {
-      resetProgressBtn.addEventListener('click', () => {
-        progress = { skill: 0, recent: [] };
-        warmupStepsLeft = 0;
-        saveProgress();
-        updateProgressSummary();
-        if (selectedMode === 'auto') applyModeSelection('auto');
-      });
-    }
+    portraitStageSelect.addEventListener('change', () => applyModeSelection(portraitStageSelect.value));
+
+    backingToggle.addEventListener('change', () => {
+      state.settings.backing = backingToggle.checked;
+      saveState();
+    });
+    warmupToggle.addEventListener('change', () => {
+      state.settings.warmup = warmupToggle.checked;
+      saveState();
+    });
+
+    resetProgressBtn.addEventListener('click', () => {
+      state.skill = 0;
+      warmupStepsLeft = 0;
+      saveState();
+      if (selectedMode === 'auto') applyModeSelection('auto');
+    });
 
     playBtn.addEventListener('click', () => {
       AudioEngine.ensure();
+      stopJam();
       if (freePlay) {
         freePlay = false;
-        updateFreeBtn();
+        freeBtn.classList.remove('btn-active');
       }
-      if (selectedMode === 's1b') {
-        if (phase === 'groove') stopGroove();
-        else { activeStageKey = 's1b'; startGroove(); }
+      if (paused) {
+        paused = false;
+        startNewRound();
         return;
       }
       if (phase === 'idle') {
@@ -1132,26 +1298,67 @@
         playPromptSequence(() => {
           phase = 'listening';
           renderDots();
+          updateActionButtons();
           statusText.textContent = 'Your turn';
         });
       }
     });
 
+    pauseBtn.addEventListener('click', () => {
+      if (paused) {
+        paused = false;
+        startNewRound();
+      } else {
+        paused = true;
+        clearTimers();
+        phase = 'idle';
+        statusText.textContent = 'Paused';
+        playBtn.textContent = 'Play';
+        updateActionButtons();
+      }
+    });
+
+    showBtn.addEventListener('click', () => {
+      if (phase !== 'listening') return;
+      phase = 'feedback';
+      missesThisPrompt = Math.max(2, missesThisPrompt + 1);
+      recordOutcome(2);
+      updateActionButtons();
+      statusText.textContent = 'Watch & listen';
+      revealAndRetry();
+    });
+
+    jamBtn.addEventListener('click', () => {
+      AudioEngine.ensure();
+      if (jamActive) stopJam();
+      else startJam();
+    });
+
     freeBtn.addEventListener('click', () => {
       AudioEngine.ensure();
+      stopJam();
+      paused = false;
       freePlay = !freePlay;
-      updateFreeBtn();
+      freeBtn.classList.toggle('btn-active', freePlay);
       clearTimers();
       phase = 'idle';
       playBtn.textContent = 'Play';
       applySpotlight();
       renderDots();
+      updateActionButtons();
       statusText.textContent = freePlay ? 'Free Play' : 'Tap Play';
     });
 
+    lockBtn.addEventListener('click', () => {
+      orientLocked = !orientLocked;
+      document.body.classList.toggle('orient-locked', orientLocked);
+      lockBtn.classList.toggle('btn-active', orientLocked);
+      lockIconOpen.classList.toggle('hidden', orientLocked);
+      lockIconClosed.classList.toggle('hidden', !orientLocked);
+    });
+
     // Initial render
-    activeStageKey = AUTO_LADDER[Math.min(AUTO_LADDER.length - 1, Math.floor(progress.skill))];
-    applySpotlight();
+    applyModeSelection('auto');
     updateProgressSummary();
 
     if ('serviceWorker' in navigator) {
