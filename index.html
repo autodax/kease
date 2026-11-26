@@ -290,7 +290,14 @@
     }
 
     .wkey.dimmed {
-      filter: brightness(0.84) saturate(0.75);
+      background: linear-gradient(180deg,
+        #c5c2bc 0%,
+        #d4d1cb 6%,
+        #dcd9d3 24%,
+        #e0ddd7 76%,
+        #d6d3cd 95%,
+        #cbc8c2 100%);
+      box-shadow: inset 0 6px 10px -5px rgba(0, 0, 0, 0.30);
     }
 
     /* Clean illuminated starting key — no dot */
@@ -326,7 +333,7 @@
         2px 2px 5px rgba(0, 0, 0, 0.28),
         inset 0 2px 3px rgba(255, 255, 255, 0.08);
       cursor: pointer;
-      transition: background 55ms ease, filter 160ms ease, box-shadow 55ms ease;
+      transition: background 55ms ease, box-shadow 55ms ease;
       display: flex;
       align-items: flex-end;
       justify-content: center;
@@ -392,8 +399,20 @@
       opacity: 0.25;
     }
 
-    .bkey.dimmed {
-      filter: brightness(0.74);
+    /* Subtle dimmed inactive black key — no CSS filter so iOS never flashes */
+    .bkey.dimmed::before {
+      background: linear-gradient(180deg,
+        #2d2e33 0%,
+        #44454b 16%,
+        #46474d 70%,
+        #3b3c42 94%,
+        #323338 100%);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.12),
+        0 1px 2px rgba(0, 0, 0, 0.65);
+    }
+    .bkey.dimmed::after {
+      opacity: 0.45;
     }
 
     .bkey.lit {
@@ -817,7 +836,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-26.8';
+    const APP_VERSION = '2026-11-26.9';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -1436,23 +1455,20 @@
       timers = [];
     }
 
-    function clearKeyStates() {
-      keyEls.forEach(arr => arr.forEach(el => el.classList.remove('lit', 'hit', 'nudge', 'dimmed')));
-    }
-
     function applySpotlight() {
-      clearKeyStates();
       pianoEl.classList.toggle('show-labels', !!state.settings.labels);
-      if (freePlay) {
-        return;
-      }
-      const activeSet = new Set(currentSpec.active);
+      const activeSet = freePlay ? null : new Set(currentSpec.active);
+      const startMidi = freePlay ? null : (promptNotes.length > 0 ? promptNotes[0] : currentRoot);
+
       keyEls.forEach((arr, midi) => {
-        if (!activeSet.has(midi)) arr.forEach(el => el.classList.add('dimmed'));
+        const isDimmed = activeSet !== null && !activeSet.has(midi);
+        const isLit = startMidi !== null && midi === startMidi;
+        arr.forEach(el => {
+          el.classList.remove('hit', 'nudge');
+          el.classList.toggle('dimmed', isDimmed);
+          el.classList.toggle('lit', isLit);
+        });
       });
-      const startMidi = promptNotes.length > 0 ? promptNotes[0] : currentRoot;
-      const startArr = keyEls.get(startMidi);
-      if (startArr) startArr.forEach(el => el.classList.add('lit'));
     }
 
     function flashKey(midi, cls, ms = 300) {
