@@ -174,8 +174,8 @@
       display: flex;
       align-items: flex-end;
       justify-content: center;
-      padding-left: max(20px, calc(env(safe-area-inset-left) * 0.54));
-      padding-right: max(20px, calc(env(safe-area-inset-right) * 0.54));
+      padding-left: max(12px, calc(env(safe-area-inset-left) * 0.36));
+      padding-right: max(12px, calc(env(safe-area-inset-right) * 0.36));
     }
 
     .piano-shell {
@@ -406,6 +406,24 @@
 
     @media (orientation: portrait) {
       body:not(.orient-locked) .rotate-overlay { display: flex; }
+      body.orient-locked .app {
+        position: fixed;
+        top: 0;
+        left: 100vw;
+        width: 100dvh;
+        height: 100vw;
+        transform: rotate(90deg);
+        transform-origin: top left;
+        padding-top: 6px;
+      }
+      body.orient-locked .topbar {
+        padding-left: max(20px, env(safe-area-inset-top));
+        padding-right: max(20px, env(safe-area-inset-bottom));
+      }
+      body.orient-locked .stage {
+        padding-left: max(12px, calc(env(safe-area-inset-top) * 0.36));
+        padding-right: max(12px, calc(env(safe-area-inset-bottom) * 0.36));
+      }
     }
   </style>
 </head>
@@ -531,7 +549,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-25.4';
+    const APP_VERSION = '2026-11-25.5';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -726,6 +744,13 @@
     const whiteContainer = document.getElementById('whiteKeys');
     const blackContainer = document.getElementById('blackKeys');
     const pianoEl = document.getElementById('piano');
+
+    // Stop iOS Safari's long-press magnifying glass / text-selection loupe on the keyboard
+    pianoEl.addEventListener('touchstart', (e) => {
+      AudioEngine.unlockIOS();
+      e.preventDefault();
+    }, { passive: false });
+    pianoEl.addEventListener('contextmenu', (e) => e.preventDefault());
 
     const whiteMidis = [];
     for (let oct = 3; oct <= 4; oct++) {
