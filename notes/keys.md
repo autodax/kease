@@ -18,7 +18,7 @@ Companion to Steve's Ear Trainer (`autodax/ear`), but a clean-slate standalone a
 - **Standalone app:** Clean slate, separate from `ear`, focused purely on playing the piano by ear and internalizing the sounds of all the keys to pick out melodies quickly and ultimately chords.
 - **Landscape orientation, minimal top strip:** The app operates in landscape orientation on the iPhone with really minimal information in the space above the keyboard.
 - **GarageBand-style 3D keys:** Clean ivory-white keys with a subtle top cast shadow and recessed grey pressed state, paired with sculpted 3D black keys (raised satin top face, angled glossy bottom bevel, darker flattened pressed state) modeled after Steve's GarageBand reference screenshot.
-- **Full 2-octave keyboard always visible:** Keep the full two-octave keyboard on screen from the start, with the starting key illuminated and active keys gently spotlighted (inactive keys subtly dimmed).
+- **Full 2-octave keyboard always visible (no dimming):** Keep all keys bright and luminous; mark active keys with a crisp periwinkle bottom lip (Option B), with a **Highlight active keys** toggle in Portrait → Settings to turn it off completely.
 - **Clean illumination (no dot):** Do not put a dot on the illuminated home/starting key unless it serves a real purpose; the soft glow on the key itself is cleaner.
 - **Key labels switch:** Controlled by a **Key labels** toggle in Portrait → Settings (default Off; larger, subtle text when On).
 - **Orientation lock:** Include a lock toggle so playing while lying down does not accidentally flip out of the keyboard into portrait mode.
