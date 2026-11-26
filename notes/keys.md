@@ -72,6 +72,7 @@ How the seamless adaptive engine could expand challenges gradually from zero kno
 - **Piano audio:** Reuse the Salamander Grand Piano `.m4a` samples (CC BY 3.0, Alexander Holm) and the offline service worker pattern from `autodax/ear` so it sounds like a real grand piano and works offline on iPhone.
 - **iPhone PWA lessons:** Reuse the audio session unlocking (`navigator.audioSession` + silent element for the mute switch), safe-area handling, no-zoom (`maximum-scale=1`), and clean audio release from `autodax/ear/notes/ear.md`. On the keyboard, attach a non-passive `touchstart` listener with `e.preventDefault()` to suppress iOS Safari's long-press magnifying glass (CSS `user-select: none` and `pointerdown` alone are not enough).
 - **Orientation lock on iPhone:** iOS Safari does not support `screen.orientation.lock('landscape')`, so when Orientation Lock is enabled and the phone tilts to portrait, `.app` rotates 90° via CSS to stay full-size landscape (matching holding the phone with the Dynamic Island on the left).
+- **Auto-updates:** Checks GitHub's `APP_VERSION` on open and when returning to the foreground (`checkForUpdate()`), reloading via `?v=<version>` when idle (guarded by `sessionStorage` `keys.updateTried` so it never loops on iOS). Always bump `APP_VERSION` on every push.
 - **Landscape viewport:** Design specifically for landscape iPhone (e.g. `874 × 402` / standalone safe areas on left & right for Dynamic Island and home indicator).
 
 ## Open questions to brainstorm next

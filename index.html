@@ -717,7 +717,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-26.4';
+    const APP_VERSION = '2026-11-26.5';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -1794,6 +1794,40 @@
     buildKeyboard();
     applyModeSelection('auto');
     updateProgressSummary();
+
+    // Auto-update check: when opened or brought back to the front, compare APP_VERSION on GitHub
+    // and load the new version via ?v=<version> when idle (once per version to avoid iOS cache loops).
+    let pendingUpdate = null;
+    async function checkForUpdate() {
+      try {
+        const r = await fetch(location.pathname + '?check=' + Date.now(), { cache: 'no-store' });
+        if (!r.ok) return;
+        const m = (await r.text()).match(/const APP_VERSION = '([^']+)'/);
+        if (m && m[1] !== APP_VERSION) {
+          let tried = null;
+          try { tried = sessionStorage.getItem('keys.updateTried'); } catch (e) {}
+          if (tried === m[1]) return;
+          pendingUpdate = m[1];
+          applyUpdateIfIdle();
+        }
+      } catch (e) {}
+    }
+    function applyUpdateIfIdle() {
+      if (!pendingUpdate) return;
+      if (phase !== 'idle' || jamActive) return;
+      statusText.textContent = 'Updating…';
+      const target = pendingUpdate;
+      pendingUpdate = null;
+      setTimeout(() => {
+        try { sessionStorage.setItem('keys.updateTried', target); } catch (e) {}
+        location.replace(location.pathname + '?v=' + encodeURIComponent(target));
+      }, 650);
+    }
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) checkForUpdate();
+    });
+    setTimeout(checkForUpdate, 1500);
+    setInterval(applyUpdateIfIdle, 5000);
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('keys-sw.js').catch(() => {});
