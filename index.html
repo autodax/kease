@@ -831,7 +831,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-26.10';
+    const APP_VERSION = '2026-11-26.11';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -960,6 +960,88 @@
         return bestDist <= 3 ? best : null;
       },
 
+      // Live key press: sustains naturally while held, releases smoothly when lifted
+      noteOn(midi, velocity = 0.88) {
+        const ctx = this.ensure();
+        const t0 = ctx.currentTime + 0.004;
+        const sampleMidi = this.nearestSample(midi);
+        let stopped = false;
+
+        if (sampleMidi !== null) {
+          const src = ctx.createBufferSource();
+          src.buffer = this.buffers[sampleMidi];
+          src.playbackRate.value = Math.pow(2, (midi - sampleMidi) / 12);
+
+          const gain = ctx.createGain();
+          gain.gain.setValueAtTime(velocity, t0);
+          src.connect(gain);
+          gain.connect(this.master);
+          src.start(t0);
+
+          return {
+            stop() {
+              if (stopped || !AudioEngine.ctx || AudioEngine.ctx.state === 'closed') return;
+              stopped = true;
+              const now = Math.max(t0 + 0.05, AudioEngine.ctx.currentTime);
+              const rel = 0.34;
+              try {
+                gain.gain.cancelScheduledValues(now);
+                gain.gain.setValueAtTime(Math.max(0.001, gain.gain.value), now);
+                gain.gain.exponentialRampToValueAtTime(0.0008, now + rel);
+                src.stop(now + rel + 0.04);
+              } catch (e) {}
+            }
+          };
+        }
+
+        // Warm synth fallback with long sustain while held
+        const freq = this.midiToFreq(midi);
+        const env = ctx.createGain();
+        env.gain.setValueAtTime(0.0001, t0);
+        env.gain.linearRampToValueAtTime(0.28 * velocity, t0 + 0.008);
+        env.gain.exponentialRampToValueAtTime(0.001, t0 + 4.8);
+
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(Math.min(5200, freq * 8), t0);
+        filter.frequency.exponentialRampToValueAtTime(Math.max(520, freq * 2.1), t0 + 0.45);
+
+        const oscs = [
+          { r: 1, g: 1.0, t: 'triangle' },
+          { r: 2, g: 0.35, t: 'sine' },
+          { r: 3, g: 0.14, t: 'sine' }
+        ].map(p => {
+          const osc = ctx.createOscillator();
+          const g = ctx.createGain();
+          osc.type = p.t;
+          osc.frequency.setValueAtTime(freq * p.r, t0);
+          g.gain.value = p.g;
+          osc.connect(g);
+          g.connect(filter);
+          osc.start(t0);
+          osc.stop(t0 + 4.9);
+          return osc;
+        });
+
+        filter.connect(env);
+        env.connect(this.master);
+
+        return {
+          stop() {
+            if (stopped || !AudioEngine.ctx || AudioEngine.ctx.state === 'closed') return;
+            stopped = true;
+            const now = Math.max(t0 + 0.05, AudioEngine.ctx.currentTime);
+            const rel = 0.32;
+            try {
+              env.gain.cancelScheduledValues(now);
+              env.gain.setValueAtTime(Math.max(0.001, env.gain.value), now);
+              env.gain.exponentialRampToValueAtTime(0.0008, now + rel);
+              oscs.forEach(o => { try { o.stop(now + rel + 0.04); } catch (e) {} });
+            } catch (e) {}
+          }
+        };
+      },
+
       note(midi, when = 0, duration = 0.9, velocity = 0.85) {
         const ctx = this.ensure();
         const t0 = when > 0 ? when : ctx.currentTime + 0.005;
@@ -1068,7 +1150,8 @@
       if (!keyEl) return;
       e.preventDefault();
       const midi = Number(keyEl.dataset.midi);
-      activePointers.set(e.pointerId, { midi, el: keyEl });
+      const voice = AudioEngine.noteOn(midi, 0.88);
+      activePointers.set(e.pointerId, { midi, el: keyEl, voice });
       keyEl.classList.add('pressed');
       handleKeyTap(midi);
     });
@@ -1079,8 +1162,10 @@
       const nextEl = keyAtPoint(e.clientX, e.clientY);
       if (!nextEl || nextEl === cur.el) return;
       const prevEl = cur.el;
+      if (cur.voice) cur.voice.stop();
       const nextMidi = Number(nextEl.dataset.midi);
-      activePointers.set(e.pointerId, { midi: nextMidi, el: nextEl });
+      const nextVoice = AudioEngine.noteOn(nextMidi, 0.88);
+      activePointers.set(e.pointerId, { midi: nextMidi, el: nextEl, voice: nextVoice });
       refreshPressedVisual(prevEl);
       nextEl.classList.add('pressed');
       handleKeyTap(nextMidi);
@@ -1090,6 +1175,7 @@
       const cur = activePointers.get(e.pointerId);
       if (!cur) return;
       activePointers.delete(e.pointerId);
+      if (cur.voice) cur.voice.stop();
       refreshPressedVisual(cur.el);
     }
     window.addEventListener('pointerup', releasePointer);
@@ -1663,8 +1749,6 @@
     // 6. Key Tap Handling (Pure-Ear Hunting + One-Shot)
     // =========================================================================
     function handleKeyTap(midi) {
-      AudioEngine.note(midi, 0, 0.9, 0.88);
-
       if (freePlay) {
         statusText.textContent = noteLabel(midi);
         return;
