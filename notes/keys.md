@@ -19,7 +19,9 @@ Companion to Steve's Ear Trainer (`autodax/ear`), but a clean-slate standalone a
 - **Warm ivory keyboard:** Uses Steve's warm ivory two-octave keyboard look (`assets/piano-warm-ivory*.png`).
 - **Full 2-octave keyboard always visible:** Keep the full two-octave keyboard on screen from the start, with the starting key illuminated and active keys gently spotlighted (inactive keys subtly dimmed).
 - **Clean illumination (no dot):** Do not put a dot on the illuminated home/starting key unless it serves a real purpose; the soft glow on the key itself is cleaner.
-- **Note names only in Free Play:** Keep the keys completely clean (no letters or numbers) during challenges; show note names only in Free Play.
+- **Note names only in Free Play:** Keep the keys completely clean (no letters or numbers) during challenges; show note names only in Free Play, with larger but more subtle text.
+- **Orientation lock:** Include a lock toggle so playing while lying down does not accidentally flip out of the keyboard into portrait mode.
+- **Two-tier 4-octave keyboard (for later):** Steve liked the two-tier 4-octave layout (with options for High-on-Top vs. Low-on-Top and 14 vs. 15 keys per tier, and possibly wider on the phone) as a future expansion once wider range / chords + melodies come in.
 - **Stage 1 (one note repeated rhythmically):** Include both call-and-response (app plays a short rhythm on the lit key, user taps it back) and playing along with a gentle backing chord/groove. Do not replay the rhythm after echoing it—move straight to the next one.
 - **Keyboard sizing & Dynamic Island (from iPhone test):** Keep the keyboard slightly narrower than full edge-to-edge so the Dynamic Island may sit over the leftmost white key but never intrudes on the first black key. Keys do not need to be stretched full height—keeping them closer to natural piano proportion saves room at the top for a few TBD controls.
 - **Pause before next prompt:** Leave a calm, unhurried pause before the next test starts so it never feels rushed.
