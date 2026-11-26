@@ -49,11 +49,11 @@
       flex-direction: column;
       width: 100%;
       height: 100dvh;
-      padding-top: max(6px, env(safe-area-inset-top));
-      padding-bottom: max(6px, env(safe-area-inset-bottom));
-      padding-left: max(10px, env(safe-area-inset-left));
-      padding-right: max(10px, env(safe-area-inset-right));
-      gap: 6px;
+      padding-top: max(4px, env(safe-area-inset-top));
+      padding-bottom: 0;
+      padding-left: 0;
+      padding-right: 0;
+      gap: 4px;
     }
 
     /* Ultra-minimal top strip above the keyboard */
@@ -64,7 +64,8 @@
       justify-content: space-between;
       gap: 10px;
       min-height: 40px;
-      padding: 0 2px;
+      padding-left: max(12px, env(safe-area-inset-left));
+      padding-right: max(12px, env(safe-area-inset-right));
     }
 
     .top-left, .top-center, .top-right {
@@ -167,9 +168,9 @@
       height: 100%;
       max-width: 100%;
       background: #1b1817;
-      border-radius: 10px;
+      border-radius: 0;
       overflow: hidden;
-      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45), inset 0 2px 4px rgba(0, 0, 0, 0.45);
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.45);
       touch-action: none;
     }
 
@@ -369,7 +370,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-25.1';
+    const APP_VERSION = '2026-11-25.2';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -389,6 +390,7 @@
       },
 
       ensure() {
+        this.unlockIOS();
         if (!this.ctx || this.ctx.state === 'closed') {
           const AC = window.AudioContext || window.webkitAudioContext;
           this.ctx = new AC();
@@ -397,30 +399,32 @@
           this.master.connect(this.ctx.destination);
         }
         if (this.ctx.state === 'suspended') this.ctx.resume().catch(() => {});
-        this.unlockIOS();
         this.decodeCached();
         return this.ctx;
       },
 
       unlockIOS() {
         try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
-        if (this.silentEl) return;
-        try {
-          const sr = 8000, n = sr / 2, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
-          const w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
-          w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVE'); w(12, 'fmt '); v.setUint32(16, 16, true);
-          v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, sr, true);
-          v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
-          w(36, 'data'); v.setUint32(40, n * 2, true);
-          const el = document.createElement('audio');
-          this.silentUrl = URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
-          el.src = this.silentUrl;
-          el.loop = true;
-          el.setAttribute('playsinline', '');
-          el.volume = 0.01;
-          el.play().catch(() => {});
-          this.silentEl = el;
-        } catch (e) {}
+        if (!this.silentEl) {
+          try {
+            const sr = 8000, n = sr / 2, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+            const w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+            w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVE'); w(12, 'fmt '); v.setUint32(16, 16, true);
+            v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, sr, true);
+            v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+            w(36, 'data'); v.setUint32(40, n * 2, true);
+            const el = document.createElement('audio');
+            this.silentUrl = URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+            el.src = this.silentUrl;
+            el.loop = true;
+            el.setAttribute('playsinline', '');
+            el.volume = 0.01;
+            this.silentEl = el;
+          } catch (e) {}
+        }
+        if (this.silentEl && this.silentEl.paused) {
+          this.silentEl.play().catch(() => {});
+        }
       },
 
       release() {
@@ -540,6 +544,9 @@
     };
 
     AudioEngine.preload();
+    ['touchstart', 'touchend', 'click'].forEach(ev => {
+      window.addEventListener(ev, () => AudioEngine.unlockIOS(), { passive: true });
+    });
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
         stopGroove();
@@ -897,7 +904,11 @@
           phase = 'feedback';
           recordOutcome(missesThisPrompt === 0);
           statusText.textContent = 'Nice';
-          timers.push(setTimeout(() => replayAndAdvance(), 360));
+          if (st.mode === 'rhythm-echo') {
+            timers.push(setTimeout(() => startNewRound(), 620));
+          } else {
+            timers.push(setTimeout(() => replayAndAdvance(), 360));
+          }
         } else {
           statusText.textContent = st.mode === 'rhythm-echo' ? 'Keep going' : 'Next note';
         }
