@@ -26,6 +26,7 @@ Companion to Steve's Ear Trainer (`autodax/ear`), but a clean-slate standalone a
 - **Hunting early, one-shot later:** In the early stages, allow hunting by ear (keep tapping keys, hearing each real piano note, until landing on the right key). Later on, transition to one-shot guesses.
 - **No discrete levels (long-term goal):** Selectable levels are useful for testing while building, but the long-term goal is a **seamless, level-less adaptive progression** driven by successes and mistakes—gradually introducing new challenges without hard level walls.
 - **Confidence-building review & warm-up/recap:** Sprinkle easier review prompts into sessions to build confidence, and consider a quick warm-up/recap at the start of a session that ramps rapidly up to the current difficulty.
+- **Portrait = guide, settings & docs:** Turning the phone upright shows instructions, settings, and documentation—keeping landscape completely clean and focused on the keyboard.
 - **Color preferences (carried over from `ear`):** Blue/periwinkle accent palette (`#7eabff`, `#5a86ee`, `#bfe3ff`), muted orange (`#d9895a`) for gentle miss cues, **no green anywhere**.
 
 ## Brainstormed progression (ideas, not yet finalized)
@@ -64,7 +65,6 @@ How the seamless adaptive engine could expand challenges gradually from zero kno
 
 ## Open questions to brainstorm next
 
-- How should the app handle holding the phone in portrait—a gentle "Rotate to landscape" prompt, or a scrollable/compact fallback?
 - In the hunting stage, should "higher / lower" text appear, or should the ear alone (plus the soft key flash) be the only feedback so the top strip stays ultra-minimal?
 - When moving into chords, should multi-touch (pressing 2–3 keys at once) be supported from the start, or arpeggiated (one key at a time) first and simultaneous later?
 - Should progress sync across devices (like `ear`'s private GitHub gist) or stay simple local storage at first?

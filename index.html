@@ -280,7 +280,7 @@
     .bkey .key-label { color: #d8cfc4; font-size: 10px; }
     .show-labels .key-label { opacity: 0.92; }
 
-    /* Portrait orientation prompt */
+    /* Portrait screen: instructions, settings, and documentation */
     .rotate-overlay {
       display: none;
       position: fixed;
@@ -289,17 +289,26 @@
       background: var(--bg);
       color: var(--text);
       flex-direction: column;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: max(20px, env(safe-area-inset-top)) 20px max(28px, env(safe-area-inset-bottom));
+      gap: 16px;
+    }
+    .portrait-hero {
+      display: flex;
       align-items: center;
-      justify-content: center;
       gap: 14px;
-      padding: 32px;
-      text-align: center;
+      padding: 14px 16px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
     }
     .rotate-icon {
-      width: 56px;
-      height: 56px;
-      border-radius: 14px;
-      background: var(--panel);
+      flex: 0 0 auto;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--panel-hi);
       border: 1px solid var(--border);
       display: flex;
       align-items: center;
@@ -307,16 +316,64 @@
       color: var(--accent);
     }
     .rotate-title {
-      font-size: 20px;
+      font-size: 17px;
       font-weight: 600;
-      margin: 0;
+      margin: 0 0 2px;
     }
     .rotate-sub {
-      font-size: 15px;
+      font-size: 13px;
       color: var(--muted);
       margin: 0;
-      max-width: 260px;
-      line-height: 1.4;
+      line-height: 1.35;
+    }
+    .p-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .p-card h2 {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--accent);
+    }
+    .p-card p, .p-card li {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.48;
+      color: var(--text);
+    }
+    .p-card ul {
+      margin: 0;
+      padding-left: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .p-muted {
+      color: var(--muted) !important;
+      font-size: 13px !important;
+    }
+    .p-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .p-row label {
+      font-size: 14px;
+      color: var(--text);
+    }
+    .p-btn-danger {
+      background: transparent;
+      border: 1px solid rgba(217, 137, 90, 0.55);
+      color: var(--nudge);
     }
 
     @media (orientation: portrait) {
@@ -326,14 +383,55 @@
 </head>
 <body>
   <div class="rotate-overlay" aria-live="polite">
-    <div class="rotate-icon" aria-hidden="true">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="4" y="6" width="16" height="12" rx="2.5"></rect>
-        <path d="M17.5 11.5v1"></path>
-      </svg>
+    <div class="portrait-hero">
+      <div class="rotate-icon" aria-hidden="true">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="6" width="16" height="12" rx="2.5"></rect>
+          <path d="M17.5 11.5v1"></path>
+        </svg>
+      </div>
+      <div>
+        <p class="rotate-title">Turn sideways to play</p>
+        <p class="rotate-sub">Landscape is the pure keyboard. Portrait holds your guide &amp; settings.</p>
+      </div>
     </div>
-    <p class="rotate-title">Turn sideways to play</p>
-    <p class="rotate-sub">Keys uses the full landscape screen so the piano keys are comfortable to play.</p>
+
+    <section class="p-card">
+      <h2>How it works</h2>
+      <ul>
+        <li><strong>Start with one key:</strong> Echo short rhythms on the glowing key, or jam along with the backing groove.</li>
+        <li><strong>Hunt by ear:</strong> When a second note is added, tap the glowing starting key, then feel your way to the next note by ear—every key plays its real piano sound.</li>
+        <li><strong>Seamless progress:</strong> In <em>Auto · Adaptive</em>, the app widens the keys and phrase length smoothly as your ear gets surer, sprinkling in easier review along the way.</li>
+        <li><strong>Free Play:</strong> Tap <em>Free Play</em> anytime to light up all two octaves and reveal note names.</li>
+      </ul>
+    </section>
+
+    <section class="p-card">
+      <h2>Settings</h2>
+      <div class="p-row">
+        <label for="portraitStageSelect">Mode</label>
+        <select id="portraitStageSelect" class="stage-select">
+          <option value="auto">Auto · Adaptive</option>
+          <option value="s1a">1a · One-Note Echo</option>
+          <option value="s1b">1b · Play Along Groove</option>
+          <option value="s2">2 · Two Notes (2 Keys)</option>
+          <option value="s3">3 · Two Notes (Trio)</option>
+          <option value="s4">4 · Two Notes (5 Keys)</option>
+          <option value="s5">5 · Tiny Tunes (One-Shot)</option>
+        </select>
+      </div>
+      <div class="p-row">
+        <span id="progressSummary" class="p-muted">Adaptive progress: starting out</span>
+        <button id="resetProgressBtn" type="button" class="btn p-btn-danger">Reset</button>
+      </div>
+    </section>
+
+    <section class="p-card">
+      <h2>About Keys</h2>
+      <p class="p-muted">Play-by-ear piano trainer built for landscape iPhone. Add to your Home Screen from Safari's Share menu for full-height edge-to-edge keys and offline play.</p>
+      <p class="p-muted">Piano sound: Salamander Grand Piano (Alexander Holm, CC BY 3.0).</p>
+      <p class="p-muted">Version <span id="versionLabel"></span></p>
+    </section>
   </div>
 
   <div class="app">
@@ -370,7 +468,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-25.2';
+    const APP_VERSION = '2026-11-25.3';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -645,6 +743,7 @@
 
     function saveProgress() {
       try { localStorage.setItem(STORE_KEY, JSON.stringify(progress)); } catch (e) {}
+      if (typeof updateProgressSummary === 'function') updateProgressSummary();
     }
 
     const stageSelect = document.getElementById('stageSelect');
@@ -971,9 +1070,25 @@
       freeBtn.classList.toggle('btn-active', freePlay);
     }
 
-    stageSelect.addEventListener('change', () => {
-      selectedMode = stageSelect.value;
-      activeStageKey = selectedMode === 'auto' ? AUTO_LADDER[Math.floor(progress.skill)] : selectedMode;
+    const portraitStageSelect = document.getElementById('portraitStageSelect');
+    const progressSummary = document.getElementById('progressSummary');
+    const resetProgressBtn = document.getElementById('resetProgressBtn');
+    const versionLabel = document.getElementById('versionLabel');
+    if (versionLabel) versionLabel.textContent = APP_VERSION;
+
+    function updateProgressSummary() {
+      if (!progressSummary) return;
+      const pct = Math.round((progress.skill / (AUTO_LADDER.length - 0.05)) * 100);
+      progressSummary.textContent = progress.skill <= 0.05
+        ? 'Adaptive progress: starting out'
+        : `Adaptive progress: ${Math.min(100, pct)}%`;
+    }
+
+    function applyModeSelection(val) {
+      selectedMode = val;
+      stageSelect.value = val;
+      if (portraitStageSelect) portraitStageSelect.value = val;
+      activeStageKey = selectedMode === 'auto' ? AUTO_LADDER[Math.min(AUTO_LADDER.length - 1, Math.floor(progress.skill))] : selectedMode;
       freePlay = false;
       updateFreeBtn();
       clearTimers();
@@ -984,7 +1099,21 @@
       renderDots();
       playBtn.textContent = 'Play';
       statusText.textContent = 'Tap Play';
-    });
+    }
+
+    stageSelect.addEventListener('change', () => applyModeSelection(stageSelect.value));
+    if (portraitStageSelect) {
+      portraitStageSelect.addEventListener('change', () => applyModeSelection(portraitStageSelect.value));
+    }
+    if (resetProgressBtn) {
+      resetProgressBtn.addEventListener('click', () => {
+        progress = { skill: 0, recent: [] };
+        warmupStepsLeft = 0;
+        saveProgress();
+        updateProgressSummary();
+        if (selectedMode === 'auto') applyModeSelection('auto');
+      });
+    }
 
     playBtn.addEventListener('click', () => {
       AudioEngine.ensure();
@@ -1023,6 +1152,7 @@
     // Initial render
     activeStageKey = AUTO_LADDER[Math.min(AUTO_LADDER.length - 1, Math.floor(progress.skill))];
     applySpotlight();
+    updateProgressSummary();
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('keys-sw.js').catch(() => {});
