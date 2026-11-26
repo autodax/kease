@@ -1,0 +1,11 @@
+{
+  "name": "Keys",
+  "short_name": "Keys",
+  "id": "/keys/",
+  "start_url": "/keys/",
+  "scope": "/keys/",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#101321",
+  "theme_color": "#101321"
+}
