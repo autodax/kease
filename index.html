@@ -253,12 +253,19 @@
       position: relative;
       flex: 1;
       height: 100%;
-      background: linear-gradient(180deg, #ece3d5 0%, #f6eee0 42%, #fef7e8 100%);
-      border-right: 1px solid #3c3430;
-      border-bottom: 2px solid #2b2522;
+      background: linear-gradient(180deg,
+        #dcdad4 0%,
+        #efede8 4%,
+        #f7f6f1 18%,
+        #fbfaf6 72%,
+        #f1efe9 94%,
+        #e5e2db 100%);
+      border-right: 1px solid #2c2d30;
+      border-bottom: 2px solid #26272a;
       border-radius: 0 0 6px 6px;
+      box-shadow: inset 0 6px 10px -5px rgba(0, 0, 0, 0.34), inset 0 -2px 0 rgba(255, 255, 255, 0.65);
       cursor: pointer;
-      transition: background 65ms ease, filter 160ms ease, box-shadow 110ms ease;
+      transition: background 55ms ease, filter 160ms ease, box-shadow 55ms ease;
       display: flex;
       align-items: flex-end;
       justify-content: center;
@@ -266,9 +273,18 @@
     }
     .wkey:last-child { border-right: none; }
 
+    /* Recessed pressed white key (GarageBand D5 reference) */
     .wkey.pressed {
-      background: linear-gradient(180deg, #c7c2b9 0%, #d2cdc4 60%, #dad5cc 100%);
-      box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.18);
+      background: linear-gradient(180deg,
+        #b8b9be 0%,
+        #c8c9ce 12%,
+        #cfd0d5 62%,
+        #d7d8dd 100%);
+      border-bottom-width: 1px;
+      box-shadow:
+        inset 0 8px 14px -4px rgba(0, 0, 0, 0.36),
+        inset 3px 0 5px -2px rgba(0, 0, 0, 0.22),
+        inset -3px 0 5px -2px rgba(0, 0, 0, 0.22);
     }
 
     .wkey.dimmed {
@@ -277,43 +293,101 @@
 
     /* Clean illuminated starting key — no dot */
     .wkey.lit {
-      background: linear-gradient(180deg, #c7dcff 0%, #dceaff 48%, #eef5ff 100%);
-      box-shadow: inset 0 -6px 0 #6c9cf8, inset 0 0 18px rgba(126, 171, 255, 0.52);
+      background: linear-gradient(180deg, #b8d2ff 0%, #d5e6ff 16%, #e6f0ff 74%, #d7e7ff 100%);
+      box-shadow: inset 0 6px 10px -5px rgba(32, 64, 140, 0.28), inset 0 -6px 0 #6c9cf8, inset 0 0 18px rgba(126, 171, 255, 0.45);
     }
 
     .wkey.hit {
-      background: linear-gradient(180deg, #9ec4ff 0%, #bfe0ff 55%, #e3f2ff 100%);
-      box-shadow: inset 0 -6px 0 #5a86ee, inset 0 0 22px rgba(126, 171, 255, 0.72);
+      background: linear-gradient(180deg, #98c0ff 0%, #b9dbff 22%, #dceeff 82%, #cbe4ff 100%);
+      box-shadow: inset 0 6px 10px -5px rgba(32, 64, 140, 0.3), inset 0 -6px 0 #5a86ee, inset 0 0 20px rgba(126, 171, 255, 0.65);
     }
 
     .wkey.nudge {
-      background: linear-gradient(180deg, #e7ccb9 0%, #f1d9c8 55%, #f8e8dc 100%);
-      box-shadow: inset 0 -5px 0 var(--nudge);
+      background: linear-gradient(180deg, #dfc1ad 0%, #edd4c3 22%, #f6e4d7 82%, #ebd1be 100%);
+      box-shadow: inset 0 6px 10px -5px rgba(90, 42, 16, 0.25), inset 0 -5px 0 var(--nudge);
     }
 
+    /* Sculpted 3D GarageBand-style black key with raised satin top face & angled bottom bevel */
     .bkey {
       position: absolute;
       top: 0;
-      width: 4.25%;
-      height: 62%;
+      width: 4.35%;
+      height: 61.5%;
       z-index: 3;
-      background: linear-gradient(180deg, #47403c 0%, #3b3431 76%, #2f2927 89%, #141211 90%, #191615 100%);
-      border-left: 1px solid #1d1917;
-      border-right: 1px solid #1d1917;
-      border-bottom: 2px solid #0e0c0b;
-      border-radius: 0 0 5px 5px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+      background: linear-gradient(180deg, #16171a 0%, #0e0f11 82%, #1d1e22 92%, #0a0b0d 100%);
+      border-left: 1px solid #090a0c;
+      border-right: 1px solid #090a0c;
+      border-bottom: 2px solid #060708;
+      border-radius: 0 0 6px 6px;
+      box-shadow:
+        0 5px 9px rgba(0, 0, 0, 0.52),
+        2px 2px 5px rgba(0, 0, 0, 0.28),
+        inset 0 2px 3px rgba(255, 255, 255, 0.08);
       cursor: pointer;
-      transition: background 65ms ease, filter 160ms ease, box-shadow 110ms ease;
+      transition: background 55ms ease, filter 160ms ease, box-shadow 55ms ease;
       display: flex;
       align-items: flex-end;
       justify-content: center;
-      padding-bottom: 8px;
+      padding-bottom: 10px;
+      overflow: hidden;
     }
 
+    /* Raised satin top face of black key */
+    .bkey::before {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 14%;
+      right: 14%;
+      bottom: 11.5%;
+      border-radius: 0 0 3px 3px;
+      background: linear-gradient(180deg,
+        #3a3b40 0%,
+        #5c5d63 14%,
+        #5f6066 68%,
+        #525359 92%,
+        #44454a 100%);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.22),
+        inset 1px 0 0 rgba(255, 255, 255, 0.1),
+        inset -1px 0 0 rgba(255, 255, 255, 0.08),
+        0 1px 2px rgba(0, 0, 0, 0.65);
+      pointer-events: none;
+      transition: background 55ms ease, bottom 55ms ease, box-shadow 55ms ease;
+    }
+
+    /* Subtle angled front chamfer highlight at bottom of black key */
+    .bkey::after {
+      content: "";
+      position: absolute;
+      left: 10%;
+      right: 10%;
+      bottom: 2px;
+      height: 8%;
+      border-radius: 0 0 3px 3px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.02) 100%);
+      pointer-events: none;
+      transition: opacity 55ms ease;
+    }
+
+    /* Pressed black key (GarageBand F#5 reference): darker, flatter, collapsed shadow */
     .bkey.pressed {
-      background: linear-gradient(180deg, #272321 0%, #211e1c 88%, #161413 100%);
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5), inset 0 2px 5px rgba(0, 0, 0, 0.45);
+      background: linear-gradient(180deg, #0d0e10 0%, #090a0c 90%, #050608 100%);
+      box-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.58),
+        inset 0 3px 6px rgba(0, 0, 0, 0.65);
+    }
+    .bkey.pressed::before {
+      bottom: 6.5%;
+      background: linear-gradient(180deg,
+        #222327 0%,
+        #35363b 24%,
+        #303136 80%,
+        #26272b 100%);
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.45);
+    }
+    .bkey.pressed::after {
+      opacity: 0.25;
     }
 
     .bkey.dimmed {
@@ -321,22 +395,33 @@
     }
 
     .bkey.lit {
-      background: linear-gradient(180deg, #5d86d8 0%, #4468b4 76%, #314d8c 89%, #23386a 100%);
-      box-shadow: 0 4px 12px rgba(126, 171, 255, 0.55), inset 0 -4px 0 var(--hit);
+      background: linear-gradient(180deg, #274078 0%, #1d315e 85%, #16264a 100%);
+      box-shadow: 0 4px 12px rgba(126, 171, 255, 0.55), inset 0 -3px 0 var(--hit);
+    }
+    .bkey.lit::before {
+      background: linear-gradient(180deg, #5d86d8 0%, #6f98ea 24%, #577fd4 85%, #4468b4 100%);
     }
 
     .bkey.hit {
-      background: linear-gradient(180deg, #7eabff 0%, #5a86ee 78%, #3c60ba 100%);
-      box-shadow: 0 4px 14px rgba(126, 171, 255, 0.72), inset 0 -4px 0 #e6f3ff;
+      background: linear-gradient(180deg, #33559e 0%, #243f7a 85%, #1b3161 100%);
+      box-shadow: 0 4px 14px rgba(126, 171, 255, 0.72), inset 0 -3px 0 #e6f3ff;
+    }
+    .bkey.hit::before {
+      background: linear-gradient(180deg, #7eabff 0%, #8eb8ff 30%, #6a94eb 85%, #547cd4 100%);
     }
 
     .bkey.nudge {
-      background: linear-gradient(180deg, #9b603e 0%, #7d4a2d 85%, #5c341d 100%);
-      box-shadow: inset 0 -4px 0 var(--nudge);
+      background: linear-gradient(180deg, #683b22 0%, #4e2b18 88%, #3c2011 100%);
+      box-shadow: inset 0 -3px 0 var(--nudge);
+    }
+    .bkey.nudge::before {
+      background: linear-gradient(180deg, #a66742 0%, #985c39 40%, #7d4a2d 90%);
     }
 
     /* Larger, subtle note labels (Free Play only) */
     .key-label {
+      position: relative;
+      z-index: 2;
       font-size: 16px;
       font-weight: 600;
       letter-spacing: -0.02em;
@@ -345,9 +430,9 @@
       transition: opacity 150ms ease;
     }
     .wkey .key-label { color: #5b5046; }
-    .bkey .key-label { color: #ebe3d8; font-size: 11px; }
-    .show-labels .wkey .key-label { opacity: 0.42; }
-    .show-labels .bkey .key-label { opacity: 0.52; }
+    .bkey .key-label { color: #f0ebe4; font-size: 10.5px; }
+    .show-labels .wkey .key-label { opacity: 0.40; }
+    .show-labels .bkey .key-label { opacity: 0.56; }
 
     /* Portrait screen: instructions, progress, settings, and documentation */
     .rotate-overlay {
@@ -360,7 +445,7 @@
       flex-direction: column;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
-      padding: max(12px, env(safe-area-inset-top)) 10px max(24px, env(safe-area-inset-bottom));
+      padding: max(34px, calc(env(safe-area-inset-top) + 22px)) 10px max(24px, env(safe-area-inset-bottom));
       gap: 12px;
     }
     .portrait-hero {
@@ -723,7 +808,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-26.6';
+    const APP_VERSION = '2026-11-26.7';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
