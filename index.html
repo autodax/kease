@@ -887,7 +887,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-26.26';
+    const APP_VERSION = '2026-11-26.27';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -1591,22 +1591,64 @@
       if (recentSignatures.length > 14) recentSignatures.shift();
     }
 
+    function todayKey(ts = Date.now()) {
+      const d = new Date(ts);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    function masteryWindow(spec) {
+      if (!spec) return 30;
+      return (spec.mode === 'rhythm-echo' || (!spec.kind && spec.len <= 2)) ? 40 : 30;
+    }
+
     const STORE_KEY = 'keys.state.v2';
     let state = {
       skill: 0,
       lastPlayed: 0,
       stats: {}, // specId -> { tries, clean }
+      hist: {},  // specId -> [{ ok: 0|1, day: 'YYYY-MM-DD' }] (rolling window)
+      ready: {}, // specId -> 'YYYY-MM-DD' (Day 1 >=90% over full window)
+      mastered: {}, // specId -> 'YYYY-MM-DD' (confirmed >=90% on a later day)
       settings: { backing: true, warmup: true, varyOctaves: true, keyboard: 'single', sharedC: false, cLabels: true, showActive: true }
     };
+
+    function hydrateMasteryState(st) {
+      st.stats = st.stats || {};
+      st.hist = st.hist || {};
+      st.ready = st.ready || {};
+      st.mastered = st.mastered || {};
+      // Backfill rolling history from legacy { tries, clean } stats if hist is empty
+      const fallbackDay = st.lastPlayed ? todayKey(st.lastPlayed) : todayKey();
+      for (const spec of FRONTIER) {
+        const s = st.stats[spec.id];
+        if (s && s.tries > 0 && (!Array.isArray(st.hist[spec.id]) || st.hist[spec.id].length === 0)) {
+          const win = masteryWindow(spec);
+          const total = Math.min(win, s.tries);
+          const cleanN = Math.round((s.clean / s.tries) * total);
+          const arr = [];
+          for (let i = 0; i < total; i++) {
+            // Interleave misses and cleans evenly across the seeded window
+            const ok = Math.floor(((i + 1) * cleanN) / total) > Math.floor((i * cleanN) / total) ? 1 : 0;
+            arr.push({ ok, day: fallbackDay });
+          }
+          st.hist[spec.id] = arr;
+        }
+      }
+      return st;
+    }
+
     try {
       const saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
       if (saved && typeof saved.skill === 'number') {
-        state = {
+        state = hydrateMasteryState({
           skill: saved.skill,
           lastPlayed: saved.lastPlayed || 0,
           stats: saved.stats || {},
+          hist: saved.hist || {},
+          ready: saved.ready || {},
+          mastered: saved.mastered || {},
           settings: Object.assign({ backing: true, warmup: true, varyOctaves: true, keyboard: 'single', sharedC: false, cLabels: true, showActive: true }, saved.settings || {})
-        };
+        });
       }
     } catch (e) {}
 
@@ -1826,21 +1868,76 @@
       return isFirst ? `(${txt} variants)` : `(${txt})`;
     }
 
-    function updateProgressSummary() {
-      const pct = Math.round((state.skill / (FRONTIER.length - 0.1)) * 100);
-      progressSummary.textContent = state.skill <= 0.05
-        ? 'Adaptive progress: starting out'
-        : `Adaptive progress: ${Math.min(100, pct)}%`;
+    function skillMasteryInfo(spec) {
+      const win = masteryWindow(spec);
+      const hist = Array.isArray(state.hist[spec.id]) ? state.hist[spec.id] : [];
+      const tries = hist.length;
+      let clean = 0;
+      const today = todayKey();
+      let todayCount = 0;
+      for (const entry of hist) {
+        if (entry && entry.ok) clean++;
+        if (entry && entry.day === today) todayCount++;
+      }
+      const acc = tries > 0 ? Math.round((clean / tries) * 100) : null;
+      const isMastered = !!state.mastered[spec.id];
+      const readyDay = state.ready[spec.id] || null;
+      const isReady = !isMastered && !!readyDay;
+      const day2Needed = Math.ceil(win / 3);
+      const needsDay2Today = isReady && today > readyDay;
 
-      // Render per-skill breakdown & "Needs work" list in Portrait
-      const tried = FRONTIER.map(spec => {
-        const st = state.stats[spec.id] || { tries: 0, clean: 0 };
-        const acc = st.tries > 0 ? Math.round((st.clean / st.tries) * 100) : null;
-        return { spec, tries: st.tries, clean: st.clean, acc };
-      });
+      let barPct = 0;
+      let barCls = 'none';
+      let pctLabel = '—';
+
+      if (isMastered) {
+        barPct = 100;
+        barCls = 'strong';
+        pctLabel = 'Mastered';
+      } else if (isReady) {
+        if (needsDay2Today) {
+          const day2Frac = Math.min(1, todayCount / day2Needed);
+          barPct = Math.round(85 + day2Frac * 13);
+        } else {
+          barPct = 85;
+        }
+        barCls = 'strong';
+        pctLabel = 'Day 1 ✓';
+      } else if (tries > 0) {
+        const volFrac = Math.min(1, tries / win);
+        const accFrac = Math.min(1, acc / 90);
+        barPct = Math.max(3, Math.min(84, Math.round(volFrac * accFrac * 84)));
+        barCls = acc >= 90 ? 'strong' : (acc >= 70 ? 'mid' : 'weak');
+        pctLabel = `${acc}% · ${tries}/${win}`;
+      }
+
+      return { spec, win, tries, clean, acc, todayCount, day2Needed, isMastered, isReady, readyDay, needsDay2Today, barPct, barCls, pctLabel };
+    }
+
+    function activeFrontierIndex() {
+      for (let i = 0; i < FRONTIER.length; i++) {
+        const id = FRONTIER[i].id;
+        if (!state.mastered[id] && !state.ready[id]) return i;
+      }
+      return FRONTIER.length - 1;
+    }
+
+    function updateProgressSummary() {
+      const tried = FRONTIER.map(spec => skillMasteryInfo(spec));
+      const totalBar = tried.reduce((s, x) => s + x.barPct, 0);
+      const overallPct = Math.round(totalBar / FRONTIER.length);
+      const masteredCount = tried.filter(x => x.isMastered).length;
+      const anyTries = tried.some(x => x.tries > 0);
+      state.skill = activeFrontierIndex();
+
+      progressSummary.textContent = !anyTries
+        ? 'Mastery: starting out'
+        : (masteredCount > 0
+          ? `Overall mastery: ${overallPct}% (${masteredCount}/${FRONTIER.length} mastered)`
+          : `Overall mastery: ${overallPct}%`);
 
       const weakSpots = tried
-        .filter(x => x.tries >= 2 && x.acc < 80)
+        .filter(x => !x.isMastered && x.tries >= 4 && x.acc < 80)
         .sort((a, b) => a.acc - b.acc)
         .slice(0, 3);
 
@@ -1850,7 +1947,7 @@
         weakSpots.forEach(w => {
           const row = document.createElement('div');
           row.className = 'p-row';
-          row.innerHTML = `<span style="font-size:13px;">${w.spec.label} <span class="p-muted">(${w.acc}%)</span></span>`;
+          row.innerHTML = `<span style="font-size:13px;">${w.spec.label} <span class="p-muted">(${w.acc}% · ${w.tries}/${w.win})</span></span>`;
           const btn = document.createElement('button');
           btn.type = 'button';
           const isSel = selectedMode === w.spec.id;
@@ -1869,9 +1966,6 @@
       tried.forEach((item, idx) => {
         const wrap = document.createElement('div');
         wrap.className = 'prog-item';
-        const barCls = item.acc === null ? 'none' : (item.acc >= 90 ? 'strong' : (item.acc >= 70 ? 'mid' : 'weak'));
-        const fillW = item.acc === null ? 0 : Math.max(6, item.acc);
-        const pctLabel = item.acc === null ? '—' : `${item.acc}%`;
 
         const head = document.createElement('div');
         head.className = 'prog-head';
@@ -1887,7 +1981,7 @@
         meta.className = 'prog-meta';
         const pctEl = document.createElement('span');
         pctEl.className = 'prog-pct';
-        pctEl.textContent = pctLabel;
+        pctEl.textContent = item.pctLabel;
 
         const prac = document.createElement('button');
         prac.type = 'button';
@@ -1904,8 +1998,8 @@
         const track = document.createElement('div');
         track.className = 'prog-track';
         const fill = document.createElement('div');
-        fill.className = `prog-fill ${barCls}`;
-        fill.style.width = `${fillW}%`;
+        fill.className = `prog-fill ${item.barCls}`;
+        fill.style.width = `${item.barPct}%`;
         track.appendChild(fill);
 
         wrap.appendChild(head);
@@ -1916,20 +2010,34 @@
 
     function pickSpecForPrompt() {
       if (selectedMode !== 'auto') return STAGE_BY_ID[selectedMode] || FRONTIER[0];
-      const frontierIdx = Math.max(0, Math.min(FRONTIER.length - 1, Math.floor(state.skill)));
+      const today = todayKey();
+      const frontierIdx = activeFrontierIndex();
+
+      // Prioritize confirming any Day-1 Ready skill on a later day (sleep consolidation check)
+      const day2Confirm = FRONTIER.find(s => !state.mastered[s.id] && state.ready[s.id] && today > state.ready[s.id]);
+      if (day2Confirm && Math.random() < 0.65) {
+        return day2Confirm;
+      }
+
       if (warmupStepsLeft > 0 && frontierIdx >= 2) {
-        const idx = Math.max(1, frontierIdx - warmupStepsLeft);
+        const idx = Math.max(0, frontierIdx - warmupStepsLeft);
         warmupStepsLeft--;
         return FRONTIER[idx];
       }
-      if (frontierIdx > 0 && Math.random() < 0.25) {
-        const revIdx = Math.floor(Math.random() * frontierIdx);
-        return FRONTIER[revIdx];
+
+      // ~20% interleaved review of mastered / ready earlier skills to strengthen long-term retention
+      const reviewPool = FRONTIER.slice(0, frontierIdx).filter(s => state.mastered[s.id] || state.ready[s.id]);
+      if (reviewPool.length > 0 && Math.random() < 0.20) {
+        return reviewPool[Math.floor(Math.random() * reviewPool.length)];
       }
+
       return FRONTIER[frontierIdx];
     }
 
+    let lastMilestoneMsg = null;
+
     function recordOutcome(misses) {
+      lastMilestoneMsg = null;
       if (misses === 0) {
         cleanInOctave++;
         recentCleanStreak++;
@@ -1940,20 +2048,34 @@
         missedQueue.push(promptNotes.slice());
         if (missedQueue.length > 8) missedQueue.shift();
       }
-      // Record per-skill stats in both Auto and targeted Practice so Progress stays accurate
-      if (!state.stats[currentSpec.id]) state.stats[currentSpec.id] = { tries: 0, clean: 0 };
-      state.stats[currentSpec.id].tries++;
-      if (misses === 0) state.stats[currentSpec.id].clean++;
 
-      if (selectedMode === 'auto') {
-        if (misses === 0) {
-          state.skill = Math.min(FRONTIER.length - 0.05, state.skill + 0.26);
-        } else if (misses === 1) {
-          state.skill = Math.min(FRONTIER.length - 0.05, state.skill + 0.04);
-        } else {
-          state.skill = Math.max(0, state.skill - 0.18);
+      const id = currentSpec.id;
+      const win = masteryWindow(currentSpec);
+      const today = todayKey();
+
+      // Lifetime counters
+      if (!state.stats[id]) state.stats[id] = { tries: 0, clean: 0 };
+      state.stats[id].tries++;
+      if (misses === 0) state.stats[id].clean++;
+
+      // Rolling window history for two-day 90% mastery
+      if (!Array.isArray(state.hist[id])) state.hist[id] = [];
+      state.hist[id].push({ ok: misses === 0 ? 1 : 0, day: today });
+      if (state.hist[id].length > win) state.hist[id].shift();
+
+      const info = skillMasteryInfo(currentSpec);
+      if (!info.isMastered && info.tries >= win && info.acc >= 90) {
+        if (!state.ready[id]) {
+          state.ready[id] = today;
+          lastMilestoneMsg = 'Day 1 Ready · confirm another day';
+        } else if (today > state.ready[id] && info.todayCount >= info.day2Needed) {
+          state.mastered[id] = today;
+          delete state.ready[id];
+          lastMilestoneMsg = 'Skill Mastered!';
         }
       }
+
+      state.skill = activeFrontierIndex();
       saveState();
     }
 
@@ -2460,8 +2582,8 @@
             if (!paused) launchCurrentPrompt();
           }, 1350));
         } else {
-          statusText.textContent = hadMisses ? 'Got it' : 'Nice';
-          scheduleNextRound(1850);
+          statusText.textContent = lastMilestoneMsg || (hadMisses ? 'Got it' : 'Nice');
+          scheduleNextRound(lastMilestoneMsg ? 2400 : 1850);
         }
       };
 
@@ -2653,15 +2775,18 @@
           flashBackupMsg('Not a valid Kease backup file');
           return;
         }
-        state = {
+        state = hydrateMasteryState({
           skill: Math.max(0, Math.min(FRONTIER.length - 0.05, incoming.skill)),
           lastPlayed: incoming.lastPlayed || Date.now(),
           stats: incoming.stats || {},
+          hist: incoming.hist || {},
+          ready: incoming.ready || {},
+          mastered: incoming.mastered || {},
           settings: Object.assign(
             { backing: true, warmup: true, varyOctaves: true, keyboard: 'single', sharedC: false, cLabels: true, showActive: true },
             incoming.settings || {}
           )
-        };
+        });
         keyboardSelect.value = state.settings.keyboard;
         sharedCToggle.checked = !!state.settings.sharedC;
         sharedCRow.classList.toggle('hidden', state.settings.keyboard === 'single');
@@ -2735,6 +2860,9 @@
     resetConfirmBtn.addEventListener('click', () => {
       state.skill = 0;
       state.stats = {};
+      state.hist = {};
+      state.ready = {};
+      state.mastered = {};
       warmupStepsLeft = 0;
       resetConfirmRow.classList.add('hidden');
       resetRow.classList.remove('hidden');
