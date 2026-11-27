@@ -961,7 +961,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-27.8';
+    const APP_VERSION = '2026-11-27.9';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -2332,14 +2332,30 @@
     // =========================================================================
     // 4. Prompt Generation, Cadences, Backing Chords & Playback
     // =========================================================================
+    function pickNoRepeat(arr, lastVal) {
+      if (!arr || !arr.length) return undefined;
+      if (arr.length === 1) return arr[0];
+      const others = arr.filter(x => x !== lastVal);
+      const pool = others.length ? others : arr;
+      return pool[Math.floor(Math.random() * pool.length)];
+    }
+
+    let lastInversion = -1;
+    let lastContour = null;
+    let lastSingleNote = null;
+    let lastChordRootKeyDeg = null;
+    let lastChordBuildKeyDeg = null;
+
     function pickKeyForSpec(spec) {
-      if (Array.isArray(spec.keys)) {
-        return spec.keys[Math.floor(Math.random() * spec.keys.length)];
-      }
-      if (spec.newKeyEveryRound || cadKeyPc === null || sinceCad >= (Number(state.settings.cadenceEvery) || 5)) {
-        const choices = [];
-        for (let k = 0; k < 12; k++) if (k !== currentKeyPc) choices.push(k);
-        return choices[Math.floor(Math.random() * choices.length)];
+      const pool = Array.isArray(spec.keys)
+        ? spec.keys
+        : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+      if (pool.length <= 1) return pool[0];
+      const cadEvery = Number(state.settings.cadenceEvery !== undefined ? state.settings.cadenceEvery : 5);
+      const rotateEvery = cadEvery > 0 ? cadEvery : 5;
+      const mustSwitch = spec.newKeyEveryRound || cadKeyPc === null || !pool.includes(currentKeyPc) || sinceCad >= rotateEvery;
+      if (mustSwitch) {
+        return pickNoRepeat(pool, currentKeyPc);
       }
       return currentKeyPc;
     }
@@ -2350,7 +2366,8 @@
       const third = tonicMidi + steps[(degIdx + 2) % 7] + (degIdx + 2 >= 7 ? 12 : 0);
       const fifth = tonicMidi + steps[(degIdx + 4) % 7] + (degIdx + 4 >= 7 ? 12 : 0);
       if (!invert) return [r, third, fifth];
-      const inv = Math.floor(Math.random() * 3);
+      const inv = pickNoRepeat([0, 1, 2], lastInversion);
+      lastInversion = inv;
       if (inv === 1) return [third, fifth, r + 12];
       if (inv === 2) return [fifth - 12, r, third];
       return [r, third, fifth];
@@ -2360,7 +2377,8 @@
       const idxOf = m => activeNotes.indexOf(m);
       const startIdx = Math.max(0, idxOf(startMidi));
       const contours = ['up', 'down', 'arch', 'valley', 'leap-step', 'repeat-jump'];
-      const contour = contours[Math.floor(Math.random() * contours.length)];
+      const contour = pickNoRepeat(contours, lastContour);
+      lastContour = contour;
       const seq = [activeNotes[startIdx]];
 
       for (let i = 1; i < len; i++) {
@@ -2398,7 +2416,11 @@
       maybeRotateOctave();
       if (currentSpec.multiOctave && state.settings.varyOctaves !== false) {
         const pool = allowedOctavesForSpec(currentSpec);
-        currentOctave = pool[Math.floor(Math.random() * pool.length)];
+        const nextOct = pickNoRepeat(pool, currentOctave);
+        if (nextOct !== undefined && nextOct !== currentOctave) {
+          pendingOctaveShift = { fromOct: currentOctave, toOct: nextOct };
+          currentOctave = nextOct;
+        }
       }
       currentKeyPc = pickKeyForSpec(currentSpec);
       const tonicMidi = tonicMidiFor(currentKeyPc, currentOctave);
@@ -2411,14 +2433,8 @@
 
       // 1. SINGLE-NOTE LESSONS (resolve stepwise to home!)
       if (currentSpec.kind === 'single') {
-        let note = currentActiveNotes[0];
-        for (let a = 0; a < 12; a++) {
-          const cand = currentActiveNotes[Math.floor(Math.random() * currentActiveNotes.length)];
-          if (`sn:${cand}` !== recentSignatures[recentSignatures.length - 1] || a === 11) {
-            note = cand;
-            break;
-          }
-        }
+        const note = pickNoRepeat(currentActiveNotes, lastSingleNote);
+        lastSingleNote = note;
         currentRoot = tonicMidi;
         promptNotes = [note];
         promptTimes = [0];
@@ -2430,11 +2446,9 @@
       // 2. CHORD ROOTS (with optional inversions)
       if (currentSpec.kind === 'chord-root') {
         const degs = currentSpec.chordDegs || [0, 3, 4];
-        let deg = degs[0];
-        for (let a = 0; a < 10; a++) {
-          const cand = degs[Math.floor(Math.random() * degs.length)];
-          if (`cr:${currentKeyPc}-${cand}` !== recentSignatures[recentSignatures.length - 1] || a === 9) { deg = cand; break; }
-        }
+        const choices = degs.filter(d => `${currentKeyPc}-${d}` !== lastChordRootKeyDeg);
+        const deg = (choices.length ? choices : degs)[Math.floor(Math.random() * (choices.length ? choices : degs).length)];
+        lastChordRootKeyDeg = `${currentKeyPc}-${deg}`;
         const rootMidi = tonicMidi + steps[deg];
         const chord = diatonicTriad(tonicMidi, deg, !!currentSpec.inversions);
         currentRoot = rootMidi;
@@ -2449,11 +2463,9 @@
       // 3. CHORD TONES / BUILD THE CHORD (one-at-a-time arpeggio OR together)
       if (currentSpec.kind === 'chord-build') {
         const degs = currentSpec.chordDegs || [0, 3, 4];
-        let deg = degs[0];
-        for (let a = 0; a < 10; a++) {
-          const cand = degs[Math.floor(Math.random() * degs.length)];
-          if (`cb:${currentKeyPc}-${cand}` !== recentSignatures[recentSignatures.length - 1] || a === 9) { deg = cand; break; }
-        }
+        const choices = degs.filter(d => `${currentKeyPc}-${d}` !== lastChordBuildKeyDeg);
+        const deg = (choices.length ? choices : degs)[Math.floor(Math.random() * (choices.length ? choices : degs).length)];
+        lastChordBuildKeyDeg = `${currentKeyPc}-${deg}`;
         const chord = diatonicTriad(tonicMidi, deg, false);
         currentRoot = chord[0];
         promptChords = [chord];
