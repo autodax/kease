@@ -732,6 +732,54 @@
     @media (orientation: portrait) {
       .rotate-overlay { display: flex; }
     }
+    .goal-slider-wrap { display: flex; align-items: center; gap: 12px; width: 100%; }
+    .goal-slider {
+      flex: 1;
+      accent-color: #7eabff;
+      height: 28px;
+      cursor: pointer;
+    }
+    .goal-val {
+      min-width: 78px;
+      text-align: right;
+      font-size: 13px;
+      font-weight: 600;
+      color: #c8dbff;
+      font-variant-numeric: tabular-nums;
+    }
+    .goal-modal-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      background: rgba(7, 9, 18, 0.78);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+    .goal-modal-bg.hidden { display: none; }
+    .goal-modal-card {
+      width: 100%;
+      max-width: 340px;
+      background: #14192b;
+      border: 1px solid rgba(126, 171, 255, 0.30);
+      border-radius: 18px;
+      padding: 20px 20px 18px;
+      text-align: center;
+      box-shadow: 0 22px 48px rgba(0, 0, 0, 0.55);
+    }
+    .goal-modal-icon { font-size: 32px; line-height: 1; margin-bottom: 8px; }
+    .goal-modal-title { font-size: 19px; font-weight: 700; color: #eef3ff; margin: 0 0 6px; }
+    .goal-modal-text { font-size: 13.5px; color: #b5c3e6; margin: 0 0 16px; line-height: 1.45; }
+    .goal-modal-btns { display: flex; gap: 10px; justify-content: center; }
+    .goal-modal-btns .btn { flex: 1; padding: 10px 12px; font-size: 14px; font-weight: 600; }
+    .goal-btn-primary {
+      background: #5a86ee !important;
+      border-color: #7eabff !important;
+      color: #ffffff !important;
+    }
   </style>
 </head>
 <body>
@@ -759,6 +807,7 @@
 
     <section class="p-card">
       <h2 id="progressHeading">Progress</h2>
+      <div id="todaySummary" class="p-muted" style="margin:-4px 0 10px;"></div>
       <div id="troubleBox" class="trouble-box hidden"></div>
       <div id="progressList" class="prog-list"></div>
     </section>
@@ -782,6 +831,20 @@
           <option value="minor">Minor (Aeolian)</option>
           <option value="locrian">Locrian</option>
         </select>
+      </div>
+      <div class="p-row">
+        <label for="goalModeSelect">Daily goal</label>
+        <select id="goalModeSelect" class="stage-select" style="max-width:230px;">
+          <option value="rounds">Rounds (10 – 100)</option>
+          <option value="time">Time (10 – 60 min)</option>
+          <option value="off">Off</option>
+        </select>
+      </div>
+      <div id="goalSliderRow" class="p-row">
+        <div class="goal-slider-wrap">
+          <input id="goalSlider" class="goal-slider" type="range" min="10" max="100" step="5" value="40" aria-label="Daily goal target" />
+          <span id="goalSliderVal" class="goal-val">40 rounds</span>
+        </div>
       </div>
       <div class="p-row">
         <label for="cadenceStyleSelect">Cadence style</label>
@@ -960,8 +1023,20 @@
     </main>
   </div>
 
+  <div id="goalModal" class="goal-modal-bg hidden" role="dialog" aria-modal="true" aria-labelledby="goalModalTitle">
+    <div class="goal-modal-card">
+      <div class="goal-modal-icon">🎯</div>
+      <h3 id="goalModalTitle" class="goal-modal-title">Daily goal reached!</h3>
+      <p id="goalModalText" class="goal-modal-text"></p>
+      <div class="goal-modal-btns">
+        <button id="goalKeepGoingBtn" type="button" class="btn goal-btn-primary">Keep going</button>
+        <button id="goalDoneBtn" type="button" class="btn">Done for today</button>
+      </div>
+    </div>
+  </div>
+
   <script>
-    const APP_VERSION = '2026-11-27.12';
+    const APP_VERSION = '2026-11-27.13';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -1700,7 +1775,10 @@
       resStyle: 'nearest',
       cadenceTempo: 1,
       noteTempo: 1,
-      resTempo: 1
+      resTempo: 1,
+      goalMode: 'rounds',
+      goalRounds: 40,
+      goalMinutes: 15
     };
 
     const STORE_KEY = 'keys.state.v2';
@@ -1713,8 +1791,17 @@
       hist: {},
       ready: {},
       mastered: {},
+      daily: { day: todayKey(), rounds: 0, seconds: 0, celebrated: false },
       settings: Object.assign({}, DEFAULT_SETTINGS)
     };
+
+    function ensureTodayDaily(st = state) {
+      const today = todayKey();
+      if (!st.daily || st.daily.day !== today) {
+        st.daily = { day: today, rounds: 0, seconds: 0, celebrated: false };
+      }
+      return st.daily;
+    }
 
     function hydrateMasteryState(st) {
       st.mode = SCALES[st.mode] ? st.mode : 'major';
@@ -1723,6 +1810,7 @@
       st.hist = st.hist || {};
       st.ready = st.ready || {};
       st.mastered = st.mastered || {};
+      ensureTodayDaily(st);
       const fallbackDay = st.lastPlayed ? todayKey(st.lastPlayed) : todayKey();
       for (const spec of FRONTIER) {
         const s = st.stats[spec.id];
@@ -1774,6 +1862,7 @@
           hist: saved.hist || {},
           ready: saved.ready || {},
           mastered: saved.mastered || {},
+          daily: saved.daily || null,
           settings: Object.assign({}, DEFAULT_SETTINGS, saved.settings || {})
         });
       }
@@ -1790,6 +1879,15 @@
     const portraitStageSelect = document.getElementById('portraitStageSelect');
     const modeSelect = document.getElementById('modeSelect');
     const progressHeading = document.getElementById('progressHeading');
+    const todaySummary = document.getElementById('todaySummary');
+    const goalModeSelect = document.getElementById('goalModeSelect');
+    const goalSliderRow = document.getElementById('goalSliderRow');
+    const goalSlider = document.getElementById('goalSlider');
+    const goalSliderVal = document.getElementById('goalSliderVal');
+    const goalModal = document.getElementById('goalModal');
+    const goalModalText = document.getElementById('goalModalText');
+    const goalKeepGoingBtn = document.getElementById('goalKeepGoingBtn');
+    const goalDoneBtn = document.getElementById('goalDoneBtn');
     const cadenceStyleSelect = document.getElementById('cadenceStyleSelect');
     const cadenceEverySelect = document.getElementById('cadenceEverySelect');
     const resStyleSelect = document.getElementById('resStyleSelect');
@@ -1828,6 +1926,84 @@
     const statusText = document.getElementById('statusText');
     const stepDots = document.getElementById('stepDots');
 
+    let lastPracticeTick = 0;
+
+    function syncGoalControls() {
+      const gm = state.settings.goalMode || 'rounds';
+      goalModeSelect.value = gm;
+      if (gm === 'off') {
+        goalSliderRow.classList.add('hidden');
+      } else if (gm === 'time') {
+        goalSliderRow.classList.remove('hidden');
+        const mins = Math.max(10, Math.min(60, Number(state.settings.goalMinutes) || 15));
+        goalSlider.min = '10';
+        goalSlider.max = '60';
+        goalSlider.step = '5';
+        goalSlider.value = String(mins);
+        goalSliderVal.textContent = `${mins} min`;
+      } else {
+        goalSliderRow.classList.remove('hidden');
+        const rnds = Math.max(10, Math.min(100, Number(state.settings.goalRounds) || 40));
+        goalSlider.min = '10';
+        goalSlider.max = '100';
+        goalSlider.step = '5';
+        goalSlider.value = String(rnds);
+        goalSliderVal.textContent = `${rnds} rounds`;
+      }
+    }
+
+    function trackPracticeTime() {
+      const d = ensureTodayDaily();
+      const now = Date.now();
+      if (lastPracticeTick > 0) {
+        const dtSec = (now - lastPracticeTick) / 1000;
+        if (dtSec > 0 && dtSec <= 60) {
+          d.seconds = Math.round((d.seconds + dtSec) * 10) / 10;
+        }
+      }
+      lastPracticeTick = now;
+    }
+
+    function isGoalReached() {
+      const d = ensureTodayDaily();
+      const gm = state.settings.goalMode || 'rounds';
+      if (gm === 'off') return false;
+      if (gm === 'time') {
+        const targetSec = Math.max(10, Math.min(60, Number(state.settings.goalMinutes) || 15)) * 60;
+        return d.seconds >= targetSec;
+      }
+      const targetRounds = Math.max(10, Math.min(100, Number(state.settings.goalRounds) || 40));
+      return d.rounds >= targetRounds;
+    }
+
+    function shouldCelebrateGoal() {
+      const d = ensureTodayDaily();
+      return !d.celebrated && isGoalReached();
+    }
+
+    function showGoalModal() {
+      const d = ensureTodayDaily();
+      d.celebrated = true;
+      saveState();
+      clearTimers();
+      waitingForNextRound = false;
+      phase = 'idle';
+      lastPracticeTick = 0;
+      const mins = Math.max(1, Math.round(d.seconds / 60));
+      const gm = state.settings.goalMode || 'rounds';
+      if (gm === 'time') {
+        goalModalText.textContent = `You’ve practiced ${mins} minute${mins === 1 ? '' : 's'} today (${d.rounds} round${d.rounds === 1 ? '' : 's'}). Nice work!`;
+      } else {
+        goalModalText.textContent = `You’ve completed ${d.rounds} round${d.rounds === 1 ? '' : 's'} today (${mins} min practiced). Nice work!`;
+      }
+      goalModal.classList.remove('hidden');
+      updateActionButtons();
+    }
+
+    function closeGoalModal() {
+      goalModal.classList.add('hidden');
+    }
+
     // Populate both Level dropdowns directly from FRONTIER so all 33 steps stay in sync
     FRONTIER.forEach((spec, i) => {
       [stageSelect, portraitStageSelect].forEach(sel => {
@@ -1840,6 +2016,7 @@
 
     versionLabel.textContent = APP_VERSION;
     modeSelect.value = state.mode || 'major';
+    syncGoalControls();
     cadenceStyleSelect.value = state.settings.cadenceType || 'I-IV-V-I';
     cadenceEverySelect.value = String(state.settings.cadenceEvery !== undefined ? state.settings.cadenceEvery : 5);
     resStyleSelect.value = state.settings.resStyle || 'nearest';
@@ -2113,6 +2290,26 @@
       if (progressHeading) {
         progressHeading.textContent = activeMode === 'major' ? 'Progress' : `Progress · ${modeName}`;
       }
+      if (todaySummary) {
+        const d = ensureTodayDaily();
+        const gm = state.settings.goalMode || 'rounds';
+        const mins = Math.floor(d.seconds / 60);
+        if (gm === 'off') {
+          todaySummary.textContent = d.rounds > 0 ? `Today: ${d.rounds} round${d.rounds === 1 ? '' : 's'} · ${mins} min` : '';
+        } else if (gm === 'time') {
+          const target = Math.max(10, Math.min(60, Number(state.settings.goalMinutes) || 15));
+          const done = d.seconds >= target * 60;
+          todaySummary.textContent = done
+            ? `Today: ${mins} / ${target} min · goal reached ✓`
+            : `Today: ${mins} / ${target} min (${d.rounds} rounds)`;
+        } else {
+          const target = Math.max(10, Math.min(100, Number(state.settings.goalRounds) || 40));
+          const done = d.rounds >= target;
+          todaySummary.textContent = done
+            ? `Today: ${d.rounds} / ${target} rounds · goal reached ✓`
+            : `Today: ${d.rounds} / ${target} rounds`;
+        }
+      }
       const tried = FRONTIER.map(spec => skillMasteryInfo(spec));
       const totalBar = tried.reduce((s, x) => s + x.barPct, 0);
       const overallPct = Math.round(totalBar / FRONTIER.length);
@@ -2236,6 +2433,8 @@
 
     function recordOutcome(misses) {
       lastMilestoneMsg = null;
+      trackPracticeTime();
+      ensureTodayDaily().rounds++;
       if (misses === 0) {
         cleanInOctave++;
         recentCleanStreak++;
@@ -2638,6 +2837,7 @@
       clearTimers();
       waitingForNextRound = false;
       isRetryOfPrompt = false;
+      trackPracticeTime();
       buildPrompt();
 
       const cadEvery = Number(state.settings.cadenceEvery !== undefined ? state.settings.cadenceEvery : 5);
@@ -2781,6 +2981,10 @@
               if (!paused) launchCurrentPrompt();
             }, 1250));
           } else {
+            if (shouldCelebrateGoal()) {
+              showGoalModal();
+              return;
+            }
             statusText.textContent = lastMilestoneMsg || (hadMisses ? 'Got it' : 'Nice');
             scheduleNextRound(lastMilestoneMsg ? 2300 : 1450);
           }
@@ -3007,9 +3211,11 @@
           hist: incoming.hist || {},
           ready: incoming.ready || {},
           mastered: incoming.mastered || {},
+          daily: incoming.daily || null,
           settings: Object.assign({}, DEFAULT_SETTINGS, incoming.settings || {})
         });
         modeSelect.value = state.mode || 'major';
+        syncGoalControls();
         cadenceStyleSelect.value = state.settings.cadenceType || 'I-IV-V-I';
         cadenceEverySelect.value = String(state.settings.cadenceEvery !== undefined ? state.settings.cadenceEvery : 5);
         resStyleSelect.value = state.settings.resStyle || 'nearest';
@@ -3034,6 +3240,39 @@
     });
 
     modeSelect.addEventListener('change', () => switchMusicalMode(modeSelect.value));
+    goalModeSelect.addEventListener('change', () => {
+      state.settings.goalMode = goalModeSelect.value;
+      syncGoalControls();
+      if (!isGoalReached()) ensureTodayDaily().celebrated = false;
+      saveState();
+    });
+    goalSlider.addEventListener('input', () => {
+      const val = Number(goalSlider.value);
+      if (state.settings.goalMode === 'time') {
+        state.settings.goalMinutes = val;
+        goalSliderVal.textContent = `${val} min`;
+      } else {
+        state.settings.goalRounds = val;
+        goalSliderVal.textContent = `${val} rounds`;
+      }
+      if (!isGoalReached()) ensureTodayDaily().celebrated = false;
+      saveState();
+    });
+    goalKeepGoingBtn.addEventListener('click', () => {
+      closeGoalModal();
+      paused = false;
+      startNewRound();
+    });
+    goalDoneBtn.addEventListener('click', () => {
+      closeGoalModal();
+      paused = true;
+      clearTimers();
+      phase = 'idle';
+      lastPracticeTick = 0;
+      playBtn.textContent = 'Play';
+      setStatus('Nice work · saved', false);
+      updateActionButtons();
+    });
     stageSelect.addEventListener('change', () => applyModeSelection(stageSelect.value));
     portraitStageSelect.addEventListener('change', () => applyModeSelection(portraitStageSelect.value));
 
