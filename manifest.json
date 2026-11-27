@@ -1,9 +1,9 @@
 {
   "name": "Kease",
   "short_name": "Kease",
-  "id": "/keys/",
-  "start_url": "/keys/",
-  "scope": "/keys/",
+  "id": "/kease/",
+  "start_url": "/kease/",
+  "scope": "/kease/",
   "display": "standalone",
   "orientation": "landscape",
   "background_color": "#101321",

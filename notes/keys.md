@@ -1,12 +1,12 @@
 # Kease — Design Notes
 
-Standalone play-by-ear piano app (`autodax/keys`, live URL `https://autodax.github.io/keys/`).
+Standalone play-by-ear piano app (`autodax/kease`, live URL `https://autodax.github.io/kease/`).
 Companion to Steve's Ear Trainer (`autodax/ear`), but a clean-slate standalone app focused on playing directly on a piano keyboard by ear.
 
 ## Files
 
 - `index.html`: standalone landscape iPhone web app (`APP_VERSION` in script).
-- `manifest.json`: landscape home-screen web app settings (`name: Kease`, `scope: /keys/`).
+- `manifest.json`: landscape home-screen web app settings (`name: Kease`, `scope: /kease/`).
 - `keys-sw.js`: offline service worker caching the page, icons, and Salamander piano samples for the full 88-key range.
 - `icon-180.png`, `icon-512.png`: Option B chosen by Steve Nov 26 2026 — periwinkle piano keys with one burnt orange lit home key and deep indigo sharp keys on a pure black background (`?v=1`). Also set as `MediaMetadata` artwork in `AudioEngine` for the Dynamic Island and lock screen while playing.
 - `piano/`: Salamander Grand Piano `.m4a` samples (CC BY 3.0, Alexander Holm, copied from `autodax/ear`).
