@@ -961,7 +961,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-27.10';
+    const APP_VERSION = '2026-11-27.11';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -2012,19 +2012,21 @@
     function maybeRotateOctave() {
       pendingOctaveShift = null;
       if (state.settings.varyOctaves === false) {
-        if (currentOctave !== 4) { currentOctave = 4; }
+        if (currentOctave !== 4) { currentOctave = 4; cleanInOctave = 0; }
         return;
       }
-      const pool = allowedOctavesForSpec(currentSpec);
+      const octSpec = selectedMode === 'auto' ? FRONTIER[activeFrontierIndex()] : currentSpec;
+      const pool = allowedOctavesForSpec(octSpec);
       if (pool.length <= 1) {
-        currentOctave = pool[0];
+        if (currentOctave !== pool[0]) { currentOctave = pool[0]; cleanInOctave = 0; }
         return;
       }
       if (!pool.includes(currentOctave)) {
         currentOctave = pool.includes(4) ? 4 : pool[0];
+        cleanInOctave = 0;
+        return;
       }
-      const needed = currentSpec.multiOctave ? 4 : CLEAN_PER_OCTAVE;
-      if (cleanInOctave >= needed && recentCleanStreak >= 2) {
+      if (cleanInOctave >= CLEAN_PER_OCTAVE && recentCleanStreak >= 2) {
         const prevOct = currentOctave;
         const nextOct = pickNoRepeat(pool, currentOctave);
         if (nextOct !== undefined && nextOct !== currentOctave) {
@@ -2908,7 +2910,11 @@
       clearTimers();
       phase = 'idle';
       cadKeyPc = null;
+      cadOct = null;
       sinceCad = 999;
+      cleanInOctave = 0;
+      recentCleanStreak = 0;
+      pendingOctaveShift = null;
       promptNotes = [];
       promptChords = [];
       currentShowIndices = [];
@@ -2917,6 +2923,10 @@
       currentSpec = selectedMode === 'auto'
         ? FRONTIER[activeFrontierIndex()]
         : (STAGE_BY_ID[selectedMode] || FRONTIER[0]);
+      const allowedOcts = allowedOctavesForSpec(currentSpec);
+      if (state.settings.varyOctaves === false || !allowedOcts.includes(currentOctave)) {
+        currentOctave = allowedOcts.includes(4) ? 4 : allowedOcts[0];
+      }
       currentKeyPc = Array.isArray(currentSpec.keys) ? currentSpec.keys[0] : 0;
       currentActiveNotes = activeMidisForSpec(currentSpec, currentKeyPc, currentOctave);
       currentRoot = tonicMidiFor(currentKeyPc, currentOctave);
