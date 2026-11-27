@@ -330,6 +330,10 @@
       background: linear-gradient(180deg, #dfc1ad 0%, #edd4c3 22%, #f6e4d7 82%, #ebd1be 100%);
       box-shadow: inset 0 6px 10px -5px rgba(90, 42, 16, 0.25), inset 0 -5px 0 var(--nudge);
     }
+    .wkey.res {
+      background: linear-gradient(180deg, #c6d4ff 0%, #d8e2ff 24%, #ecf1ff 84%, #cfd9f8 100%);
+      box-shadow: inset 0 6px 10px -5px rgba(24, 48, 120, 0.22), inset 0 -5px 0 #b4b9ff;
+    }
 
     /* Sculpted 3D GarageBand-style black key with raised satin top face & angled bottom bevel */
     .bkey {
@@ -433,6 +437,10 @@
     .bkey.hit {
       background: linear-gradient(180deg, #33559e 0%, #243f7a 85%, #1b3161 100%);
       box-shadow: 0 4px 14px rgba(126, 171, 255, 0.72), inset 0 -3px 0 #e6f3ff;
+    }
+    .bkey.res {
+      background: linear-gradient(180deg, #3a4585 0%, #2b346b 85%, #202754 100%);
+      box-shadow: 0 4px 14px rgba(180, 185, 255, 0.65), inset 0 -3px 0 #b4b9ff;
     }
     .bkey.hit::before {
       background: linear-gradient(180deg, #7eabff 0%, #8eb8ff 30%, #6a94eb 85%, #547cd4 100%);
@@ -630,6 +638,39 @@
       min-width: 24px;
       text-align: right;
     }
+    .prog-pct.done {
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .prog-group {
+      font-size: 11.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      padding-top: 8px;
+      margin-top: 4px;
+      border-top: 1px solid rgba(38, 46, 73, 0.7);
+    }
+    .prog-group:first-child {
+      padding-top: 0;
+      margin-top: 0;
+      border-top: none;
+    }
+    .prog-tag {
+      font-size: 10.5px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 999px;
+      background: rgba(180, 185, 255, 0.14);
+      color: #b4b9ff;
+      margin-left: 5px;
+      vertical-align: 1px;
+    }
+    .prog-tag.clean {
+      background: rgba(126, 171, 255, 0.14);
+      color: var(--accent);
+    }
     .prog-track {
       width: 100%;
       height: 7px;
@@ -703,15 +744,15 @@
 
     <section class="p-card">
       <h2>What it is</h2>
-      <p>Kease trains you to play piano by ear—no sheet music, no note names to memorize, and no theory jargon. The goal is simple: hear a melody or chord in your head and let your fingers find it on the keys naturally, the way you can hum a tune without thinking. You start with a single key and a steady rhythm, then the app gently widens the keyboard, lengthens the phrases, and shifts octaves as your ear gets surer.</p>
+      <p>Kease trains you to play piano by ear—no sheet music, no note names to memorize, and no theory jargon. The goal is simple: hear a melody or chord in your head and let your fingers find it on the keys naturally, the way you can hum a tune without thinking. Every note is heard in the context of a key established by a cadence, and single notes resolve stepwise back to the home key so your ear feels where every pitch wants to go.</p>
     </section>
 
     <section class="p-card">
       <h2>How it works</h2>
       <ul>
         <li><span class="phone-inline" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="16" height="12" rx="2.5"></rect><path d="M17.5 11.5v1"></path></svg></span><strong>Turn sideways to play:</strong> Landscape is the pure keyboard; portrait holds your guide and settings. Lying down? Hold the phone upside down (cameras at the bottom) and iPhone keeps the full-size landscape keyboard open on either side.</li>
-        <li><strong>Seamless progress:</strong> In <em>Auto · Adaptive</em>, new keys, rhythms, and longer phrases join smoothly as your ear gets surer—with easier review sprinkled in for momentum.</li>
-        <li><strong>Hunt by ear on new skills:</strong> Whenever a new key or phrase length arrives, tap around freely to find the sound by ear. Once it clicks, it gently tightens to one-shot guesses.</li>
+        <li><strong>Cadence &amp; resolution:</strong> A short chord cadence sets the home key. On single-note lessons, each note resolves stepwise back to the nearest home key—lighting up the piano keys as it walks home.</li>
+        <li><strong>Hunt → Clean on every step:</strong> Every new skill opens in <em>Hunt</em> so you can tap around freely to find the sound by ear. Once it clicks, it automatically tightens to <em>Clean</em> (one-shot) for two-day 90% mastery.</li>
         <li><strong>Jam &amp; Free Play:</strong> Tap <em>Jam</em> for a warm backing groove over the active keys, or <em>Free Play</em> to explore the full keyboard with octave arrows and note names.</li>
       </ul>
     </section>
@@ -728,22 +769,38 @@
         <label for="portraitStageSelect">Mode</label>
         <select id="portraitStageSelect" class="stage-select" style="max-width:230px;">
           <option value="auto">Auto · Adaptive</option>
-          <option value="s0">1 · White Key Echo</option>
-          <option value="s1">2 · Two Notes (3 White Keys)</option>
-          <option value="s2">3 · Two Notes (Trio)</option>
-          <option value="s3">4 · Two Notes (5 Keys)</option>
-          <option value="s5">5 · Three Notes (Hunt)</option>
-          <option value="s6">6 · Three Notes (One-Shot)</option>
-          <option value="s7">7 · All White Keys</option>
-          <option value="s9">8 · Moving Home Key</option>
-          <option value="s10">9 · Black Keys</option>
-          <option value="s11">10 · Four-Note Melodies</option>
-          <option value="s12">11 · Five-Note Melodies</option>
-          <option value="s14">12 · Pure-Ear Melodies</option>
-          <option value="s15">13 · Chord Roots</option>
-          <option value="s17">14 · Two-Note Blend</option>
-          <option value="s18">15 · Build the Chord</option>
-          <option value="s20">16 · Chord Changes</option>
+        </select>
+      </div>
+      <div class="p-row">
+        <label for="cadenceStyleSelect">Cadence style</label>
+        <select id="cadenceStyleSelect" class="stage-select" style="max-width:230px;">
+          <option value="I-IV-V-I">I – IV – V – I</option>
+          <option value="I-V-I">I – V – I</option>
+          <option value="V7-I">V7 – I</option>
+          <option value="ii7-V7-I">ii7 – V7 – I</option>
+          <option value="I">I chord</option>
+          <option value="IM7">IM7 chord</option>
+          <option value="several tonics">Several tonics</option>
+          <option value="tonic">Single tonic</option>
+        </select>
+      </div>
+      <div class="p-row">
+        <label for="cadenceEverySelect">Cadence frequency</label>
+        <select id="cadenceEverySelect" class="stage-select" style="max-width:230px;">
+          <option value="1">Every question</option>
+          <option value="3">Every 3 questions</option>
+          <option value="5">Every 5 questions</option>
+          <option value="10">Every 10 questions</option>
+          <option value="0">Only on key change</option>
+        </select>
+      </div>
+      <div class="p-row">
+        <label for="resStyleSelect">Resolution style</label>
+        <select id="resStyleSelect" class="stage-select" style="max-width:230px;">
+          <option value="nearest">Nearest home (stepwise)</option>
+          <option value="down">Always down to 1</option>
+          <option value="up">Always up to 1↑</option>
+          <option value="jump">Jump straight to home</option>
         </select>
       </div>
       <div class="p-row">
@@ -806,7 +863,7 @@
       </div>
       <div id="backupMsg" class="p-muted hidden" style="text-align:right;"></div>
       <div id="resetRow" class="p-row">
-        <span id="progressSummary" class="p-muted">Adaptive progress: starting out</span>
+        <span id="progressSummary" class="p-muted">Mastery: starting out</span>
         <button id="resetProgressBtn" type="button" class="btn p-btn-danger">Reset</button>
       </div>
       <div id="resetConfirmRow" class="confirm-row hidden">
@@ -831,22 +888,6 @@
       <div class="top-left">
         <select id="stageSelect" class="stage-select" aria-label="Choose mode">
           <option value="auto">Auto · Adaptive</option>
-          <option value="s0">1 · White Key Echo</option>
-          <option value="s1">2 · Two Notes (3 White Keys)</option>
-          <option value="s2">3 · Two Notes (Trio)</option>
-          <option value="s3">4 · Two Notes (5 Keys)</option>
-          <option value="s5">5 · Three Notes (Hunt)</option>
-          <option value="s6">6 · Three Notes (One-Shot)</option>
-          <option value="s7">7 · All White Keys</option>
-          <option value="s9">8 · Moving Home Key</option>
-          <option value="s10">9 · Black Keys</option>
-          <option value="s11">10 · Four-Note Melodies</option>
-          <option value="s12">11 · Five-Note Melodies</option>
-          <option value="s14">12 · Pure-Ear Melodies</option>
-          <option value="s15">13 · Chord Roots</option>
-          <option value="s17">14 · Two-Note Blend</option>
-          <option value="s18">15 · Build the Chord</option>
-          <option value="s20">16 · Chord Changes</option>
         </select>
         <button id="jamBtn" type="button" class="btn">Jam</button>
         <div id="octShiftGroup" class="oct-pair hidden">
@@ -881,7 +922,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-27.1';
+    const APP_VERSION = '2026-11-27.2';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -1423,156 +1464,149 @@
     }
 
     // =========================================================================
-    // 3. Seamless 12-Step Adaptive Frontier + Musical Hooks & Rhythms
+    // 3. Ear Trainer 36-Step Pitch/Melody/Chord Ladder (No Rhythm) + Cadence & Resolution
     // =========================================================================
-    // Every new skill briefly re-enables hunting before tightening to one-shot.
+    // Each step opens in Hunt (tap freely by ear) and automatically tightens to Clean (one-shot)
+    // once it clicks, building toward two-day 90% mastery.
+    const MAJOR_STEPS = [0, 2, 4, 5, 7, 9, 11];
+    const KEY_NAMES = ['C', 'D♭', 'D', 'E♭', 'E', 'F', 'G♭', 'G', 'A♭', 'A', 'B♭', 'B'];
+
     const FRONTIER = [
-      { id: 's0',  label: 'White Key Echo',           mode: 'rhythm-echo', root: 60, active: [60],                                         len: 1 },
-      { id: 's1',  label: 'Two Notes · 3 White Keys', mode: 'hunt',        root: 60, active: [60, 62, 67],                                 len: 2 },
-      { id: 's2',  label: 'Two Notes · Trio',       mode: 'hunt',        root: 60, active: [60, 64, 67],                                 len: 2 },
-      { id: 's3',  label: 'Two Notes · 5 Keys',     mode: 'hunt',        root: 60, active: [60, 62, 64, 67, 69],                         len: 2 },
-      { id: 's4',  label: 'Two Notes · One-Shot',   mode: 'oneshot',     root: 60, active: [60, 62, 64, 67, 69],                         len: 2 },
-      { id: 's5',  label: 'Three Notes · Hunt',     mode: 'hunt',        root: 60, active: [60, 62, 64, 67, 69],                         len: 3, hooks: true },
-      { id: 's6',  label: 'Three Notes · One-Shot', mode: 'oneshot',     root: 60, active: [60, 62, 64, 67, 69],                         len: 3, hooks: true },
-      { id: 's7',  label: 'All White Keys · Hunt',  mode: 'hunt',        root: 60, active: [60, 62, 64, 65, 67, 69, 71, 72],             len: 3, hooks: true },
-      { id: 's8',  label: 'All White Keys · Clean', mode: 'oneshot',     root: 60, active: [60, 62, 64, 65, 67, 69, 71, 72],             len: 3, hooks: true },
-      { id: 's9',  label: 'Moving Home Key',        mode: 'hunt',        root: 'move-white', active: [55, 57, 59, 60, 62, 64, 65, 67, 69, 71, 72], len: 3, hooks: true },
-      { id: 's10', label: 'Black Keys',             mode: 'hunt',        root: 'move-any',   active: [55, 57, 58, 60, 62, 63, 64, 65, 66, 67, 69, 70, 72], len: 3, hooks: true },
-      { id: 's11', label: 'Four-Note Melodies',     mode: 'oneshot',     root: 'move-any',   active: [53, 55, 56, 57, 58, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 72], len: 4, hooks: true },
-      { id: 's12', label: 'Five-Note Melodies',     mode: 'hunt',        root: 'move-any',   active: [55, 57, 59, 60, 62, 64, 65, 67, 69, 71, 72], len: 5, hooks: true },
-      { id: 's13', label: 'Five-Note · One-Shot',   mode: 'oneshot',     root: 'move-any',   active: [55, 57, 59, 60, 62, 64, 65, 67, 69, 71, 72], len: 5, hooks: true },
-      { id: 's14', label: 'Pure-Ear Melodies',      mode: 'hunt',        root: 'move-white', active: [60, 62, 64, 65, 67, 69, 71, 72], len: 3, hooks: true, noLitStart: true },
-      { id: 's15', label: 'Chord Roots · Hunt',     mode: 'hunt',        kind: 'chord-root',  root: 60, active: [55, 57, 60, 62, 64, 65, 67], len: 1, noLitStart: true },
-      { id: 's16', label: 'Chord Roots · Clean',    mode: 'oneshot',     kind: 'chord-root',  root: 60, active: [55, 57, 60, 62, 64, 65, 67], len: 1, noLitStart: true },
-      { id: 's17', label: 'Two-Note Blend',         mode: 'hunt',        kind: 'chord-build', root: 'move-white', active: [55, 57, 59, 60, 62, 64, 65, 67, 69, 71, 72], len: 2 },
-      { id: 's18', label: 'Build the Chord · Hunt', mode: 'hunt',        kind: 'chord-build', root: 'move-white', active: [55, 57, 59, 60, 62, 64, 65, 67, 69, 71, 72], len: 3 },
-      { id: 's19', label: 'Build the Chord · Clean',mode: 'oneshot',     kind: 'chord-build', root: 'move-white', active: [55, 57, 59, 60, 62, 64, 65, 67, 69, 71, 72], len: 3 },
-      { id: 's20', label: 'Chord Changes',          mode: 'hunt',        kind: 'chord-change',root: 60, active: [55, 57, 60, 62, 64, 65, 67], len: 2, noLitStart: true }
+      // Part 1 · Home & Triad (1, 3, 5) + Phrase Stepping Stones
+      { id: 'e01', group: '1 · Home & Triad (1, 3, 5)', label: 'Single notes: 1, 3, 5',             kind: 'single', degs: [0, 2, 4], keys: [0], len: 1 },
+      { id: 'e02', group: '1 · Home & Triad (1, 3, 5)', label: 'Two notes: first key lit',          kind: 'phrase', degs: [0, 2, 4], keys: [0], len: 2, show: [0] },
+      { id: 'e03', group: '1 · Home & Triad (1, 3, 5)', label: 'Two notes: last key lit',           kind: 'phrase', degs: [0, 2, 4], keys: [0], len: 2, show: [1] },
+      { id: 'e04', group: '1 · Home & Triad (1, 3, 5)', label: 'Two notes: 1, 3, 5',                kind: 'phrase', degs: [0, 2, 4], keys: [0], len: 2 },
+      { id: 'e05', group: '1 · Home & Triad (1, 3, 5)', label: 'Three notes: first two lit',        kind: 'phrase', degs: [0, 2, 4], keys: [0], len: 3, show: [0, 1] },
+      { id: 'e06', group: '1 · Home & Triad (1, 3, 5)', label: 'Three notes: last two lit',         kind: 'phrase', degs: [0, 2, 4], keys: [0], len: 3, show: [1, 2] },
+      { id: 'e07', group: '1 · Home & Triad (1, 3, 5)', label: 'Three notes: first & last lit',     kind: 'phrase', degs: [0, 2, 4], keys: [0], len: 3, show: [0, 2] },
+      { id: 'e08', group: '1 · Home & Triad (1, 3, 5)', label: 'Three notes: first key lit',        kind: 'phrase', degs: [0, 2, 4], keys: [0], len: 3, show: [0] },
+      { id: 'e09', group: '1 · Home & Triad (1, 3, 5)', label: 'Three notes: last key lit',         kind: 'phrase', degs: [0, 2, 4], keys: [0], len: 3, show: [2] },
+      { id: 'e10', group: '1 · Home & Triad (1, 3, 5)', label: 'Three notes: 1, 3, 5',              kind: 'phrase', degs: [0, 2, 4], keys: [0], len: 3 },
+      { id: 'e11', group: '1 · Home & Triad (1, 3, 5)', label: 'Phrases over a chord: 1, 3, 5',     kind: 'phrase', degs: [0, 2, 4], keys: [0], len: 3, overChord: true },
+
+      // Part 2 · Expanding the Scale & Keys (Single Notes with Stepwise Resolution)
+      { id: 'e12', group: '2 · Full Scale & Keys',      label: 'Single notes: add 2 & 6',           kind: 'single', degs: [0, 1, 2, 4, 5], keys: [0], len: 1 },
+      { id: 'e13', group: '2 · Full Scale & Keys',      label: 'Single notes: add 4',               kind: 'single', degs: [0, 1, 2, 3, 4, 5], keys: [0], len: 1 },
+      { id: 'e14', group: '2 · Full Scale & Keys',      label: 'Single notes: add 7, full scale',   kind: 'single', degs: [0, 1, 2, 3, 4, 5, 6], keys: [0], len: 1 },
+      { id: 'e15', group: '2 · Full Scale & Keys',      label: 'Single notes: new key every round', kind: 'single', degs: [0, 1, 2, 3, 4, 5, 6], keys: 'all', newKeyEveryRound: true, len: 1 },
+      { id: 'e16', group: '2 · Full Scale & Keys',      label: 'Single notes: multi-octave',        kind: 'single', degs: [0, 1, 2, 3, 4, 5, 6], keys: 'all', multiOctave: true, len: 1 },
+
+      // Part 3 · Melodies & Phrases in Any Key
+      { id: 'e17', group: '3 · Melodies & Phrases',     label: 'Two notes: 1, 3, 5, any key',       kind: 'phrase', degs: [0, 2, 4], keys: 'all', len: 2 },
+      { id: 'e18', group: '3 · Melodies & Phrases',     label: 'Three notes: 1, 3, 5, any key',     kind: 'phrase', degs: [0, 2, 4], keys: 'all', len: 3 },
+      { id: 'e19', group: '3 · Melodies & Phrases',     label: 'Two notes: full scale',             kind: 'phrase', degs: [0, 1, 2, 3, 4, 5, 6], keys: 'all', len: 2 },
+      { id: 'e20', group: '3 · Melodies & Phrases',     label: 'Three notes: full scale',           kind: 'phrase', degs: [0, 1, 2, 3, 4, 5, 6], keys: 'all', len: 3, hooks: true },
+      { id: 'e21', group: '3 · Melodies & Phrases',     label: 'Four-note melodies',                kind: 'phrase', degs: [0, 1, 2, 3, 4, 5, 6], keys: 'all', len: 4, hooks: true },
+      { id: 'e22', group: '3 · Melodies & Phrases',     label: 'Five-note melodies',                kind: 'phrase', degs: [0, 1, 2, 3, 4, 5, 6], keys: 'all', len: 5, hooks: true },
+      { id: 'e23', group: '3 · Melodies & Phrases',     label: 'Six-note melodies',                 kind: 'phrase', degs: [0, 1, 2, 3, 4, 5, 6], keys: 'all', len: 6 },
+
+      // Part 4 · Chromatic / Outside Notes (with Half-Step Resolution)
+      { id: 'e24', group: '4 · Chromatic Notes',        label: 'Chromatic: 1 outside note',         kind: 'single', degs: [0, 1, 2, 3, 4, 5, 6], outs: [6], keys: 'all', len: 1 },
+      { id: 'e25', group: '4 · Chromatic Notes',        label: 'Chromatic: 2 outside notes',        kind: 'single', degs: [0, 1, 2, 3, 4, 5, 6], outs: [6, 10], keys: 'all', len: 1 },
+      { id: 'e26', group: '4 · Chromatic Notes',        label: 'Chromatic: 4 outside notes',        kind: 'single', degs: [0, 1, 2, 3, 4, 5, 6], outs: [6, 10, 3, 8], keys: 'all', len: 1 },
+      { id: 'e27', group: '4 · Chromatic Notes',        label: 'Chromatic: all 12 notes',           kind: 'single', degs: [0, 1, 2, 3, 4, 5, 6], outs: [1, 3, 6, 8, 10], keys: 'all', len: 1 },
+      { id: 'e28', group: '4 · Chromatic Notes',        label: 'Chromatic: three-note phrases',     kind: 'phrase', degs: [0, 1, 2, 3, 4, 5, 6], outs: [1, 3, 6, 8, 10], keys: 'all', len: 3, hooks: true },
+
+      // Part 5 · Chords & Harmony
+      { id: 'e29', group: '5 · Chords & Harmony',       label: 'Chord roots: I and V',              kind: 'chord-root',   chordDegs: [0, 4], keys: 'all', len: 1 },
+      { id: 'e30', group: '5 · Chords & Harmony',       label: 'Chord roots: I, IV, V',             kind: 'chord-root',   chordDegs: [0, 3, 4], keys: 'all', len: 1 },
+      { id: 'e31', group: '5 · Chords & Harmony',       label: 'Chord roots: all seven',            kind: 'chord-root',   chordDegs: [0, 1, 2, 3, 4, 5, 6], keys: 'all', len: 1 },
+      { id: 'e32', group: '5 · Chords & Harmony',       label: 'Chord roots: inversions',           kind: 'chord-root',   chordDegs: [0, 1, 2, 3, 4, 5, 6], inversions: true, keys: 'all', len: 1 },
+      { id: 'e33', group: '5 · Chords & Harmony',       label: 'Chord tones: one at a time',        kind: 'chord-build',  chordDegs: [0, 3, 4], arpeggio: true, keys: 'all', len: 3 },
+      { id: 'e34', group: '5 · Chords & Harmony',       label: 'Chord tones: together, I IV V',     kind: 'chord-build',  chordDegs: [0, 3, 4], keys: 'all', len: 3 },
+      { id: 'e35', group: '5 · Chords & Harmony',       label: 'Chord tones: together, any chord',  kind: 'chord-build',  chordDegs: [0, 1, 2, 3, 4, 5, 6], keys: 'all', len: 3 },
+      { id: 'e36', group: '5 · Chords & Harmony',       label: 'Chord changes',                     kind: 'chord-change', chordDegs: [0, 1, 2, 3, 4, 5], keys: 'all', len: 2 }
     ];
 
     const STAGE_BY_ID = Object.fromEntries(FRONTIER.map(s => [s.id, s]));
 
-    // Deep library of recognizable short melody fragments (semitone offsets from the lit starting note)
-    // Automatically filtered to fit whichever keys are currently active, in any octave.
+    // Build Ear Trainer-style cadence chords anchored on tonicMidi (e.g. C4 = 60)
+    function buildCadenceChords(tonicMidi, type = 'I-IV-V-I') {
+      const t = tonicMidi;
+      const tonic = [t - 12, t, t + 4, t + 7];
+      const IV = [t - 7, t, t + 5, t + 9];
+      const V = [t - 5, t - 1, t + 2, t + 7];
+      const V7 = [t - 5, t - 1, t + 2, t + 5, t + 7];
+      const ii7 = [t - 10, t, t + 2, t + 5, t + 9];
+      const IM7 = [t - 12, t, t + 4, t + 7, t + 11];
+      switch (type) {
+        case 'several tonics': return [[t - 12, t, t + 12]];
+        case 'tonic': return [[t]];
+        case 'I': return [tonic];
+        case 'IM7': return [IM7];
+        case 'I-V-I': return [tonic, V, tonic];
+        case 'V7-I': return [V7, tonic];
+        case 'ii7-V7-I': return [ii7, V7, tonic];
+        default: return [tonic, IV, V, tonic];
+      }
+    }
+
+    // Build stepwise resolution MIDI path from any note (diatonic or chromatic) to the tonic
+    function buildResolutionMidis(midi, tonicMidi, style = 'nearest') {
+      const off = ((midi - tonicMidi) % 12 + 12) % 12;
+      const baseTonic = midi - off; // tonic at or below midi
+      if (off === 0) return [midi];
+      const degIdx = MAJOR_STEPS.indexOf(off);
+      const walkDown = (startDeg) => {
+        const out = [];
+        for (let d = startDeg; d >= 0; d--) out.push(baseTonic + MAJOR_STEPS[d]);
+        return out;
+      };
+      const walkUp = (startDeg) => {
+        const out = [];
+        for (let d = startDeg; d <= 6; d++) out.push(baseTonic + MAJOR_STEPS[d]);
+        out.push(baseTonic + 12);
+        return out;
+      };
+      if (degIdx !== -1) {
+        if (style === 'down') return walkDown(degIdx);
+        if (style === 'up') return walkUp(degIdx);
+        if (style === 'jump') return [midi, degIdx <= 3 ? baseTonic : baseTonic + 12];
+        return degIdx <= 3 ? walkDown(degIdx) : walkUp(degIdx);
+      }
+      // Chromatic outside note: resolve by half-step to nearest diatonic neighbor, then walk home
+      let belowDeg = 0;
+      for (let i = 0; i < MAJOR_STEPS.length; i++) {
+        if (MAJOR_STEPS[i] < off) belowDeg = i;
+      }
+      const aboveDeg = belowDeg + 1;
+      const dnPath = walkDown(belowDeg);
+      const upPath = aboveDeg <= 6 ? walkUp(aboveDeg) : [baseTonic + 12];
+      let chosen = style === 'down' ? dnPath : (style === 'up' ? upPath : (dnPath.length <= upPath.length ? dnPath : upPath));
+      if (style === 'jump') chosen = [chosen[chosen.length - 1]];
+      return [midi, ...chosen];
+    }
+
+    // Deep library of recognizable short melody fragments (semitone offsets from the starting note)
     const HOOKS_3 = [
-      [0, 4, 7],     // bright major triad rise (Blue Danube / bugle)
-      [0, 7, 4],     // triad skip & settle
-      [0, 2, 4],     // Frere Jacques / Do-Re-Mi rise
-      [0, -2, -4],   // Three Blind Mice / gentle descent
-      [0, 7, 9],     // Twinkle opening (1-5-6)
-      [0, 4, 2],     // Mary Had a Little Lamb arch
-      [0, -2, 0],    // neighbor dip & return
-      [0, 2, 0],     // upper neighbor & return
-      [0, 5, 4],     // warm 4-3 sigh
-      [0, 5, 7],     // Amazing Grace / folk lift
-      [0, -3, 0],    // pentatonic dip (6-5-6 / 3-1-3)
-      [0, -5, -3],   // warm low pickup
-      [0, 0, 7],     // repeated-note fifth leap (Star Wars / Twinkle)
-      [0, 0, 4],     // repeated-note triad bounce
-      [0, 0, 2],     // repeated-note step (Jingle Bells)
-      [0, -2, -5],   // pentatonic cascade down
-      [0, 3, 5],     // minor/folk climb
-      [0, 3, 7],     // minor triad rise
-      [0, 7, 12],    // heroic fifth-to-octave rise
-      [0, -5, 0],    // fourth dip & bounce
-      [0, 4, 5],     // Ode to Joy / Saints climb
-      [0, -1, -3],   // descending scale sigh
-      [0, 2, 7],     // wide open leap after step
-      [0, 9, 7]      // sixth leap & gentle step down
+      [0, 4, 7], [0, 7, 4], [0, 2, 4], [0, -2, -4], [0, 7, 9], [0, 4, 2],
+      [0, -2, 0], [0, 2, 0], [0, 5, 4], [0, 5, 7], [0, -3, 0], [0, -5, -3],
+      [0, 0, 7], [0, 0, 4], [0, 0, 2], [0, -2, -5], [0, 3, 5], [0, 3, 7],
+      [0, 7, 12], [0, -5, 0], [0, 4, 5], [0, -1, -3], [0, 2, 7], [0, 9, 7]
     ];
 
     const HOOKS_4 = [
-      [0, 2, 4, 0],     // Frere Jacques
-      [0, 4, 5, 7],     // When the Saints
-      [0, 2, 4, 7],     // Pentatonic sunrise
-      [0, 7, 9, 7],     // Twinkle arch
-      [0, 4, 7, 4],     // Triad bounce
-      [0, -2, -4, -2],  // Mary Had a Little Lamb
-      [0, -2, -4, -7],  // Joy to the World pentatonic fall
-      [0, 0, 2, 4],     // Lean on Me / pickup climb
-      [0, 0, 7, 7],     // Twinkle full start
-      [0, 2, 4, 5],     // Ode to Joy rise
-      [0, -1, -3, -5],  // Canon in D / smooth descent
-      [0, 4, 7, 9],     // My Girl / soul climb
-      [0, 7, 4, 0],     // Classic arpeggio down
-      [0, 5, 4, 2],     // Gentle lyrical fall
-      [0, 2, 0, -3],    // Folk turn
-      [0, 4, 2, 0],     // Arch home
-      [0, -3, -5, -3],  // Valley bounce
-      [0, 0, 4, 7],     // Bugle pickup
-      [0, 3, 5, 7],     // Soul / blues rise
-      [0, 7, 5, 4],     // Leap & stepwise fall
-      [0, 2, 5, 4],     // Step, jump, resolve
-      [0, -2, 0, 4],    // Dip & bloom
-      [0, 4, 5, 4],     // Gentle wave
-      [0, 9, 7, 4]      // High spark cascading down
+      [0, 2, 4, 0], [0, 4, 5, 7], [0, 2, 4, 7], [0, 7, 9, 7], [0, 4, 7, 4],
+      [0, -2, -4, -2], [0, -2, -4, -7], [0, 0, 2, 4], [0, 0, 7, 7], [0, 2, 4, 5],
+      [0, -1, -3, -5], [0, 4, 7, 9], [0, 7, 4, 0], [0, 5, 4, 2], [0, 2, 0, -3],
+      [0, 4, 2, 0], [0, -3, -5, -3], [0, 0, 4, 7], [0, 3, 5, 7], [0, 7, 5, 4],
+      [0, 2, 5, 4], [0, -2, 0, 4], [0, 4, 5, 4], [0, 9, 7, 4]
     ];
 
     const HOOKS_5 = [
-      [0, 0, 2, 4, 2],       // Ode to Joy / gentle peak
-      [0, 2, 4, 7, 4],       // Pentatonic arch
-      [0, 4, 7, 9, 7],       // Bright lift & settle
-      [0, -2, -4, -2, 0],    // Mary Had a Little Lamb full
-      [0, 4, 5, 7, 5],       // When the Saints wave
-      [0, 2, 4, 2, 0],       // Classic 5-note arch
-      [0, 7, 9, 7, 4],       // Twinkle cascade
-      [0, 0, 7, 9, 7],       // Twinkle full phrase
-      [0, 5, 4, 2, 0],       // Descending scale home
-      [0, 2, 0, -3, 0],      // Folk turnaround
-      [0, 4, 7, 4, 0],       // Triad up & down
-      [0, 0, 2, 0, 5]        // Happy Birthday motif
+      [0, 0, 2, 4, 2], [0, 2, 4, 7, 4], [0, 4, 7, 9, 7], [0, -2, -4, -2, 0],
+      [0, 4, 5, 7, 5], [0, 2, 4, 2, 0], [0, 7, 9, 7, 4], [0, 0, 7, 9, 7],
+      [0, 5, 4, 2, 0], [0, 2, 0, -3, 0], [0, 4, 7, 4, 0], [0, 0, 2, 0, 5]
     ];
 
-    // 24 varied musical rhythm-echo grooves (seconds at 1.0x tempo; subtly tempo-varied each prompt)
-    const RHYTHM_ECHO_PATTERNS = [
-      [0, 0.44, 0.88],                     // steady 3
-      [0, 0.30, 0.60, 1.08],               // quick-quick-quick … hold
-      [0, 0.52, 0.80, 1.08],               // long … quick-quick-quick
-      [0, 0.34, 0.88, 1.22],               // pair … pair
-      [0, 0.58, 0.86],                     // dotted bounce (long-short)
-      [0, 0.28, 0.82],                     // crisp pickup … land
-      [0, 0.40, 0.80, 1.20],               // steady 4
-      [0, 0.26, 0.52, 0.78, 1.26],         // 4-step pickup + landing
-      [0, 0.48, 0.72, 1.20],               // syncopated swing
-      [0, 0.32, 0.64, 0.96, 1.28],         // upbeat 5
-      [0, 0.56, 1.12, 1.40],               // waltz + pickup
-      [0, 0.28, 0.56, 1.04, 1.32],         // triplet-feel + echo
-      [0, 0.62, 0.90, 1.44],               // heartbeat groove
-      [0, 0.30, 0.78, 1.08, 1.38],         // short-long-short-short
-      [0, 0.46, 0.92, 1.16, 1.40],         // march + double tap
-      [0, 0.34, 0.68, 1.24],               // three & rest-hit
-      [0, 0.54, 0.82, 1.10, 1.62],         // call groove
-      [0, 0.26, 0.66, 0.92],               // funky two-pair
-      [0, 0.42, 0.64, 1.06],               // light skip
-      [0, 0.60, 0.84, 1.08, 1.32],         // slow start, lively run
-      [0, 0.36, 0.72],                     // brisk trio
-      [0, 0.50, 1.00, 1.25, 1.50],         // ballad pulse
-      [0, 0.28, 0.56, 0.98, 1.26, 1.54],   // double triplet feel
-      [0, 0.44, 0.88, 1.42]                // calm 3 + accent
-    ];
-
-    // Deep bank of natural rhythmic timings for 2-, 3-, 4-, and 5-note melodic phrases
+    // Natural melodic note spacing (even, calm phrasing — no rhythm grading)
     const MELODY_RHYTHMS = {
-      2: [
-        [0, 0.36], [0, 0.46], [0, 0.58], [0, 0.28],
-        [0, 0.68], [0, 0.40], [0, 0.52], [0, 0.32]
-      ],
-      3: [
-        [0, 0.38, 0.76], [0, 0.54, 0.84], [0, 0.30, 0.66], [0, 0.46, 0.96],
-        [0, 0.28, 0.56], [0, 0.58, 0.86], [0, 0.36, 0.86], [0, 0.48, 0.74],
-        [0, 0.32, 0.78], [0, 0.52, 1.04], [0, 0.26, 0.68], [0, 0.42, 0.84]
-      ],
-      4: [
-        [0, 0.36, 0.72, 1.12], [0, 0.48, 0.78, 1.08], [0, 0.30, 0.62, 0.94],
-        [0, 0.52, 0.80, 1.24], [0, 0.34, 0.68, 1.20], [0, 0.44, 0.88, 1.16],
-        [0, 0.28, 0.56, 1.02], [0, 0.50, 0.96, 1.24], [0, 0.38, 0.64, 1.08],
-        [0, 0.32, 0.78, 1.10], [0, 0.46, 0.74, 1.20], [0, 0.40, 0.80, 1.20]
-      ],
-      5: [
-        [0, 0.34, 0.68, 1.02, 1.40], [0, 0.44, 0.72, 1.00, 1.38],
-        [0, 0.30, 0.60, 1.02, 1.32], [0, 0.46, 0.88, 1.16, 1.44],
-        [0, 0.32, 0.64, 0.96, 1.28], [0, 0.42, 0.70, 1.12, 1.44]
-      ]
+      2: [[0, 0.44]],
+      3: [[0, 0.42, 0.84]],
+      4: [[0, 0.40, 0.80, 1.20]],
+      5: [[0, 0.38, 0.76, 1.14, 1.52]],
+      6: [[0, 0.36, 0.72, 1.08, 1.44, 1.80]]
     };
 
     // Smart shuffle memory: prevents back-to-back repeats & cycles fresh material
@@ -1592,8 +1626,21 @@
 
     function masteryWindow(spec) {
       if (!spec) return 30;
-      return (spec.mode === 'rhythm-echo' || (!spec.kind && spec.len <= 2)) ? 40 : 30;
+      return (spec.kind === 'single' || (spec.kind === 'phrase' && spec.len <= 2)) ? 40 : 30;
     }
+
+    const DEFAULT_SETTINGS = {
+      backing: false,
+      warmup: true,
+      varyOctaves: true,
+      keyboard: 'single',
+      sharedC: false,
+      cLabels: true,
+      showActive: true,
+      cadenceType: 'I-IV-V-I',
+      cadenceEvery: 5,
+      resStyle: 'nearest'
+    };
 
     const STORE_KEY = 'keys.state.v2';
     let state = {
@@ -1603,7 +1650,7 @@
       hist: {},  // specId -> [{ ok: 0|1, day: 'YYYY-MM-DD' }] (rolling window)
       ready: {}, // specId -> 'YYYY-MM-DD' (Day 1 >=90% over full window)
       mastered: {}, // specId -> 'YYYY-MM-DD' (confirmed >=90% on a later day)
-      settings: { backing: true, warmup: true, varyOctaves: true, keyboard: 'single', sharedC: false, cLabels: true, showActive: true }
+      settings: Object.assign({}, DEFAULT_SETTINGS)
     };
 
     function hydrateMasteryState(st) {
@@ -1611,7 +1658,6 @@
       st.hist = st.hist || {};
       st.ready = st.ready || {};
       st.mastered = st.mastered || {};
-      // Backfill rolling history from legacy { tries, clean } stats if hist is empty
       const fallbackDay = st.lastPlayed ? todayKey(st.lastPlayed) : todayKey();
       for (const spec of FRONTIER) {
         const s = st.stats[spec.id];
@@ -1621,7 +1667,6 @@
           const cleanN = Math.round((s.clean / s.tries) * total);
           const arr = [];
           for (let i = 0; i < total; i++) {
-            // Interleave misses and cleans evenly across the seeded window
             const ok = Math.floor(((i + 1) * cleanN) / total) > Math.floor((i * cleanN) / total) ? 1 : 0;
             arr.push({ ok, day: fallbackDay });
           }
@@ -1641,7 +1686,7 @@
           hist: saved.hist || {},
           ready: saved.ready || {},
           mastered: saved.mastered || {},
-          settings: Object.assign({ backing: true, warmup: true, varyOctaves: true, keyboard: 'single', sharedC: false, cLabels: true, showActive: true }, saved.settings || {})
+          settings: Object.assign({}, DEFAULT_SETTINGS, saved.settings || {})
         });
       }
     } catch (e) {}
@@ -1655,6 +1700,9 @@
     // Elements
     const stageSelect = document.getElementById('stageSelect');
     const portraitStageSelect = document.getElementById('portraitStageSelect');
+    const cadenceStyleSelect = document.getElementById('cadenceStyleSelect');
+    const cadenceEverySelect = document.getElementById('cadenceEverySelect');
+    const resStyleSelect = document.getElementById('resStyleSelect');
     const keyboardSelect = document.getElementById('keyboardSelect');
     const sharedCRow = document.getElementById('sharedCRow');
     const sharedCToggle = document.getElementById('sharedCToggle');
@@ -1687,30 +1735,48 @@
     const statusText = document.getElementById('statusText');
     const stepDots = document.getElementById('stepDots');
 
+    // Populate both Mode dropdowns directly from FRONTIER so all 36 steps stay in sync
+    FRONTIER.forEach((spec, i) => {
+      [stageSelect, portraitStageSelect].forEach(sel => {
+        const opt = document.createElement('option');
+        opt.value = spec.id;
+        opt.textContent = `${i + 1} · ${spec.label}`;
+        sel.appendChild(opt);
+      });
+    });
+
     versionLabel.textContent = APP_VERSION;
+    cadenceStyleSelect.value = state.settings.cadenceType || 'I-IV-V-I';
+    cadenceEverySelect.value = String(state.settings.cadenceEvery !== undefined ? state.settings.cadenceEvery : 5);
+    resStyleSelect.value = state.settings.resStyle || 'nearest';
     keyboardSelect.value = state.settings.keyboard;
     sharedCToggle.checked = state.settings.sharedC;
     sharedCRow.classList.toggle('hidden', state.settings.keyboard === 'single');
     labelsToggle.checked = state.settings.cLabels !== false;
     activeKeysToggle.checked = state.settings.showActive !== false;
-    backingToggle.checked = state.settings.backing;
-    warmupToggle.checked = state.settings.warmup;
+    backingToggle.checked = !!state.settings.backing;
+    warmupToggle.checked = state.settings.warmup !== false;
     varyOctavesToggle.checked = state.settings.varyOctaves !== false;
 
-    const GOLDEN_OCTAVES = [2, 3, 4, 5, 6]; // 5 full octaves: C2..C6 (skipping only lowest 1 & highest 1)
+    const GOLDEN_OCTAVES = [2, 3, 4, 5, 6]; // 5 full octaves: C2..C6 (lessons stay in C2..C7)
     const CLEAN_PER_OCTAVE = 6;
 
     let selectedMode = 'auto';
     let currentSpec = FRONTIER[0];
+    let currentKeyPc = 0; // 0 = C .. 11 = B
     let currentRoot = 60;
-    let currentActiveNotes = [60];
+    let currentActiveNotes = [60, 64, 67];
+    let currentShowIndices = []; // stepping-stone note indices lit on the keyboard
+    let cadKeyPc = null;
+    let cadOct = null;
+    let sinceCad = 999;
     let currentLeftKey = 16; // leftmost visible white key index on the 52-white-key track (16 = C3)
     let cleanInOctave = 0;
     let recentCleanStreak = 0;
     let isRetryOfPrompt = false;
     let waitingForNextRound = false;
     let inOctaveCadence = false;
-    let pendingOctaveShift = null; // { fromOct, toOct } when an octave slide animation + cadence should run before the prompt
+    let pendingOctaveShift = null;
     let freePlay = false;
     let jamActive = false;
     let paused = false;
@@ -1725,7 +1791,7 @@
     let jamInterval = null;
     let jamBeat = 0;
 
-    const isReturnSession = state.skill >= 1.5 && (Date.now() - state.lastPlayed > 10 * 60 * 1000 || state.lastPlayed === 0);
+    const isReturnSession = state.skill >= 2 && (Date.now() - state.lastPlayed > 10 * 60 * 1000 || state.lastPlayed === 0);
     let warmupStepsLeft = (state.settings.warmup && isReturnSession) ? 3 : 0;
 
     function setStatus(text, isNotePop = false) {
@@ -1733,30 +1799,43 @@
       statusText.classList.toggle('note-pop', !!isNotePop);
     }
 
-    function octaveShift() {
-      return (currentOctave - 4) * 12;
+    function tonicMidiFor(keyPc = currentKeyPc, oct = currentOctave) {
+      let t = (oct + 1) * 12 + keyPc;
+      const { minMidi, maxMidi } = visibleRangeBounds();
+      while (t < minMidi) t += 12;
+      while (t + 12 > maxMidi) t -= 12;
+      return t;
     }
 
     function visibleRangeBounds() {
       if ((state.settings.keyboard || 'single') !== 'single') {
         return { minMidi: 36, maxMidi: state.settings.sharedC ? 84 : 83 }; // two-tier C2..B5/C6
       }
-      // Lessons stay strictly inside C2..C7 (36..96), while the full 88-key track centers any spread
-      return { minMidi: 36, maxMidi: 96 };
+      return { minMidi: 36, maxMidi: 96 }; // C2..C7
     }
 
-    function transposeForCurrentOctave(midis) {
-      const shift = octaveShift();
+    function activeMidisForSpec(spec, keyPc = currentKeyPc, oct = currentOctave) {
+      const t = tonicMidiFor(keyPc, oct);
+      const out = new Set();
+      if (spec.kind === 'chord-root' || spec.kind === 'chord-change') {
+        const degs = spec.chordDegs || [0, 3, 4];
+        degs.forEach(d => out.add(t + MAJOR_STEPS[d]));
+      } else if (spec.kind === 'chord-build') {
+        const degs = spec.chordDegs || [0, 3, 4];
+        degs.forEach(d => {
+          const r = t + MAJOR_STEPS[d];
+          const third = t + MAJOR_STEPS[(d + 2) % 7] + (d + 2 >= 7 ? 12 : 0);
+          const fifth = t + MAJOR_STEPS[(d + 4) % 7] + (d + 4 >= 7 ? 12 : 0);
+          out.add(r); out.add(third); out.add(fifth);
+        });
+      } else {
+        const degs = spec.degs || [0, 2, 4];
+        degs.forEach(d => out.add(t + MAJOR_STEPS[d]));
+        if (spec.outs) spec.outs.forEach(o => out.add(t + o));
+        if (degs.includes(0) && degs.length >= 6) out.add(t + 12); // upper home key for full scale
+      }
       const { minMidi, maxMidi } = visibleRangeBounds();
-      const out = [];
-      const seen = new Set();
-      midis.forEach(m => {
-        let n = m + shift;
-        while (n < minMidi) n += 12;
-        while (n > maxMidi) n -= 12;
-        if (!seen.has(n)) { seen.add(n); out.push(n); }
-      });
-      return out.sort((a, b) => a - b);
+      return Array.from(out).filter(m => m >= minMidi && m <= maxMidi).sort((a, b) => a - b);
     }
 
     function setTrackLeftKey(leftKey, quick = false) {
@@ -1773,7 +1852,6 @@
       const minPos = midiToWhitePos(Math.min(...notes));
       const maxPos = midiToWhitePos(Math.max(...notes));
       const midPos = (minPos + maxPos) / 2;
-      // Center midPos inside the 15-white-key viewport (fractional-octave smooth positioning)
       setTrackLeftKey(midPos - 7.0, false);
     }
 
@@ -1781,51 +1859,73 @@
       setTrackLeftKey(currentLeftKey + deltaOct * 7, true);
     }
 
-    function playOctaveShiftCue(fromOct, toOct) {
-      const goingUp = toOct > fromOct;
-      const c = (toOct + 1) * 12; // C of the new octave (C2=36 .. C6=84)
-      // Smooth piano voice-leading I - IV - V - I cadence in the new octave
-      const cadence = [
-        { notes: [c, c + 4, c + 7],     dt: 0.00, dur: 0.50, vel: 0.36 }, // I  (C)
-        { notes: [c, c + 5, c + 9],     dt: 0.52, dur: 0.50, vel: 0.36 }, // IV (F, 2nd inv)
-        { notes: [c - 1, c + 2, c + 7], dt: 1.04, dur: 0.50, vel: 0.38 }, // V  (G, 1st inv)
-        { notes: [c, c + 4, c + 7],     dt: 1.56, dur: 0.95, vel: 0.40 }  // I  (C)
-      ];
+    function playCadence(tonicMidi, labelText, onDone) {
+      const style = state.settings.cadenceType || 'I-IV-V-I';
+      const chords = buildCadenceChords(tonicMidi, style);
+      const stepSec = 0.52;
+      inOctaveCadence = true;
+      phase = 'playing';
+      syncTrackPosition();
+      setStatus(labelText || `Key of ${KEY_NAMES[currentKeyPc]}`, false);
 
       AudioEngine.whenReady((ctx) => {
         if (paused || freePlay || jamActive) return;
         const base = ctx.currentTime + 0.08;
-        cadence.forEach(ch => AudioEngine.chord(ch.notes, base + ch.dt, ch.dur, ch.vel));
+        chords.forEach((notes, i) => {
+          const isLast = i === chords.length - 1;
+          const dur = isLast ? 0.95 : 0.48;
+          const vel = notes.length === 1 ? 0.56 : (isLast ? 0.40 : 0.36);
+          AudioEngine.chord(notes, base + i * stepSec, dur, vel);
+        });
+        // Gently pulse home key on the final resolving tonic chord
+        const lastMs = Math.round(((chords.length - 1) * stepSec) * 1000 + 80);
+        timers.push(setTimeout(() => flashKey(tonicMidi, 'res', 520), lastMs));
+        const totalMs = Math.round(((chords.length - 1) * stepSec + 1.05) * 1000);
+        timers.push(setTimeout(() => {
+          inOctaveCadence = false;
+          if (!paused && onDone) onDone();
+        }, totalMs));
       });
+    }
 
-      // Slide the continuous 88-key track over 1.5s and pulse the C labels
-      syncTrackPosition();
-      const lbls = document.querySelectorAll('#piano .key-label');
-      lbls.forEach(l => l.classList.add('pulse'));
-      setStatus(goingUp ? `New octave · C${toOct}` : `New octave · C${toOct}`, false);
-      timers.push(setTimeout(() => lbls.forEach(l => l.classList.remove('pulse')), 1500));
+    // Play & light up stepwise resolution back to the nearest home key (single-note lessons)
+    function playResolution(midi, tonicMidi, onDone) {
+      const style = state.settings.resStyle || 'nearest';
+      const path = buildResolutionMidis(midi, tonicMidi, style);
+      if (path.length <= 1) {
+        timers.push(setTimeout(() => { if (!paused && onDone) onDone(); }, 650));
+        return;
+      }
+      const stepSec = 0.27;
+      AudioEngine.whenReady((ctx) => {
+        if (paused || freePlay || jamActive) return;
+        const base = ctx.currentTime + 0.16;
+        path.forEach((m, i) => {
+          const isLast = i === path.length - 1;
+          AudioEngine.note(m, base + i * stepSec, isLast ? 0.85 : 0.34, isLast ? 0.72 : 0.62);
+          timers.push(setTimeout(() => flashKey(m, 'res', isLast ? 520 : 240), Math.round(160 + i * stepSec * 1000)));
+        });
+        const totalMs = Math.round(160 + (path.length - 1) * stepSec * 1000 + 820);
+        timers.push(setTimeout(() => { if (!paused && onDone) onDone(); }, totalMs));
+      });
     }
 
     function maybeRotateOctave() {
       pendingOctaveShift = null;
       if (state.settings.varyOctaves === false) {
-        if (currentOctave !== 4) { currentOctave = 4; syncTrackPosition(); }
+        if (currentOctave !== 4) { currentOctave = 4; }
         return;
       }
-      if (selectedMode === 'auto' && state.skill < 1.0) {
-        if (currentOctave !== 4) { currentOctave = 4; syncTrackPosition(); }
+      if (!currentSpec.multiOctave && selectedMode === 'auto' && activeFrontierIndex() < 15) {
+        if (currentOctave !== 4) { currentOctave = 4; }
         return;
       }
-      // Only move to a new octave once the user is comfortable here (6+ clean answers & 2 clean in a row)
       if (cleanInOctave >= CLEAN_PER_OCTAVE && recentCleanStreak >= 2) {
         const prevOct = currentOctave;
         const pool = (state.settings.keyboard || 'single') === 'single' ? GOLDEN_OCTAVES : [2, 3, 4, 5];
         const others = pool.filter(o => o !== currentOctave);
         currentOctave = others[Math.floor(Math.random() * others.length)];
         cleanInOctave = 0;
-        if (state.settings.warmup !== false && selectedMode === 'auto' && state.skill >= 1.5) {
-          warmupStepsLeft = Math.max(warmupStepsLeft, 2);
-        }
         pendingOctaveShift = { fromOct: prevOct, toOct: currentOctave };
       }
     }
@@ -1847,6 +1947,9 @@
       const isReady = !isMastered && !!readyDay;
       const day2Needed = Math.ceil(win / 3);
       const needsDay2Today = isReady && today > readyDay;
+      // Built-in Hunt -> Clean progression inside every step:
+      // Starts in Hunt until >= 8 tries at >= 75% accuracy, then tightens to Clean (one-shot)
+      const isCleanPhase = isMastered || isReady || (tries >= 8 && acc >= 75);
 
       let barPct = 0;
       let barCls = 'none';
@@ -1873,7 +1976,11 @@
         pctLabel = `${acc}% · ${tries}/${win}`;
       }
 
-      return { spec, win, tries, clean, acc, todayCount, day2Needed, isMastered, isReady, readyDay, needsDay2Today, barPct, barCls, pctLabel };
+      return { spec, win, tries, clean, acc, todayCount, day2Needed, isMastered, isReady, readyDay, needsDay2Today, isCleanPhase, barPct, barCls, pctLabel };
+    }
+
+    function effectiveMode(spec) {
+      return skillMasteryInfo(spec).isCleanPhase ? 'oneshot' : 'hunt';
     }
 
     function activeFrontierIndex() {
@@ -1925,7 +2032,15 @@
       }
 
       progressList.innerHTML = '';
+      let lastGroup = '';
       tried.forEach((item, idx) => {
+        if (item.spec.group !== lastGroup) {
+          lastGroup = item.spec.group;
+          const grp = document.createElement('div');
+          grp.className = 'prog-group';
+          grp.textContent = lastGroup;
+          progressList.appendChild(grp);
+        }
         const wrap = document.createElement('div');
         wrap.className = 'prog-item';
 
@@ -1934,11 +2049,17 @@
         const name = document.createElement('span');
         name.className = 'prog-name';
         name.textContent = item.spec.label;
+        if (item.tries > 0 && !item.isMastered && !item.isReady) {
+          const tag = document.createElement('span');
+          tag.className = 'prog-tag' + (item.isCleanPhase ? ' clean' : '');
+          tag.textContent = item.isCleanPhase ? 'Clean' : 'Hunt';
+          name.appendChild(tag);
+        }
 
         const meta = document.createElement('div');
         meta.className = 'prog-meta';
         const pctEl = document.createElement('span');
-        pctEl.className = 'prog-pct';
+        pctEl.className = 'prog-pct' + (item.isMastered ? ' done' : '');
         pctEl.textContent = item.pctLabel;
 
         const prac = document.createElement('button');
@@ -1971,7 +2092,6 @@
       const today = todayKey();
       const frontierIdx = activeFrontierIndex();
 
-      // Prioritize confirming any Day-1 Ready skill on a later day (sleep consolidation check)
       const day2Confirm = FRONTIER.find(s => !state.mastered[s.id] && state.ready[s.id] && today > state.ready[s.id]);
       if (day2Confirm && Math.random() < 0.65) {
         return day2Confirm;
@@ -1983,7 +2103,6 @@
         return FRONTIER[idx];
       }
 
-      // ~20% interleaved review of mastered / ready earlier skills to strengthen long-term retention
       const reviewPool = FRONTIER.slice(0, frontierIdx).filter(s => state.mastered[s.id] || state.ready[s.id]);
       if (reviewPool.length > 0 && Math.random() < 0.20) {
         return reviewPool[Math.floor(Math.random() * reviewPool.length)];
@@ -2047,11 +2166,19 @@
       if (!freePlay) syncTrackPosition();
       const showActive = !freePlay && state.settings.showActive !== false;
       const activeSet = showActive ? new Set(currentActiveNotes) : null;
-      const hideStart = freePlay || !!currentSpec.noLitStart;
-      const startMidi = hideStart ? null : (promptNotes.length > 0 ? promptNotes[0] : currentRoot);
+      const litSet = new Set();
+      if (!freePlay && !jamActive) {
+        if (currentShowIndices.length > 0) {
+          currentShowIndices.forEach(idx => {
+            if (promptNotes[idx] !== undefined) litSet.add(promptNotes[idx]);
+          });
+        } else if (currentSpec.kind === 'chord-build' && promptNotes.length > 0 && effectiveMode(currentSpec) === 'hunt') {
+          litSet.add(promptNotes[0]); // softly light root while hunting a chord
+        }
+      }
 
       keyEls.forEach((arr, midi) => {
-        const isLit = startMidi !== null && midi === startMidi;
+        const isLit = litSet.has(midi);
         const isActive = activeSet !== null && activeSet.has(midi) && !isLit;
         const isFound = foundChordNotes.has(midi);
         arr.forEach(el => {
@@ -2071,7 +2198,7 @@
     }
 
     function updateActionButtons() {
-      const showRescue = !freePlay && !jamActive && phase === 'listening' && currentSpec.mode !== 'rhythm-echo';
+      const showRescue = !freePlay && !jamActive && phase === 'listening';
       showBtn.classList.toggle('hidden', !showRescue);
       const showPause = !freePlay && !jamActive && (phase === 'listening' || phase === 'feedback' || phase === 'playing' || phase === 'waiting' || paused);
       pauseBtn.classList.toggle('hidden', !showPause);
@@ -2090,34 +2217,40 @@
         d.className = 'step-dot';
         if (i < stepIndex) d.classList.add('done');
         else if (i === stepIndex && phase === 'listening') d.classList.add('active');
-        else if (i === 0) d.classList.add('lit');
+        else if (currentShowIndices.includes(i)) d.classList.add('lit');
         stepDots.appendChild(d);
       }
     }
 
     // =========================================================================
-    // 4. Prompt Generation, Backing Chords & Playback
+    // 4. Prompt Generation, Cadences, Backing Chords & Playback
     // =========================================================================
-    function pickStartNote(spec, activeNotes) {
-      const shift = octaveShift();
-      const { minMidi, maxMidi } = visibleRangeBounds();
-      let home = (typeof spec.root === 'number' ? spec.root : 60) + shift;
-      while (home < minMidi) home += 12;
-      while (home > maxMidi) home -= 12;
-
-      if (spec.mode === 'rhythm-echo' || activeNotes.length <= 1) return home;
-
-      // ~50% start on any active key (enabling upward AND downward phrases!) so variety multiplies 3-5x
-      if (Math.random() < 0.52 || typeof spec.root !== 'number') {
-        return activeNotes[Math.floor(Math.random() * activeNotes.length)];
+    function pickKeyForSpec(spec) {
+      if (Array.isArray(spec.keys)) {
+        return spec.keys[Math.floor(Math.random() * spec.keys.length)];
       }
-      return activeNotes.includes(home) ? home : activeNotes[0];
+      if (spec.newKeyEveryRound || cadKeyPc === null || sinceCad >= (Number(state.settings.cadenceEvery) || 5)) {
+        const choices = [];
+        for (let k = 0; k < 12; k++) if (k !== currentKeyPc) choices.push(k);
+        return choices[Math.floor(Math.random() * choices.length)];
+      }
+      return currentKeyPc;
+    }
+
+    function diatonicTriad(tonicMidi, degIdx, invert = false) {
+      const r = tonicMidi + MAJOR_STEPS[degIdx];
+      const third = tonicMidi + MAJOR_STEPS[(degIdx + 2) % 7] + (degIdx + 2 >= 7 ? 12 : 0);
+      const fifth = tonicMidi + MAJOR_STEPS[(degIdx + 4) % 7] + (degIdx + 4 >= 7 ? 12 : 0);
+      if (!invert) return [r, third, fifth];
+      const inv = Math.floor(Math.random() * 3);
+      if (inv === 1) return [third, fifth, r + 12];
+      if (inv === 2) return [fifth - 12, r, third];
+      return [r, third, fifth];
     }
 
     function generateContourPhrase(activeNotes, startMidi, len) {
       const idxOf = m => activeNotes.indexOf(m);
       const startIdx = Math.max(0, idxOf(startMidi));
-      const maxIdx = activeNotes.length - 1;
       const contours = ['up', 'down', 'arch', 'valley', 'leap-step', 'repeat-jump'];
       const contour = contours[Math.floor(Math.random() * contours.length)];
       const seq = [activeNotes[startIdx]];
@@ -2151,116 +2284,109 @@
       return seq;
     }
 
-    function buildChordFromRoot(rootMidi, len, activeSet) {
-      const templates = len === 2
-        ? [[0, 7], [0, 4], [0, 3]]
-        : [[0, 4, 7], [0, 3, 7]];
-      const valid = templates
-        .map(t => t.map(off => rootMidi + off))
-        .filter(notes => notes.every(n => activeSet.has(n)));
-      if (valid.length) return valid[Math.floor(Math.random() * valid.length)];
-      return len === 2 ? [rootMidi, rootMidi + 7] : [rootMidi, rootMidi + 4, rootMidi + 7];
-    }
-
     function buildPrompt() {
-      maybeRotateOctave();
       currentSpec = pickSpecForPrompt();
+      maybeRotateOctave();
+      if (currentSpec.multiOctave && state.settings.varyOctaves !== false) {
+        const pool = (state.settings.keyboard || 'single') === 'single' ? [3, 4, 5] : [3, 4];
+        currentOctave = pool[Math.floor(Math.random() * pool.length)];
+      }
+      currentKeyPc = pickKeyForSpec(currentSpec);
+      const tonicMidi = tonicMidiFor(currentKeyPc, currentOctave);
       missesThisPrompt = 0;
       promptChords = [];
       foundChordNotes.clear();
-      currentActiveNotes = transposeForCurrentOctave(currentSpec.active);
+      currentShowIndices = Array.isArray(currentSpec.show) ? currentSpec.show.slice() : [];
+      currentActiveNotes = activeMidisForSpec(currentSpec, currentKeyPc, currentOctave);
+      const activeSet = new Set(currentActiveNotes);
 
-      const tempoScale = 0.90 + Math.random() * 0.22;
-
-      if (currentSpec.mode === 'rhythm-echo') {
-        currentRoot = pickStartNote(currentSpec, currentActiveNotes);
-        let chosenIdx = 0;
-        for (let attempt = 0; attempt < 12; attempt++) {
-          const idx = Math.floor(Math.random() * RHYTHM_ECHO_PATTERNS.length);
-          const sig = `r:${idx}`;
-          if (!recentSignatures.includes(sig) || attempt === 11) {
-            chosenIdx = idx;
-            rememberSignature(sig);
+      // 1. SINGLE-NOTE LESSONS (resolve stepwise to home!)
+      if (currentSpec.kind === 'single') {
+        let note = currentActiveNotes[0];
+        for (let a = 0; a < 12; a++) {
+          // On chromatic levels, bias ~45% toward the new outside notes so they get real practice
+          let cand;
+          if (currentSpec.outs && Math.random() < 0.45) {
+            const outMidis = currentSpec.outs.map(o => tonicMidi + o).filter(m => activeSet.has(m));
+            cand = outMidis.length ? outMidis[Math.floor(Math.random() * outMidis.length)] : currentActiveNotes[Math.floor(Math.random() * currentActiveNotes.length)];
+          } else {
+            cand = currentActiveNotes[Math.floor(Math.random() * currentActiveNotes.length)];
+          }
+          if (`sn:${cand}` !== recentSignatures[recentSignatures.length - 1] || a === 11) {
+            note = cand;
             break;
           }
         }
-        const pat = RHYTHM_ECHO_PATTERNS[chosenIdx].map(t => +(t * tempoScale).toFixed(3));
-        promptNotes = pat.map(() => currentRoot);
-        promptTimes = pat;
-        stepIndex = 0;
-        return;
-      }
-
-      const activeSet = new Set(currentActiveNotes);
-
-      // CHORD STAGES
-      const { maxMidi: maxVis } = visibleRangeBounds();
-      if (currentSpec.kind === 'chord-root') {
-        const roots = currentActiveNotes.filter(r => r + 7 <= maxVis);
-        const pool = roots.length ? roots : currentActiveNotes;
-        let root = pool[0];
-        for (let a = 0; a < 10; a++) {
-          const cand = pool[Math.floor(Math.random() * pool.length)];
-          if (`cr:${cand}` !== recentSignatures[recentSignatures.length - 1] || a === 9) { root = cand; break; }
-        }
-        const isMinor = [2, 4, 9].includes(root % 12);
-        const chord = isMinor ? [root, root + 3, root + 7] : [root, root + 4, root + 7];
-        currentRoot = root;
-        promptChords = [chord];
-        promptNotes = [root];
+        currentRoot = tonicMidi;
+        promptNotes = [note];
         promptTimes = [0];
-        rememberSignature(`cr:${root}`);
+        rememberSignature(`sn:${note}`);
         stepIndex = 0;
         return;
       }
 
-      if (currentSpec.kind === 'chord-build') {
-        const viableRoots = currentActiveNotes.filter(r =>
-          (activeSet.has(r + 4) && activeSet.has(r + 7)) ||
-          (activeSet.has(r + 3) && activeSet.has(r + 7))
-        );
-        const pool = viableRoots.length ? viableRoots : [currentActiveNotes[0]];
-        let chord = null;
-        for (let a = 0; a < 12; a++) {
-          const r = pool[Math.floor(Math.random() * pool.length)];
-          const c = buildChordFromRoot(r, currentSpec.len, activeSet);
-          const sig = `cb:${c.join('-')}`;
-          chord = c;
-          if (sig !== recentSignatures[recentSignatures.length - 1] && (!recentSignatures.includes(sig) || a >= 8)) break;
+      // 2. CHORD ROOTS (with optional inversions)
+      if (currentSpec.kind === 'chord-root') {
+        const degs = currentSpec.chordDegs || [0, 3, 4];
+        let deg = degs[0];
+        for (let a = 0; a < 10; a++) {
+          const cand = degs[Math.floor(Math.random() * degs.length)];
+          if (`cr:${currentKeyPc}-${cand}` !== recentSignatures[recentSignatures.length - 1] || a === 9) { deg = cand; break; }
         }
+        const rootMidi = tonicMidi + MAJOR_STEPS[deg];
+        const chord = diatonicTriad(tonicMidi, deg, !!currentSpec.inversions);
+        currentRoot = rootMidi;
+        promptChords = [chord];
+        promptNotes = [rootMidi];
+        promptTimes = [0];
+        rememberSignature(`cr:${currentKeyPc}-${deg}`);
+        stepIndex = 0;
+        return;
+      }
+
+      // 3. CHORD TONES / BUILD THE CHORD (one-at-a-time arpeggio OR together)
+      if (currentSpec.kind === 'chord-build') {
+        const degs = currentSpec.chordDegs || [0, 3, 4];
+        let deg = degs[0];
+        for (let a = 0; a < 10; a++) {
+          const cand = degs[Math.floor(Math.random() * degs.length)];
+          if (`cb:${currentKeyPc}-${cand}` !== recentSignatures[recentSignatures.length - 1] || a === 9) { deg = cand; break; }
+        }
+        const chord = diatonicTriad(tonicMidi, deg, false);
         currentRoot = chord[0];
         promptChords = [chord];
         promptNotes = chord;
         promptTimes = [0];
-        rememberSignature(`cb:${chord.join('-')}`);
+        rememberSignature(`cb:${currentKeyPc}-${deg}`);
         stepIndex = 0;
         return;
       }
 
+      // 4. CHORD CHANGES (two-chord progression)
       if (currentSpec.kind === 'chord-change') {
-        const roots = currentActiveNotes.filter(r => r + 7 <= maxVis);
-        const pool = roots.length >= 2 ? roots : currentActiveNotes;
-        let r1 = pool[0], r2 = pool[pool.length - 1];
+        const degs = currentSpec.chordDegs || [0, 1, 2, 3, 4, 5];
+        let d1 = degs[0], d2 = degs[degs.length - 1];
         for (let a = 0; a < 12; a++) {
-          const c1 = pool[Math.floor(Math.random() * pool.length)];
-          const others = pool.filter(x => x !== c1);
+          const c1 = degs[Math.floor(Math.random() * degs.length)];
+          const others = degs.filter(x => x !== c1);
           const c2 = others[Math.floor(Math.random() * others.length)];
-          const sig = `cc:${c1}-${c2}`;
-          r1 = c1; r2 = c2;
+          const sig = `cc:${currentKeyPc}-${c1}-${c2}`;
+          d1 = c1; d2 = c2;
           if (sig !== recentSignatures[recentSignatures.length - 1] && (!recentSignatures.includes(sig) || a >= 8)) break;
         }
-        const mkTriad = r => ([2, 4, 9].includes(r % 12) ? [r, r + 3, r + 7] : [r, r + 4, r + 7]);
+        const r1 = tonicMidi + MAJOR_STEPS[d1];
+        const r2 = tonicMidi + MAJOR_STEPS[d2];
         currentRoot = r1;
-        promptChords = [mkTriad(r1), mkTriad(r2)];
+        promptChords = [diatonicTriad(tonicMidi, d1, false), diatonicTriad(tonicMidi, d2, false)];
         promptNotes = [r1, r2];
         promptTimes = [0, 0.95];
-        rememberSignature(`cc:${r1}-${r2}`);
+        rememberSignature(`cc:${currentKeyPc}-${d1}-${d2}`);
         stepIndex = 0;
         return;
       }
 
-      // ~20% chance to gently revisit a previously missed phrase that fits the current active keys
-      if (missedQueue.length > 0 && Math.random() < 0.22) {
+      // 5. PHRASES & MELODIES (2 to 6 notes, with optional stepping-stone lit keys & musical hooks)
+      if (missedQueue.length > 0 && Math.random() < 0.20) {
         const matchIdx = missedQueue.findIndex(q =>
           q.length === currentSpec.len &&
           q.every(n => activeSet.has(n)) &&
@@ -2270,8 +2396,7 @@
           const revisit = missedQueue.splice(matchIdx, 1)[0];
           currentRoot = revisit[0];
           promptNotes = revisit;
-          const rBank = MELODY_RHYTHMS[revisit.length] || MELODY_RHYTHMS[3];
-          promptTimes = rBank[Math.floor(Math.random() * rBank.length)].map(t => +(t * tempoScale).toFixed(3));
+          promptTimes = (MELODY_RHYTHMS[revisit.length] || MELODY_RHYTHMS[3])[0].slice();
           rememberSignature(`m:${revisit.join('-')}`);
           stepIndex = 0;
           return;
@@ -2280,19 +2405,16 @@
 
       let bestSeq = null;
       for (let attempt = 0; attempt < 14; attempt++) {
-        const startNote = pickStartNote(currentSpec, currentActiveNotes);
+        const startNote = currentActiveNotes[Math.floor(Math.random() * currentActiveNotes.length)];
         let seq = null;
 
-        if (currentSpec.hooks && Math.random() < 0.42) {
+        if (currentSpec.hooks && currentSpec.len <= 5 && Math.random() < 0.42) {
           const bank = currentSpec.len === 5 ? HOOKS_5 : (currentSpec.len === 4 ? HOOKS_4 : HOOKS_3);
           const valid = bank
             .map(h => h.map(off => startNote + off))
             .filter(notes => notes.every(n => activeSet.has(n)));
-          if (valid.length) {
-            seq = valid[Math.floor(Math.random() * valid.length)];
-          }
+          if (valid.length) seq = valid[Math.floor(Math.random() * valid.length)];
         }
-
         if (!seq) {
           seq = generateContourPhrase(currentActiveNotes, startNote, currentSpec.len);
         }
@@ -2300,33 +2422,19 @@
         const sig = `m:${seq.join('-')}`;
         bestSeq = seq;
         const lastSig = recentSignatures[recentSignatures.length - 1];
-        if (sig !== lastSig && (!recentSignatures.includes(sig) || attempt >= 8)) {
-          break;
-        }
+        if (sig !== lastSig && (!recentSignatures.includes(sig) || attempt >= 8)) break;
       }
 
       currentRoot = bestSeq[0];
       promptNotes = bestSeq;
       rememberSignature(`m:${bestSeq.join('-')}`);
-      const rBank = MELODY_RHYTHMS[bestSeq.length] || MELODY_RHYTHMS[3];
-      promptTimes = rBank[Math.floor(Math.random() * rBank.length)].map(t => +(t * tempoScale).toFixed(3));
+      promptTimes = (MELODY_RHYTHMS[bestSeq.length] || MELODY_RHYTHMS[3])[0].slice();
       stepIndex = 0;
     }
 
-    function playLivingBacking(rootMidi, when) {
-      const base = rootMidi - 12 >= 48 ? rootMidi - 12 : rootMidi;
-      const style = backingStep % 4;
-      backingStep++;
-
-      if (style === 0) {
-        AudioEngine.chord([base, base + 4, base + 7], when, 1.9, 0.20);
-      } else if (style === 1) {
-        AudioEngine.chord([base, base + 7], when, 2.0, 0.21);
-      } else if (style === 2) {
-        [base, base + 4, base + 7].forEach((m, i) => AudioEngine.note(m, when + i * 0.045, 1.8, 0.18));
-      } else {
-        AudioEngine.chord([base, base + 7, base + 12], when, 1.9, 0.17);
-      }
+    function playLivingBacking(tonicMidi, when) {
+      const base = tonicMidi - 12 >= 36 ? tonicMidi - 12 : tonicMidi;
+      AudioEngine.chord([base, base + 4, base + 7], when, 2.0, 0.22);
     }
 
     let promptRunId = 0;
@@ -2350,29 +2458,31 @@
         if (promptChords.length > 0) {
           promptChords.forEach((ch, idx) => {
             const dt = promptTimes[idx] || 0;
-            AudioEngine.chord(ch, base + dt, 1.5, 0.62);
-            if (!currentSpec.noLitStart && idx === 0) {
-              timers.push(setTimeout(() => flashKey(ch[0], 'hit', 280), dt * 1000 + 50));
+            if (currentSpec.arpeggio) {
+              ch.forEach((m, j) => AudioEngine.note(m, base + dt + j * 0.28, 0.9, 0.78));
+            } else {
+              AudioEngine.chord(ch, base + dt, 1.5, 0.62);
             }
           });
-          const endMs = ((promptTimes[promptTimes.length - 1] || 0) + 1.15) * 1000;
+          const extra = currentSpec.arpeggio ? 1.45 : 1.15;
+          const endMs = ((promptTimes[promptTimes.length - 1] || 0) + extra) * 1000;
           timers.push(setTimeout(() => { if (onDone) onDone(); }, endMs));
           return;
         }
 
-        if (state.settings.backing && currentSpec.mode !== 'rhythm-echo') {
-          playLivingBacking(promptNotes[0], base);
+        if (currentSpec.overChord || state.settings.backing) {
+          playLivingBacking(tonicMidiFor(currentKeyPc, currentOctave), base);
         }
 
         promptNotes.forEach((midi, idx) => {
-          const dt = promptTimes[idx];
-          AudioEngine.note(midi, base + dt, 0.72, 0.86);
-          if ((!currentSpec.noLitStart && idx === 0) || currentSpec.mode === 'rhythm-echo') {
+          const dt = promptTimes[idx] || 0;
+          AudioEngine.note(midi, base + dt, currentSpec.kind === 'single' ? 1.05 : 0.74, 0.86);
+          if (currentShowIndices.includes(idx)) {
             timers.push(setTimeout(() => flashKey(midi, 'hit', 240), dt * 1000 + 50));
           }
         });
 
-        const endMs = (promptTimes[promptTimes.length - 1] + 0.56) * 1000;
+        const endMs = ((promptTimes[promptTimes.length - 1] || 0) + (currentSpec.kind === 'single' ? 0.65 : 0.56)) * 1000;
         timers.push(setTimeout(() => { if (onDone) onDone(); }, endMs));
       });
     }
@@ -2387,7 +2497,8 @@
         foundChordNotes.clear();
         renderDots();
         updateActionButtons();
-        setStatus(currentSpec.mode === 'rhythm-echo' ? 'Echo it' : 'Your turn', false);
+        const modeLabel = effectiveMode(currentSpec) === 'hunt' ? 'Your turn · Hunt' : 'Your turn';
+        setStatus(modeLabel, false);
       });
     }
 
@@ -2407,20 +2518,28 @@
       isRetryOfPrompt = false;
       buildPrompt();
 
-      if (pendingOctaveShift) {
-        const { fromOct, toOct } = pendingOctaveShift;
+      const cadEvery = Number(state.settings.cadenceEvery !== undefined ? state.settings.cadenceEvery : 5);
+      const keyChanged = cadKeyPc !== currentKeyPc;
+      const octChanged = cadOct !== currentOctave || !!pendingOctaveShift;
+      const periodicDue = cadEvery > 0 && sinceCad >= cadEvery;
+      const needCadence = cadKeyPc === null || keyChanged || octChanged || periodicDue;
+
+      if (needCadence) {
+        const octShift = pendingOctaveShift;
         pendingOctaveShift = null;
-        phase = 'playing';
-        inOctaveCadence = true;
+        cadKeyPc = currentKeyPc;
+        cadOct = currentOctave;
+        sinceCad = 1;
         applySpotlight();
         renderDots();
         updateActionButtons();
-        playOctaveShiftCue(fromOct, toOct);
-        timers.push(setTimeout(() => {
-          inOctaveCadence = false;
-          if (!paused) launchCurrentPrompt();
-        }, 2650));
+        const tonicMidi = tonicMidiFor(currentKeyPc, currentOctave);
+        const cadLabel = octShift
+          ? `New octave · ${KEY_NAMES[currentKeyPc]}${currentOctave}`
+          : (keyChanged ? `New key · ${KEY_NAMES[currentKeyPc]}` : `Key of ${KEY_NAMES[currentKeyPc]}`);
+        playCadence(tonicMidi, cadLabel, () => launchCurrentPrompt());
       } else {
+        sinceCad++;
         launchCurrentPrompt();
       }
     }
@@ -2437,8 +2556,8 @@
       jamBtn.classList.add('btn-active');
       playBtn.textContent = 'Play';
       currentSpec = pickSpecForPrompt();
-      if (currentSpec.active.length === 1) currentSpec = FRONTIER[3];
-      currentActiveNotes = transposeForCurrentOctave(currentSpec.active);
+      currentActiveNotes = activeMidisForSpec(currentSpec, currentKeyPc, currentOctave);
+      if (currentActiveNotes.length < 3) currentActiveNotes = [60, 62, 64, 67, 69];
       promptNotes = [currentActiveNotes[0]];
       promptChords = [];
       foundChordNotes.clear();
@@ -2447,11 +2566,12 @@
       stepDots.innerHTML = '<span id="beatDot" class="step-dot active"></span>';
       statusText.textContent = 'Jam along';
 
+      const t = tonicMidiFor(currentKeyPc, 3);
       const chords = [
-        [48, 52, 55],
-        [45, 48, 52],
-        [48, 53, 57],
-        [47, 50, 55]
+        [t, t + 4, t + 7],
+        [t - 3, t, t + 4],
+        [t, t + 5, t + 9],
+        [t - 1, t + 2, t + 7]
       ];
       jamBeat = 0;
       const tick = () => {
@@ -2483,7 +2603,7 @@
     }
 
     // =========================================================================
-    // 6. Key Tap Handling (Pure-Ear Hunting, One-Shot & Chords)
+    // 6. Key Tap Handling (Hunt -> Clean, Stepwise Resolution & Chords)
     // =========================================================================
     function handleKeyTap(midi) {
       if (freePlay) {
@@ -2503,13 +2623,11 @@
         return;
       }
 
-      // If user is still tapping keys during the pause before the next test, politely wait
       if (phase === 'feedback' && waitingForNextRound) {
         scheduleNextRound(1400);
         return;
       }
 
-      // If user taps keys while a prompt is playing (or waiting to replay), pause & restart the prompt cleanly
       if ((phase === 'playing' && !inOctaveCadence) || phase === 'waiting') {
         clearTimers();
         promptRunId++;
@@ -2523,25 +2641,35 @@
 
       if (phase !== 'listening') return;
 
+      const curMode = effectiveMode(currentSpec);
+
       const finishPromptSuccess = () => {
         phase = 'feedback';
         const hadMisses = missesThisPrompt > 0;
         if (!isRetryOfPrompt) recordOutcome(missesThisPrompt);
-        else if (!hadMisses) {
-          // Nailing the clean retry gives a small confidence boost without double-counting tries
-          recentCleanStreak++;
-        }
+        else if (!hadMisses) recentCleanStreak++;
         updateActionButtons();
-        if (hadMisses && !isRetryOfPrompt && currentSpec.mode === 'hunt') {
-          isRetryOfPrompt = true;
-          missesThisPrompt = 0;
-          statusText.textContent = 'Got it — once more';
-          timers.push(setTimeout(() => {
-            if (!paused) launchCurrentPrompt();
-          }, 1350));
+
+        const advanceAfter = () => {
+          if (hadMisses && !isRetryOfPrompt && curMode === 'hunt') {
+            isRetryOfPrompt = true;
+            missesThisPrompt = 0;
+            statusText.textContent = 'Got it — once more';
+            timers.push(setTimeout(() => {
+              if (!paused) launchCurrentPrompt();
+            }, 1250));
+          } else {
+            statusText.textContent = lastMilestoneMsg || (hadMisses ? 'Got it' : 'Nice');
+            scheduleNextRound(lastMilestoneMsg ? 2300 : 1450);
+          }
+        };
+
+        // On single-note lessons, play & light up the stepwise resolution to the home key!
+        if (currentSpec.kind === 'single' && promptNotes.length === 1) {
+          statusText.textContent = lastMilestoneMsg || (hadMisses ? 'Resolving…' : 'Nice · resolving');
+          playResolution(promptNotes[0], tonicMidiFor(currentKeyPc, currentOctave), advanceAfter);
         } else {
-          statusText.textContent = lastMilestoneMsg || (hadMisses ? 'Got it' : 'Nice');
-          scheduleNextRound(lastMilestoneMsg ? 2400 : 1850);
+          advanceAfter();
         }
       };
 
@@ -2560,7 +2688,7 @@
           return;
         }
         missesThisPrompt++;
-        if (currentSpec.mode === 'hunt') {
+        if (curMode === 'hunt') {
           flashKey(midi, 'nudge', 300);
         } else {
           phase = 'feedback';
@@ -2583,19 +2711,14 @@
         if (stepIndex >= promptNotes.length) {
           finishPromptSuccess();
         } else {
-          statusText.textContent = currentSpec.mode === 'rhythm-echo' ? 'Keep going' : '';
+          statusText.textContent = '';
         }
       } else {
-        if (stepIndex === 0 && !currentSpec.noLitStart) {
-          flashKey(expected, 'lit', 300);
-          return;
-        }
-
         missesThisPrompt++;
 
-        if (currentSpec.mode === 'hunt') {
+        if (curMode === 'hunt') {
           flashKey(midi, 'nudge', 300);
-        } else if (currentSpec.mode === 'oneshot') {
+        } else {
           phase = 'feedback';
           recordOutcome(2);
           updateActionButtons();
@@ -2611,36 +2734,7 @@
       const base = ctx.currentTime + 0.05;
       foundChordNotes.clear();
 
-      if (promptChords.length > 0) {
-        promptChords.forEach((ch, idx) => {
-          const dt = promptTimes[idx] || 0;
-          AudioEngine.chord(ch, base + dt, 1.4, 0.62);
-          const toLight = currentSpec.kind === 'chord-build' ? ch : [ch[0]];
-          toLight.forEach(m => timers.push(setTimeout(() => flashKey(m, 'hit', 520), dt * 1000 + 30)));
-        });
-        const endMs = ((promptTimes[promptTimes.length - 1] || 0) + 1.2) * 1000;
-        timers.push(setTimeout(() => {
-          if (paused) return;
-          phase = 'listening';
-          stepIndex = 0;
-          applySpotlight();
-          renderDots();
-          updateActionButtons();
-          statusText.textContent = 'Try again';
-        }, endMs));
-        return;
-      }
-
-      if (state.settings.backing && currentSpec.mode !== 'rhythm-echo') {
-        playLivingBacking(promptNotes[0], base);
-      }
-      promptNotes.forEach((midi, idx) => {
-        const dt = promptTimes[idx];
-        AudioEngine.note(midi, base + dt, 0.72, 0.82);
-        timers.push(setTimeout(() => flashKey(midi, 'hit', 340), dt * 1000 + 30));
-      });
-      const endMs = (promptTimes[promptTimes.length - 1] + 0.9) * 1000;
-      timers.push(setTimeout(() => {
+      const backToListening = () => {
         if (paused) return;
         phase = 'listening';
         stepIndex = 0;
@@ -2648,7 +2742,45 @@
         renderDots();
         updateActionButtons();
         statusText.textContent = 'Try again';
-      }, endMs));
+      };
+
+      if (promptChords.length > 0) {
+        promptChords.forEach((ch, idx) => {
+          const dt = promptTimes[idx] || 0;
+          if (currentSpec.arpeggio) {
+            ch.forEach((m, j) => AudioEngine.note(m, base + dt + j * 0.25, 0.85, 0.72));
+          } else {
+            AudioEngine.chord(ch, base + dt, 1.4, 0.62);
+          }
+          const toLight = currentSpec.kind === 'chord-build' ? ch : [ch[0]];
+          toLight.forEach(m => timers.push(setTimeout(() => flashKey(m, 'hit', 520), dt * 1000 + 30)));
+        });
+        const endMs = ((promptTimes[promptTimes.length - 1] || 0) + 1.25) * 1000;
+        timers.push(setTimeout(backToListening, endMs));
+        return;
+      }
+
+      // Single-note miss: play the note, light it, and resolve stepwise home!
+      if (currentSpec.kind === 'single' && promptNotes.length === 1) {
+        const m = promptNotes[0];
+        AudioEngine.note(m, base, 0.72, 0.84);
+        timers.push(setTimeout(() => flashKey(m, 'hit', 360), 30));
+        timers.push(setTimeout(() => {
+          playResolution(m, tonicMidiFor(currentKeyPc, currentOctave), backToListening);
+        }, 420));
+        return;
+      }
+
+      if (currentSpec.overChord || state.settings.backing) {
+        playLivingBacking(tonicMidiFor(currentKeyPc, currentOctave), base);
+      }
+      promptNotes.forEach((midi, idx) => {
+        const dt = promptTimes[idx] || 0;
+        AudioEngine.note(midi, base + dt, 0.72, 0.82);
+        timers.push(setTimeout(() => flashKey(midi, 'hit', 340), dt * 1000 + 30));
+      });
+      const endMs = ((promptTimes[promptTimes.length - 1] || 0) + 0.9) * 1000;
+      timers.push(setTimeout(backToListening, endMs));
     }
 
     // =========================================================================
@@ -2664,16 +2796,19 @@
       paused = false;
       clearTimers();
       phase = 'idle';
+      cadKeyPc = null;
+      sinceCad = 999;
       promptNotes = [];
       promptChords = [];
+      currentShowIndices = [];
       foundChordNotes.clear();
       stepIndex = 0;
       currentSpec = selectedMode === 'auto'
-        ? FRONTIER[Math.min(FRONTIER.length - 1, Math.floor(state.skill))]
+        ? FRONTIER[activeFrontierIndex()]
         : (STAGE_BY_ID[selectedMode] || FRONTIER[0]);
-      currentActiveNotes = transposeForCurrentOctave(currentSpec.active);
-      currentRoot = pickStartNote(currentSpec, currentActiveNotes);
-      if (!currentActiveNotes.includes(currentRoot)) currentRoot = currentActiveNotes[0];
+      currentKeyPc = Array.isArray(currentSpec.keys) ? currentSpec.keys[0] : 0;
+      currentActiveNotes = activeMidisForSpec(currentSpec, currentKeyPc, currentOctave);
+      currentRoot = tonicMidiFor(currentKeyPc, currentOctave);
       applySpotlight();
       renderDots();
       updateActionButtons();
@@ -2740,17 +2875,17 @@
           hist: incoming.hist || {},
           ready: incoming.ready || {},
           mastered: incoming.mastered || {},
-          settings: Object.assign(
-            { backing: true, warmup: true, varyOctaves: true, keyboard: 'single', sharedC: false, cLabels: true, showActive: true },
-            incoming.settings || {}
-          )
+          settings: Object.assign({}, DEFAULT_SETTINGS, incoming.settings || {})
         });
+        cadenceStyleSelect.value = state.settings.cadenceType || 'I-IV-V-I';
+        cadenceEverySelect.value = String(state.settings.cadenceEvery !== undefined ? state.settings.cadenceEvery : 5);
+        resStyleSelect.value = state.settings.resStyle || 'nearest';
         keyboardSelect.value = state.settings.keyboard;
         sharedCToggle.checked = !!state.settings.sharedC;
         sharedCRow.classList.toggle('hidden', state.settings.keyboard === 'single');
         labelsToggle.checked = state.settings.cLabels !== false;
         activeKeysToggle.checked = state.settings.showActive !== false;
-        backingToggle.checked = state.settings.backing !== false;
+        backingToggle.checked = !!state.settings.backing;
         warmupToggle.checked = state.settings.warmup !== false;
         varyOctavesToggle.checked = state.settings.varyOctaves !== false;
         saveState();
@@ -2764,6 +2899,19 @@
 
     stageSelect.addEventListener('change', () => applyModeSelection(stageSelect.value));
     portraitStageSelect.addEventListener('change', () => applyModeSelection(portraitStageSelect.value));
+
+    cadenceStyleSelect.addEventListener('change', () => {
+      state.settings.cadenceType = cadenceStyleSelect.value;
+      saveState();
+    });
+    cadenceEverySelect.addEventListener('change', () => {
+      state.settings.cadenceEvery = Number(cadenceEverySelect.value);
+      saveState();
+    });
+    resStyleSelect.addEventListener('change', () => {
+      state.settings.resStyle = resStyleSelect.value;
+      saveState();
+    });
 
     keyboardSelect.addEventListener('change', () => {
       state.settings.keyboard = keyboardSelect.value;
