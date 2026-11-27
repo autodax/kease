@@ -1,8 +1,8 @@
-const CACHE = 'keys-cache-v58';
+const CACHE = 'keys-cache-v59';
 const ASSETS = [
   './',
   './index.html',
-  './manifest.json',
+  './manifest.json?v=2',
   './icon-180.png?v=1',
   './icon-512.png?v=1',
   './piano/21.m4a',
