@@ -961,7 +961,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-27.9';
+    const APP_VERSION = '2026-11-27.10';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -2023,12 +2023,15 @@
       if (!pool.includes(currentOctave)) {
         currentOctave = pool.includes(4) ? 4 : pool[0];
       }
-      if (cleanInOctave >= CLEAN_PER_OCTAVE && recentCleanStreak >= 2) {
+      const needed = currentSpec.multiOctave ? 4 : CLEAN_PER_OCTAVE;
+      if (cleanInOctave >= needed && recentCleanStreak >= 2) {
         const prevOct = currentOctave;
-        const others = pool.filter(o => o !== currentOctave);
-        currentOctave = others[Math.floor(Math.random() * others.length)];
-        cleanInOctave = 0;
-        pendingOctaveShift = { fromOct: prevOct, toOct: currentOctave };
+        const nextOct = pickNoRepeat(pool, currentOctave);
+        if (nextOct !== undefined && nextOct !== currentOctave) {
+          currentOctave = nextOct;
+          cleanInOctave = 0;
+          pendingOctaveShift = { fromOct: prevOct, toOct: currentOctave };
+        }
       }
     }
 
@@ -2414,14 +2417,6 @@
       const steps = currentScaleSteps();
       currentSpec = pickSpecForPrompt();
       maybeRotateOctave();
-      if (currentSpec.multiOctave && state.settings.varyOctaves !== false) {
-        const pool = allowedOctavesForSpec(currentSpec);
-        const nextOct = pickNoRepeat(pool, currentOctave);
-        if (nextOct !== undefined && nextOct !== currentOctave) {
-          pendingOctaveShift = { fromOct: currentOctave, toOct: nextOct };
-          currentOctave = nextOct;
-        }
-      }
       currentKeyPc = pickKeyForSpec(currentSpec);
       const tonicMidi = tonicMidiFor(currentKeyPc, currentOctave);
       missesThisPrompt = 0;
