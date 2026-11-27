@@ -922,7 +922,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-27.2';
+    const APP_VERSION = '2026-11-27.3';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -1893,19 +1893,20 @@
       const style = state.settings.resStyle || 'nearest';
       const path = buildResolutionMidis(midi, tonicMidi, style);
       if (path.length <= 1) {
-        timers.push(setTimeout(() => { if (!paused && onDone) onDone(); }, 650));
+        timers.push(setTimeout(() => { if (!paused && onDone) onDone(); }, 750));
         return;
       }
-      const stepSec = 0.27;
+      const leadSec = 0.38;
+      const stepSec = 0.42; // matches Ear Trainer's calm stepwise resolution pace
       AudioEngine.whenReady((ctx) => {
         if (paused || freePlay || jamActive) return;
-        const base = ctx.currentTime + 0.16;
+        const base = ctx.currentTime + leadSec;
         path.forEach((m, i) => {
           const isLast = i === path.length - 1;
-          AudioEngine.note(m, base + i * stepSec, isLast ? 0.85 : 0.34, isLast ? 0.72 : 0.62);
-          timers.push(setTimeout(() => flashKey(m, 'res', isLast ? 520 : 240), Math.round(160 + i * stepSec * 1000)));
+          AudioEngine.note(m, base + i * stepSec, isLast ? 0.90 : 0.42, isLast ? 0.76 : 0.68);
+          timers.push(setTimeout(() => flashKey(m, 'res', isLast ? 620 : 360), Math.round((leadSec + i * stepSec) * 1000)));
         });
-        const totalMs = Math.round(160 + (path.length - 1) * stepSec * 1000 + 820);
+        const totalMs = Math.round((leadSec + (path.length - 1) * stepSec + 0.92) * 1000);
         timers.push(setTimeout(() => { if (!paused && onDone) onDone(); }, totalMs));
       });
     }
