@@ -804,6 +804,33 @@
         </select>
       </div>
       <div class="p-row">
+        <label for="cadenceTempoSelect">Cadence speed</label>
+        <select id="cadenceTempoSelect" class="stage-select" style="max-width:230px;">
+          <option value="0.75">Slow</option>
+          <option value="1">Normal</option>
+          <option value="1.3">Fast</option>
+          <option value="1.65">Very fast</option>
+        </select>
+      </div>
+      <div class="p-row">
+        <label for="noteTempoSelect">Notes speed</label>
+        <select id="noteTempoSelect" class="stage-select" style="max-width:230px;">
+          <option value="0.75">Slow</option>
+          <option value="1">Normal</option>
+          <option value="1.3">Fast</option>
+          <option value="1.65">Very fast</option>
+        </select>
+      </div>
+      <div class="p-row">
+        <label for="resTempoSelect">Resolution speed</label>
+        <select id="resTempoSelect" class="stage-select" style="max-width:230px;">
+          <option value="0.75">Slow</option>
+          <option value="1">Normal</option>
+          <option value="1.3">Fast</option>
+          <option value="1.65">Very fast</option>
+        </select>
+      </div>
+      <div class="p-row">
         <label for="keyboardSelect">Keyboard</label>
         <select id="keyboardSelect" class="stage-select" style="max-width:230px;">
           <option value="single">2 Octaves (Single tier)</option>
@@ -922,7 +949,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-27.3';
+    const APP_VERSION = '2026-11-27.4';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -1639,7 +1666,10 @@
       showActive: true,
       cadenceType: 'I-IV-V-I',
       cadenceEvery: 5,
-      resStyle: 'nearest'
+      resStyle: 'nearest',
+      cadenceTempo: 1,
+      noteTempo: 1,
+      resTempo: 1
     };
 
     const STORE_KEY = 'keys.state.v2';
@@ -1703,6 +1733,9 @@
     const cadenceStyleSelect = document.getElementById('cadenceStyleSelect');
     const cadenceEverySelect = document.getElementById('cadenceEverySelect');
     const resStyleSelect = document.getElementById('resStyleSelect');
+    const cadenceTempoSelect = document.getElementById('cadenceTempoSelect');
+    const noteTempoSelect = document.getElementById('noteTempoSelect');
+    const resTempoSelect = document.getElementById('resTempoSelect');
     const keyboardSelect = document.getElementById('keyboardSelect');
     const sharedCRow = document.getElementById('sharedCRow');
     const sharedCToggle = document.getElementById('sharedCToggle');
@@ -1749,6 +1782,9 @@
     cadenceStyleSelect.value = state.settings.cadenceType || 'I-IV-V-I';
     cadenceEverySelect.value = String(state.settings.cadenceEvery !== undefined ? state.settings.cadenceEvery : 5);
     resStyleSelect.value = state.settings.resStyle || 'nearest';
+    cadenceTempoSelect.value = String(state.settings.cadenceTempo || 1);
+    noteTempoSelect.value = String(state.settings.noteTempo || 1);
+    resTempoSelect.value = String(state.settings.resTempo || 1);
     keyboardSelect.value = state.settings.keyboard;
     sharedCToggle.checked = state.settings.sharedC;
     sharedCRow.classList.toggle('hidden', state.settings.keyboard === 'single');
@@ -1862,7 +1898,8 @@
     function playCadence(tonicMidi, labelText, onDone) {
       const style = state.settings.cadenceType || 'I-IV-V-I';
       const chords = buildCadenceChords(tonicMidi, style);
-      const stepSec = 0.52;
+      const tempo = Number(state.settings.cadenceTempo) || 1;
+      const stepSec = 0.52 / tempo;
       inOctaveCadence = true;
       phase = 'playing';
       syncTrackPosition();
@@ -1873,14 +1910,13 @@
         const base = ctx.currentTime + 0.08;
         chords.forEach((notes, i) => {
           const isLast = i === chords.length - 1;
-          const dur = isLast ? 0.95 : 0.48;
+          const dur = (isLast ? 0.95 : 0.48) / tempo;
           const vel = notes.length === 1 ? 0.56 : (isLast ? 0.40 : 0.36);
           AudioEngine.chord(notes, base + i * stepSec, dur, vel);
         });
-        // Gently pulse home key on the final resolving tonic chord
         const lastMs = Math.round(((chords.length - 1) * stepSec) * 1000 + 80);
-        timers.push(setTimeout(() => flashKey(tonicMidi, 'res', 520), lastMs));
-        const totalMs = Math.round(((chords.length - 1) * stepSec + 1.05) * 1000);
+        timers.push(setTimeout(() => flashKey(tonicMidi, 'res', Math.round(520 / tempo)), lastMs));
+        const totalMs = Math.round(((chords.length - 1) * stepSec + 1.05 / tempo) * 1000);
         timers.push(setTimeout(() => {
           inOctaveCadence = false;
           if (!paused && onDone) onDone();
@@ -1892,21 +1928,22 @@
     function playResolution(midi, tonicMidi, onDone) {
       const style = state.settings.resStyle || 'nearest';
       const path = buildResolutionMidis(midi, tonicMidi, style);
+      const tempo = Number(state.settings.resTempo) || 1;
       if (path.length <= 1) {
-        timers.push(setTimeout(() => { if (!paused && onDone) onDone(); }, 750));
+        timers.push(setTimeout(() => { if (!paused && onDone) onDone(); }, Math.round(750 / tempo)));
         return;
       }
       const leadSec = 0.38;
-      const stepSec = 0.42; // matches Ear Trainer's calm stepwise resolution pace
+      const stepSec = 0.42 / tempo; // matches Ear Trainer's calm stepwise resolution pace
       AudioEngine.whenReady((ctx) => {
         if (paused || freePlay || jamActive) return;
         const base = ctx.currentTime + leadSec;
         path.forEach((m, i) => {
           const isLast = i === path.length - 1;
-          AudioEngine.note(m, base + i * stepSec, isLast ? 0.90 : 0.42, isLast ? 0.76 : 0.68);
-          timers.push(setTimeout(() => flashKey(m, 'res', isLast ? 620 : 360), Math.round((leadSec + i * stepSec) * 1000)));
+          AudioEngine.note(m, base + i * stepSec, (isLast ? 0.90 : 0.42) / tempo, isLast ? 0.76 : 0.68);
+          timers.push(setTimeout(() => flashKey(m, 'res', Math.round((isLast ? 620 : 360) / tempo)), Math.round((leadSec + i * stepSec) * 1000)));
         });
-        const totalMs = Math.round((leadSec + (path.length - 1) * stepSec + 0.92) * 1000);
+        const totalMs = Math.round((leadSec + (path.length - 1) * stepSec + 0.92 / tempo) * 1000);
         timers.push(setTimeout(() => { if (!paused && onDone) onDone(); }, totalMs));
       });
     }
@@ -2455,18 +2492,19 @@
       AudioEngine.whenReady((ctx) => {
         if (myRun !== promptRunId || phase !== 'playing' || paused) return;
         const base = ctx.currentTime + 0.08;
+        const nt = Number(state.settings.noteTempo) || 1;
 
         if (promptChords.length > 0) {
           promptChords.forEach((ch, idx) => {
-            const dt = promptTimes[idx] || 0;
+            const dt = (promptTimes[idx] || 0) / nt;
             if (currentSpec.arpeggio) {
-              ch.forEach((m, j) => AudioEngine.note(m, base + dt + j * 0.28, 0.9, 0.78));
+              ch.forEach((m, j) => AudioEngine.note(m, base + dt + (j * 0.28) / nt, 0.9 / nt, 0.78));
             } else {
-              AudioEngine.chord(ch, base + dt, 1.5, 0.62);
+              AudioEngine.chord(ch, base + dt, 1.5 / nt, 0.62);
             }
           });
-          const extra = currentSpec.arpeggio ? 1.45 : 1.15;
-          const endMs = ((promptTimes[promptTimes.length - 1] || 0) + extra) * 1000;
+          const extra = (currentSpec.arpeggio ? 1.45 : 1.15) / nt;
+          const endMs = (((promptTimes[promptTimes.length - 1] || 0) / nt) + extra) * 1000;
           timers.push(setTimeout(() => { if (onDone) onDone(); }, endMs));
           return;
         }
@@ -2476,14 +2514,14 @@
         }
 
         promptNotes.forEach((midi, idx) => {
-          const dt = promptTimes[idx] || 0;
-          AudioEngine.note(midi, base + dt, currentSpec.kind === 'single' ? 1.05 : 0.74, 0.86);
+          const dt = (promptTimes[idx] || 0) / nt;
+          AudioEngine.note(midi, base + dt, (currentSpec.kind === 'single' ? 1.05 : 0.74) / nt, 0.86);
           if (currentShowIndices.includes(idx)) {
-            timers.push(setTimeout(() => flashKey(midi, 'hit', 240), dt * 1000 + 50));
+            timers.push(setTimeout(() => flashKey(midi, 'hit', Math.round(240 / nt)), dt * 1000 + 50));
           }
         });
 
-        const endMs = ((promptTimes[promptTimes.length - 1] || 0) + (currentSpec.kind === 'single' ? 0.65 : 0.56)) * 1000;
+        const endMs = (((promptTimes[promptTimes.length - 1] || 0) / nt) + (currentSpec.kind === 'single' ? 0.65 : 0.56) / nt) * 1000;
         timers.push(setTimeout(() => { if (onDone) onDone(); }, endMs));
       });
     }
@@ -2881,6 +2919,9 @@
         cadenceStyleSelect.value = state.settings.cadenceType || 'I-IV-V-I';
         cadenceEverySelect.value = String(state.settings.cadenceEvery !== undefined ? state.settings.cadenceEvery : 5);
         resStyleSelect.value = state.settings.resStyle || 'nearest';
+        cadenceTempoSelect.value = String(state.settings.cadenceTempo || 1);
+        noteTempoSelect.value = String(state.settings.noteTempo || 1);
+        resTempoSelect.value = String(state.settings.resTempo || 1);
         keyboardSelect.value = state.settings.keyboard;
         sharedCToggle.checked = !!state.settings.sharedC;
         sharedCRow.classList.toggle('hidden', state.settings.keyboard === 'single');
@@ -2911,6 +2952,18 @@
     });
     resStyleSelect.addEventListener('change', () => {
       state.settings.resStyle = resStyleSelect.value;
+      saveState();
+    });
+    cadenceTempoSelect.addEventListener('change', () => {
+      state.settings.cadenceTempo = Number(cadenceTempoSelect.value) || 1;
+      saveState();
+    });
+    noteTempoSelect.addEventListener('change', () => {
+      state.settings.noteTempo = Number(noteTempoSelect.value) || 1;
+      saveState();
+    });
+    resTempoSelect.addEventListener('change', () => {
+      state.settings.resTempo = Number(resTempoSelect.value) || 1;
       saveState();
     });
 
