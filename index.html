@@ -1036,7 +1036,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-27.14';
+    const APP_VERSION = '2026-11-27.15';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -1357,6 +1357,29 @@
         const ctx = this.ensure();
         const t0 = when > 0 ? when : ctx.currentTime + 0.005;
         midis.forEach((m, i) => this.note(m, t0 + i * 0.014, duration, velocity));
+      },
+
+      // Ear Trainer's short low "wrong" tone: two slightly clashing low saw waves through a low-pass filter
+      error(when = 0) {
+        const ctx = this.ensure();
+        const t0 = when > 0 ? when : ctx.currentTime + 0.04;
+        const g = ctx.createGain();
+        const f = ctx.createBiquadFilter();
+        f.type = 'lowpass';
+        f.frequency.value = 420;
+        g.connect(f);
+        f.connect(this.master);
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.exponentialRampToValueAtTime(0.55, t0 + 0.015);
+        g.gain.exponentialRampToValueAtTime(0.0008, t0 + 0.32);
+        [98, 103.5].forEach(fr => {
+          const o = ctx.createOscillator();
+          o.type = 'sawtooth';
+          o.frequency.value = fr;
+          o.connect(g);
+          o.start(t0);
+          o.stop(t0 + 0.35);
+        });
       }
     };
 
@@ -2171,23 +2194,26 @@
     }
 
     // Play & light up stepwise resolution back to the nearest home key (single-note lessons)
-    function playResolution(midi, tonicMidi, onDone) {
+    function playResolution(midi, tonicMidi, onDone, opts = {}) {
       const style = state.settings.resStyle || 'nearest';
-      const path = buildResolutionMidis(midi, tonicMidi, style);
+      const fullPath = buildResolutionMidis(midi, tonicMidi, style);
       const tempo = Number(state.settings.resTempo) || 1;
-      if (path.length <= 1) {
+      const skipFirst = !!opts.skipFirst;
+      const path = skipFirst ? fullPath.slice(1) : fullPath;
+      if (path.length === 0) {
         timers.push(setTimeout(() => { if (!paused && onDone) onDone(); }, Math.round(750 / tempo)));
         return;
       }
-      const leadSec = 0.72;
+      const leadSec = opts.leadSec !== undefined ? opts.leadSec : 0.72;
       const stepSec = 0.42 / tempo; // matches Ear Trainer's calm stepwise resolution pace
       AudioEngine.whenReady((ctx) => {
         if (paused || freePlay || jamActive) return;
         const base = ctx.currentTime + leadSec;
         path.forEach((m, i) => {
           const isLast = i === path.length - 1;
+          const flashCls = (!skipFirst && i === 0) ? 'hit' : 'res';
           AudioEngine.note(m, base + i * stepSec, (isLast ? 0.90 : 0.42) / tempo, isLast ? 0.76 : 0.68);
-          timers.push(setTimeout(() => flashKey(m, 'res', Math.round((isLast ? 620 : 360) / tempo)), Math.round((leadSec + i * stepSec) * 1000)));
+          timers.push(setTimeout(() => flashKey(m, flashCls, Math.round((isLast ? 620 : 360) / tempo)), Math.round((leadSec + i * stepSec) * 1000)));
         });
         const totalMs = Math.round((leadSec + (path.length - 1) * stepSec + 0.92 / tempo) * 1000);
         timers.push(setTimeout(() => { if (!paused && onDone) onDone(); }, totalMs));
@@ -2993,10 +3019,10 @@
           }
         };
 
-        // On single-note lessons, play & light up the stepwise resolution to the home key!
+        // On single-note lessons, play & light up the stepwise resolution from the next note toward home!
         if (currentSpec.kind === 'single' && promptNotes.length === 1) {
           statusText.textContent = lastMilestoneMsg || (hadMisses ? 'Resolving…' : 'Nice · resolving');
-          playResolution(promptNotes[0], tonicMidiFor(currentKeyPc, currentOctave), advanceAfter);
+          playResolution(promptNotes[0], tonicMidiFor(currentKeyPc, currentOctave), advanceAfter, { skipFirst: true, leadSec: 0.62 });
         } else {
           advanceAfter();
         }
@@ -3053,7 +3079,12 @@
           updateActionButtons();
           flashKey(midi, 'nudge', 360);
           statusText.textContent = 'Watch & listen';
-          timers.push(setTimeout(() => revealAndRetry(), 780));
+          if (currentSpec.kind === 'single' && promptNotes.length === 1) {
+            timers.push(setTimeout(() => { if (!paused) AudioEngine.error(); }, 280));
+            timers.push(setTimeout(() => revealAndRetry(), 780));
+          } else {
+            timers.push(setTimeout(() => revealAndRetry(), 780));
+          }
         }
       }
     }
@@ -3089,14 +3120,10 @@
         return;
       }
 
-      // Single-note miss: play the note, light it, and resolve stepwise home!
+      // Single-note miss: play the full stepwise resolution starting from the correct note!
       if (currentSpec.kind === 'single' && promptNotes.length === 1) {
         const m = promptNotes[0];
-        AudioEngine.note(m, base, 0.72, 0.84);
-        timers.push(setTimeout(() => flashKey(m, 'hit', 360), 30));
-        timers.push(setTimeout(() => {
-          playResolution(m, tonicMidiFor(currentKeyPc, currentOctave), backToListening);
-        }, 420));
+        playResolution(m, tonicMidiFor(currentKeyPc, currentOctave), backToListening, { skipFirst: false, leadSec: 0.12 });
         return;
       }
 
