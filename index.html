@@ -617,6 +617,12 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+    .prog-count {
+      color: var(--muted);
+      font-weight: 400;
+      font-size: 13.5px;
+      margin-left: 4px;
+    }
     .prog-meta {
       display: flex;
       align-items: center;
@@ -700,6 +706,11 @@
       <h1 class="brand-title">Kease</h1>
       <p class="brand-sub">Learn Keyboard with Ease</p>
     </div>
+
+    <section class="p-card">
+      <h2>What it is</h2>
+      <p>Kease trains you to play piano by ear—no sheet music, no note names to memorize, and no theory jargon. The goal is simple: hear a melody or chord in your head and let your fingers find it on the keys naturally, the way you can hum a tune without thinking. You start with a single key and a steady rhythm, then the app gently widens the keyboard, lengthens the phrases, and shifts octaves as your ear gets surer.</p>
+    </section>
 
     <section class="p-card">
       <h2>How it works</h2>
@@ -876,7 +887,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-26.22';
+    const APP_VERSION = '2026-11-26.23';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -1774,6 +1785,38 @@
       }
     }
 
+    function getVariantCountLabel(spec, isFirst) {
+      let n = 0;
+      const act = spec.active || [];
+      const aset = new Set(act);
+      if (spec.mode === 'rhythm-echo') {
+        n = RHYTHM_ECHO_PATTERNS.length;
+      } else if (spec.kind === 'chord-root') {
+        n = act.length;
+      } else if (spec.kind === 'chord-build') {
+        const tmps = spec.len === 2 ? [[0, 7], [0, 4], [0, 3]] : [[0, 4, 7], [0, 3, 7]];
+        for (const r of act) {
+          for (const t of tmps) {
+            if (t.every(o => aset.has(r + o))) n++;
+          }
+        }
+      } else if (spec.kind === 'chord-change') {
+        n = act.length * Math.max(0, act.length - 1);
+      } else {
+        const starts = typeof spec.root === 'number'
+          ? 1
+          : (spec.root === 'move-white'
+            ? act.filter(x => [0, 2, 4, 5, 7, 9, 11].includes(x % 12)).length
+            : act.length);
+        n = starts * Math.pow(act.length, Math.max(0, (spec.len || 1) - 1));
+      }
+      let txt;
+      if (n >= 10000) txt = `${Math.floor(n / 1000)}k+`;
+      else if (n >= 1000) txt = `${(Math.floor(n / 100) * 100).toLocaleString()}+`;
+      else txt = String(n);
+      return isFirst ? `(${txt} variants)` : `(${txt})`;
+    }
+
     function updateProgressSummary() {
       const pct = Math.round((state.skill / (FRONTIER.length - 0.1)) * 100);
       progressSummary.textContent = state.skill <= 0.05
@@ -1814,7 +1857,7 @@
       }
 
       progressList.innerHTML = '';
-      tried.forEach(item => {
+      tried.forEach((item, idx) => {
         const wrap = document.createElement('div');
         wrap.className = 'prog-item';
         const barCls = item.acc === null ? 'none' : (item.acc >= 90 ? 'strong' : (item.acc >= 70 ? 'mid' : 'weak'));
@@ -1826,6 +1869,10 @@
         const name = document.createElement('span');
         name.className = 'prog-name';
         name.textContent = item.spec.label;
+        const countSpan = document.createElement('span');
+        countSpan.className = 'prog-count';
+        countSpan.textContent = getVariantCountLabel(item.spec, idx === 0);
+        name.appendChild(countSpan);
 
         const meta = document.createElement('div');
         meta.className = 'prog-meta';
