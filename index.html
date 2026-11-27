@@ -887,7 +887,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-26.25';
+    const APP_VERSION = '2026-11-26.26';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -2608,16 +2608,27 @@
       setTimeout(() => backupMsg.classList.add('hidden'), 3200);
     }
 
-    exportBtn.addEventListener('click', () => {
+    exportBtn.addEventListener('click', async () => {
       const payload = {
-        app: 'keys',
+        app: 'kease',
         version: APP_VERSION,
         exportedAt: new Date().toISOString(),
         state
       };
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const json = JSON.stringify(payload, null, 2);
       const dateStr = new Date().toISOString().slice(0, 10);
-      const fileName = `keys-progress-${dateStr}.json`;
+      const fileName = `kease-progress-${dateStr}.json`;
+      try {
+        const file = new File([json], fileName, { type: 'application/json' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: 'Kease progress' });
+          flashBackupMsg('Backup saved');
+          return;
+        }
+      } catch (e) {
+        if (e && e.name === 'AbortError') return;
+      }
+      const blob = new Blob([json], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
