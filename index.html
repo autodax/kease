@@ -988,9 +988,6 @@
   <div class="app">
     <header class="topbar">
       <div class="top-left">
-        <select id="stageSelect" class="stage-select" aria-label="Choose level">
-          <option value="auto">Auto · Adaptive</option>
-        </select>
         <button id="jamBtn" type="button" class="btn">Jam</button>
         <button id="cadenceBtn" type="button" class="btn btn-subtle">Cadence</button>
         <div id="octShiftGroup" class="oct-pair hidden">
@@ -1009,7 +1006,7 @@
       </div>
 
       <div class="top-right">
-        <button id="showBtn" type="button" class="btn btn-subtle hidden">Show me</button>
+        <button id="showBtn" type="button" class="btn btn-subtle hidden">Show Me</button>
         <button id="pauseBtn" type="button" class="btn btn-subtle hidden">Pause</button>
         <button id="playBtn" type="button" class="btn btn-primary">Play</button>
         <button id="freeBtn" type="button" class="btn">Free Play</button>
@@ -1037,7 +1034,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-27.17';
+    const APP_VERSION = '2026-11-27.18';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -1899,7 +1896,6 @@
     }
 
     // Elements
-    const stageSelect = document.getElementById('stageSelect');
     const portraitStageSelect = document.getElementById('portraitStageSelect');
     const modeSelect = document.getElementById('modeSelect');
     const progressHeading = document.getElementById('progressHeading');
@@ -2028,14 +2024,12 @@
       goalModal.classList.add('hidden');
     }
 
-    // Populate both Level dropdowns directly from FRONTIER so all 33 steps stay in sync
+    // Populate Level dropdown in Portrait Settings directly from FRONTIER so all 33 steps stay in sync
     FRONTIER.forEach((spec, i) => {
-      [stageSelect, portraitStageSelect].forEach(sel => {
-        const opt = document.createElement('option');
-        opt.value = spec.id;
-        opt.textContent = `${i + 1} · ${spec.label}`;
-        sel.appendChild(opt);
-      });
+      const opt = document.createElement('option');
+      opt.value = spec.id;
+      opt.textContent = `${i + 1} · ${spec.label}`;
+      portraitStageSelect.appendChild(opt);
     });
 
     versionLabel.textContent = APP_VERSION;
@@ -2556,8 +2550,7 @@
     function updateActionButtons() {
       const showRescue = !freePlay && !jamActive && phase === 'listening';
       showBtn.classList.toggle('hidden', !showRescue);
-      const showCadence = !freePlay && !jamActive && (phase === 'listening' || phase === 'idle');
-      cadenceBtn.classList.toggle('hidden', !showCadence);
+      cadenceBtn.classList.toggle('hidden', freePlay);
       const showPause = !freePlay && !jamActive && (phase === 'listening' || phase === 'feedback' || phase === 'playing' || phase === 'waiting' || paused);
       pauseBtn.classList.toggle('hidden', !showPause);
       pauseBtn.textContent = paused ? 'Resume' : 'Pause';
@@ -3153,7 +3146,6 @@
     // =========================================================================
     function applyModeSelection(val) {
       selectedMode = val;
-      stageSelect.value = val;
       portraitStageSelect.value = val;
       stopJam();
       freePlay = false;
@@ -3308,7 +3300,6 @@
       setStatus('Nice work · saved', false);
       updateActionButtons();
     });
-    stageSelect.addEventListener('change', () => applyModeSelection(stageSelect.value));
     portraitStageSelect.addEventListener('change', () => applyModeSelection(portraitStageSelect.value));
 
     cadenceStyleSelect.addEventListener('change', () => {
@@ -3454,10 +3445,10 @@
     });
 
     cadenceBtn.addEventListener('click', () => {
-      if (freePlay || jamActive) return;
-      if (phase !== 'listening' && phase !== 'idle') return;
+      if (freePlay) return;
       AudioEngine.ensure();
-      const returnPhase = phase;
+      if (jamActive) stopJam();
+      const returnPhase = (phase === 'idle' || paused || !promptNotes.length) ? 'idle' : 'listening';
       clearTimers();
       playCadence(tonicMidiFor(currentKeyPc, currentOctave), `Key of ${KEY_NAMES[currentKeyPc]}`, () => {
         if (paused || freePlay || jamActive) return;
