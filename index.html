@@ -141,16 +141,18 @@
     .hidden { display: none !important; }
 
     .status-text {
-      font-size: 14px;
-      color: var(--muted);
+      font-size: 17px;
+      font-weight: 600;
+      color: #edf3ff;
+      letter-spacing: -0.01em;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
       transition: font-size 120ms ease, color 120ms ease;
     }
     .status-text.note-pop {
-      font-size: 20px;
-      font-weight: 600;
+      font-size: 21px;
+      font-weight: 700;
       color: var(--text);
       letter-spacing: -0.02em;
     }
@@ -1033,7 +1035,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-27.20';
+    const APP_VERSION = '2026-11-27.21';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -2085,8 +2087,41 @@
     const isReturnSession = state.skill >= 2 && (Date.now() - state.lastPlayed > 10 * 60 * 1000 || state.lastPlayed === 0);
     let warmupStepsLeft = (state.settings.warmup && isReturnSession) ? 3 : 0;
 
+    function specIcon(spec = currentSpec) {
+      if (!spec) return '🎵';
+      if (spec.kind === 'single') return '🎵';
+      if (spec.kind === 'phrase') return '🎶';
+      return '🎹';
+    }
+
+    function listeningPromptText() {
+      const ico = specIcon(currentSpec);
+      const huntSuffix = effectiveMode(currentSpec) === 'hunt' ? ' 🔍' : '';
+      const total = promptNotes.length || 1;
+      if (currentSpec && currentSpec.kind === 'chord-build') {
+        const done = foundChordNotes.size;
+        return done > 0 ? `${ico} ${done} of ${total} notes${huntSuffix}` : `${ico} Play chord${huntSuffix}`;
+      }
+      if (total > 1) {
+        const cur = Math.min(total, stepIndex + 1);
+        return `${ico} Note ${cur} of ${total}${huntSuffix}`;
+      }
+      return `${ico} Your turn${huntSuffix}`;
+    }
+
+    function pauseSession() {
+      if (paused && phase === 'idle') return;
+      paused = true;
+      clearTimers();
+      phase = 'idle';
+      lastPracticeTick = 0;
+      setStatus('Paused', false);
+      playBtn.textContent = 'Play';
+      updateActionButtons();
+    }
+
     function setStatus(text, isNotePop = false) {
-      statusText.textContent = text;
+      statusText.textContent = text || listeningPromptText();
       statusText.classList.toggle('note-pop', !!isNotePop);
     }
 
@@ -2800,7 +2835,7 @@
       applySpotlight();
       renderDots();
       updateActionButtons();
-      statusText.textContent = 'Listen…';
+      setStatus('👂 Listen…', false);
       playBtn.textContent = 'Replay';
 
       AudioEngine.whenReady((ctx) => {
@@ -2850,8 +2885,7 @@
         foundChordNotes.clear();
         renderDots();
         updateActionButtons();
-        const modeLabel = effectiveMode(currentSpec) === 'hunt' ? 'Your turn · Hunt' : 'Your turn';
-        setStatus(modeLabel, false);
+        setStatus(listeningPromptText(), false);
       });
     }
 
@@ -2986,7 +3020,7 @@
         clearTimers();
         promptRunId++;
         phase = 'waiting';
-        setStatus('Listen…', false);
+        setStatus('👂 Listen…', false);
         timers.push(setTimeout(() => {
           if (!paused && phase === 'waiting') launchCurrentPrompt();
         }, 1100));
@@ -3008,7 +3042,7 @@
           if (hadMisses && !isRetryOfPrompt && curMode === 'hunt') {
             isRetryOfPrompt = true;
             missesThisPrompt = 0;
-            statusText.textContent = 'Got it — once more';
+            setStatus(`${specIcon(currentSpec)} Got it — once more`, false);
             timers.push(setTimeout(() => {
               if (!paused) launchCurrentPrompt();
             }, 1250));
@@ -3017,14 +3051,14 @@
               showGoalModal();
               return;
             }
-            statusText.textContent = lastMilestoneMsg || (hadMisses ? 'Got it' : 'Nice');
+            setStatus(lastMilestoneMsg || (hadMisses ? 'Got it' : 'Nice'), false);
             scheduleNextRound(lastMilestoneMsg ? 2300 : 1450);
           }
         };
 
         // On single-note lessons, play & light up the stepwise resolution from the next note toward home!
         if (currentSpec.kind === 'single' && promptNotes.length === 1) {
-          statusText.textContent = lastMilestoneMsg || (hadMisses ? 'Resolving…' : 'Nice · resolving');
+          setStatus(lastMilestoneMsg || (hadMisses ? '🎵 Resolving…' : '🎵 Nice · resolving'), false);
           playResolution(promptNotes[0], tonicMidiFor(currentKeyPc, currentOctave), advanceAfter, { skipFirst: true, leadSec: 0.62 });
         } else {
           advanceAfter();
@@ -3041,6 +3075,8 @@
             renderDots();
             if (foundChordNotes.size >= promptNotes.length) {
               finishPromptSuccess();
+            } else {
+              setStatus(listeningPromptText(), false);
             }
           }
           return;
@@ -3053,7 +3089,7 @@
           recordOutcome(2);
           updateActionButtons();
           flashKey(midi, 'nudge', 360);
-          statusText.textContent = 'Watch & listen';
+          setStatus('👀 Watch & listen', false);
           timers.push(setTimeout(() => revealAndRetry(), 780));
         }
         return;
@@ -3069,7 +3105,7 @@
         if (stepIndex >= promptNotes.length) {
           finishPromptSuccess();
         } else {
-          statusText.textContent = '';
+          setStatus(listeningPromptText(), false);
         }
       } else {
         missesThisPrompt++;
@@ -3081,7 +3117,7 @@
           recordOutcome(2);
           updateActionButtons();
           flashKey(midi, 'nudge', 360);
-          statusText.textContent = 'Watch & listen';
+          setStatus('👀 Watch & listen', false);
           if (currentSpec.kind === 'single' && promptNotes.length === 1) {
             timers.push(setTimeout(() => { if (!paused) AudioEngine.error(); }, 280));
             timers.push(setTimeout(() => revealAndRetry(), 780));
@@ -3104,7 +3140,7 @@
         applySpotlight();
         renderDots();
         updateActionButtons();
-        statusText.textContent = 'Try again';
+        setStatus(`${specIcon(currentSpec)} Try again`, false);
       };
 
       if (promptChords.length > 0) {
@@ -3410,7 +3446,7 @@
           phase = 'listening';
           renderDots();
           updateActionButtons();
-          statusText.textContent = 'Your turn';
+          setStatus(listeningPromptText(), false);
         });
       }
     });
@@ -3420,12 +3456,7 @@
         paused = false;
         startNewRound();
       } else {
-        paused = true;
-        clearTimers();
-        phase = 'idle';
-        statusText.textContent = 'Paused';
-        playBtn.textContent = 'Play';
-        updateActionButtons();
+        pauseSession();
       }
     });
 
@@ -3435,7 +3466,7 @@
       missesThisPrompt = Math.max(2, missesThisPrompt + 1);
       recordOutcome(2);
       updateActionButtons();
-      statusText.textContent = 'Watch & listen';
+      setStatus('👀 Watch & listen', false);
       revealAndRetry();
     });
 
@@ -3451,12 +3482,12 @@
       if (jamActive) stopJam();
       const returnPhase = (phase === 'idle' || paused || !promptNotes.length) ? 'idle' : 'listening';
       clearTimers();
-      playCadence(tonicMidiFor(currentKeyPc, currentOctave), `Key of ${KEY_NAMES[currentKeyPc]}`, () => {
+      playCadence(tonicMidiFor(currentKeyPc, currentOctave), `👂 Key of ${KEY_NAMES[currentKeyPc]}`, () => {
         if (paused || freePlay || jamActive) return;
         phase = returnPhase;
         renderDots();
         updateActionButtons();
-        setStatus(returnPhase === 'listening' ? 'Your turn' : 'Tap Play', false);
+        setStatus(returnPhase === 'listening' ? listeningPromptText() : `${specIcon(currentSpec)} Tap Play`, false);
       });
       updateActionButtons();
     });
@@ -3476,8 +3507,18 @@
       applySpotlight();
       renderDots();
       updateActionButtons();
-      setStatus(freePlay ? 'Free Play' : 'Tap Play', false);
+      setStatus(freePlay ? 'Free Play' : `${specIcon(currentSpec)} Tap Play`, false);
     });
+
+    // Auto-pause cleanly when rotating to portrait or leaving the app mid-lesson
+    const portraitMQ = window.matchMedia('(orientation: portrait)');
+    const handlePortraitAutoPause = (e) => {
+      if (e.matches && !freePlay && !jamActive && phase !== 'idle') {
+        pauseSession();
+      }
+    };
+    if (portraitMQ.addEventListener) portraitMQ.addEventListener('change', handlePortraitAutoPause);
+    else if (portraitMQ.addListener) portraitMQ.addListener(handlePortraitAutoPause);
 
     // Initial render
     buildKeyboard();
@@ -3513,7 +3554,11 @@
       }, 650);
     }
     document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) checkForUpdate();
+      if (document.hidden) {
+        if (!freePlay && !jamActive && phase !== 'idle') pauseSession();
+      } else {
+        checkForUpdate();
+      }
     });
     setTimeout(checkForUpdate, 1500);
     setInterval(applyUpdateIfIdle, 5000);
