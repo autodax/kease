@@ -1036,7 +1036,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-27.15';
+    const APP_VERSION = '2026-11-27.16';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -2245,7 +2245,12 @@
         cleanInOctave = 0;
         return;
       }
-      if (cleanInOctave >= CLEAN_PER_OCTAVE && recentCleanStreak >= 2) {
+      const isMultiKey = !Array.isArray(currentSpec.keys) || currentSpec.keys.length > 1;
+      const cadEvery = Number(state.settings.cadenceEvery !== undefined ? state.settings.cadenceEvery : 5);
+      const rotateEvery = cadEvery > 0 ? cadEvery : 5;
+      const atKeyBoundary = !isMultiKey || currentSpec.newKeyEveryRound || cadKeyPc === null || sinceCad >= rotateEvery;
+      const minClean = isMultiKey ? Math.max(5, Math.min(CLEAN_PER_OCTAVE, rotateEvery)) : CLEAN_PER_OCTAVE;
+      if (atKeyBoundary && cleanInOctave >= minClean && recentCleanStreak >= 2) {
         const prevOct = currentOctave;
         const nextOct = pickNoRepeat(pool, currentOctave);
         if (nextOct !== undefined && nextOct !== currentOctave) {
