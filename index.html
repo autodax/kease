@@ -606,8 +606,8 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 8px;
-      font-size: 15px;
+      gap: 6px;
+      font-size: 14.5px;
     }
     .prog-name {
       color: var(--text);
@@ -617,23 +617,17 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    .prog-count {
-      color: var(--muted);
-      font-weight: 400;
-      font-size: 13.5px;
-      margin-left: 4px;
-    }
     .prog-meta {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       flex: 0 0 auto;
     }
     .prog-pct {
-      font-size: 13.5px;
+      font-size: 12.5px;
       color: var(--muted);
       font-variant-numeric: tabular-nums;
-      min-width: 36px;
+      min-width: 24px;
       text-align: right;
     }
     .prog-track {
@@ -887,7 +881,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-26.27';
+    const APP_VERSION = '2026-11-27.1';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -1836,38 +1830,6 @@
       }
     }
 
-    function getVariantCountLabel(spec, isFirst) {
-      let n = 0;
-      const act = spec.active || [];
-      const aset = new Set(act);
-      if (spec.mode === 'rhythm-echo') {
-        n = RHYTHM_ECHO_PATTERNS.length;
-      } else if (spec.kind === 'chord-root') {
-        n = act.length;
-      } else if (spec.kind === 'chord-build') {
-        const tmps = spec.len === 2 ? [[0, 7], [0, 4], [0, 3]] : [[0, 4, 7], [0, 3, 7]];
-        for (const r of act) {
-          for (const t of tmps) {
-            if (t.every(o => aset.has(r + o))) n++;
-          }
-        }
-      } else if (spec.kind === 'chord-change') {
-        n = act.length * Math.max(0, act.length - 1);
-      } else {
-        const starts = typeof spec.root === 'number'
-          ? 1
-          : (spec.root === 'move-white'
-            ? act.filter(x => [0, 2, 4, 5, 7, 9, 11].includes(x % 12)).length
-            : act.length);
-        n = starts * Math.pow(act.length, Math.max(0, (spec.len || 1) - 1));
-      }
-      let txt;
-      if (n >= 10000) txt = `${Math.floor(n / 1000)}k+`;
-      else if (n >= 1000) txt = `${(Math.floor(n / 100) * 100).toLocaleString()}+`;
-      else txt = String(n);
-      return isFirst ? `(${txt} variants)` : `(${txt})`;
-    }
-
     function skillMasteryInfo(spec) {
       const win = masteryWindow(spec);
       const hist = Array.isArray(state.hist[spec.id]) ? state.hist[spec.id] : [];
@@ -1972,10 +1934,6 @@
         const name = document.createElement('span');
         name.className = 'prog-name';
         name.textContent = item.spec.label;
-        const countSpan = document.createElement('span');
-        countSpan.className = 'prog-count';
-        countSpan.textContent = getVariantCountLabel(item.spec, idx === 0);
-        name.appendChild(countSpan);
 
         const meta = document.createElement('div');
         meta.className = 'prog-meta';
