@@ -949,7 +949,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-27.6';
+    const APP_VERSION = '2026-11-27.7';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -1510,7 +1510,6 @@
       { id: 'e08', group: '1 · Home & Triad (1, 3, 5)', label: 'Three notes: first key lit',        kind: 'phrase', degs: [0, 2, 4], keys: [0], len: 3, show: [0] },
       { id: 'e09', group: '1 · Home & Triad (1, 3, 5)', label: 'Three notes: last key lit',         kind: 'phrase', degs: [0, 2, 4], keys: [0], len: 3, show: [2] },
       { id: 'e10', group: '1 · Home & Triad (1, 3, 5)', label: 'Three notes: 1, 3, 5',              kind: 'phrase', degs: [0, 2, 4], keys: [0], len: 3 },
-      { id: 'e11', group: '1 · Home & Triad (1, 3, 5)', label: 'Phrases over a chord: 1, 3, 5',     kind: 'phrase', degs: [0, 2, 4], keys: [0], len: 3, overChord: true },
 
       // Part 2 · Expanding the Scale & Keys (Single Notes with Stepwise Resolution)
       { id: 'e12', group: '2 · Full Scale & Keys',      label: 'Single notes: add 2 & 6',           kind: 'single', degs: [0, 1, 2, 4, 5], keys: [0], len: 1 },
@@ -1954,7 +1953,7 @@
         if (currentOctave !== 4) { currentOctave = 4; }
         return;
       }
-      if (!currentSpec.multiOctave && selectedMode === 'auto' && activeFrontierIndex() < 15) {
+      if (!currentSpec.multiOctave && selectedMode === 'auto' && activeFrontierIndex() < 14) {
         if (currentOctave !== 4) { currentOctave = 4; }
         return;
       }
