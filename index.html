@@ -876,7 +876,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-26.21';
+    const APP_VERSION = '2026-11-26.22';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -1801,9 +1801,10 @@
           row.innerHTML = `<span style="font-size:13px;">${w.spec.label} <span class="p-muted">(${w.acc}%)</span></span>`;
           const btn = document.createElement('button');
           btn.type = 'button';
-          btn.className = 'btn btn-mini';
-          btn.textContent = 'Practice';
-          btn.addEventListener('click', () => applyModeSelection(w.spec.id));
+          const isSel = selectedMode === w.spec.id;
+          btn.className = 'btn btn-mini' + (isSel ? ' btn-active' : '');
+          btn.textContent = isSel ? 'Selected' : 'Practice';
+          btn.addEventListener('click', () => applyModeSelection(isSel ? 'auto' : w.spec.id));
           row.appendChild(btn);
           troubleBox.appendChild(row);
         });
@@ -1834,9 +1835,10 @@
 
         const prac = document.createElement('button');
         prac.type = 'button';
-        prac.className = 'btn btn-mini' + (selectedMode === item.spec.id ? ' btn-active' : '');
-        prac.textContent = selectedMode === item.spec.id ? 'Selected' : 'Practice';
-        prac.addEventListener('click', () => applyModeSelection(item.spec.id));
+        const isSel = selectedMode === item.spec.id;
+        prac.className = 'btn btn-mini' + (isSel ? ' btn-active' : '');
+        prac.textContent = isSel ? 'Selected' : 'Practice';
+        prac.addEventListener('click', () => applyModeSelection(isSel ? 'auto' : item.spec.id));
 
         meta.appendChild(pctEl);
         meta.appendChild(prac);
