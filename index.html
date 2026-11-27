@@ -887,7 +887,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-26.24';
+    const APP_VERSION = '2026-11-26.25';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -1662,19 +1662,23 @@
     varyOctavesToggle.checked = state.settings.varyOctaves !== false;
 
     const GOLDEN_OCTAVES = [2, 3, 4, 5, 6]; // 5 full octaves: C2..C6 (skipping only lowest 1 & highest 1)
-    const PROMPTS_PER_OCTAVE = 10;
+    const CLEAN_PER_OCTAVE = 6;
 
     let selectedMode = 'auto';
     let currentSpec = FRONTIER[0];
     let currentRoot = 60;
     let currentActiveNotes = [60];
     let currentLeftKey = 16; // leftmost visible white key index on the 52-white-key track (16 = C3)
-    let promptsInOctave = 0;
-    let pendingOctaveShift = null; // { fromOct, toOct } when an octave slide animation should run before the prompt
+    let cleanInOctave = 0;
+    let recentCleanStreak = 0;
+    let isRetryOfPrompt = false;
+    let waitingForNextRound = false;
+    let inOctaveCadence = false;
+    let pendingOctaveShift = null; // { fromOct, toOct } when an octave slide animation + cadence should run before the prompt
     let freePlay = false;
     let jamActive = false;
     let paused = false;
-    let phase = 'idle'; // 'idle' | 'playing' | 'listening' | 'feedback' | 'jam'
+    let phase = 'idle'; // 'idle' | 'playing' | 'waiting' | 'listening' | 'feedback' | 'jam'
     let promptNotes = [];
     let promptTimes = [];
     let promptChords = [];
@@ -1743,22 +1747,26 @@
 
     function playOctaveShiftCue(fromOct, toOct) {
       const goingUp = toOct > fromOct;
-      const startC = (fromOct + 1) * 12;
-      const endC = (toOct + 1) * 12;
-      const dir = goingUp ? 1 : -1;
-      const mid1 = startC + dir * 4;
-      const mid2 = startC + dir * 7;
-      const sweepNotes = [startC, mid1, mid2, endC];
+      const c = (toOct + 1) * 12; // C of the new octave (C2=36 .. C6=84)
+      // Smooth piano voice-leading I - IV - V - I cadence in the new octave
+      const cadence = [
+        { notes: [c, c + 4, c + 7],     dt: 0.00, dur: 0.50, vel: 0.36 }, // I  (C)
+        { notes: [c, c + 5, c + 9],     dt: 0.52, dur: 0.50, vel: 0.36 }, // IV (F, 2nd inv)
+        { notes: [c - 1, c + 2, c + 7], dt: 1.04, dur: 0.50, vel: 0.38 }, // V  (G, 1st inv)
+        { notes: [c, c + 4, c + 7],     dt: 1.56, dur: 0.95, vel: 0.40 }  // I  (C)
+      ];
 
-      const ctx = AudioEngine.ensure();
-      const base = ctx.currentTime + 0.06;
-      sweepNotes.forEach((m, i) => AudioEngine.note(m, base + i * 0.20, 0.85, 0.34));
+      AudioEngine.whenReady((ctx) => {
+        if (paused || freePlay || jamActive) return;
+        const base = ctx.currentTime + 0.08;
+        cadence.forEach(ch => AudioEngine.chord(ch.notes, base + ch.dt, ch.dur, ch.vel));
+      });
 
-      // Slide the continuous 5-octave track over 1.5s and pulse the C labels
+      // Slide the continuous 88-key track over 1.5s and pulse the C labels
       syncTrackPosition();
       const lbls = document.querySelectorAll('#piano .key-label');
       lbls.forEach(l => l.classList.add('pulse'));
-      setStatus(goingUp ? `Higher octave · C${toOct}` : `Lower octave · C${toOct}`, false);
+      setStatus(goingUp ? `New octave · C${toOct}` : `New octave · C${toOct}`, false);
       timers.push(setTimeout(() => lbls.forEach(l => l.classList.remove('pulse')), 1500));
     }
 
@@ -1772,12 +1780,13 @@
         if (currentOctave !== 4) { currentOctave = 4; syncTrackPosition(); }
         return;
       }
-      if (promptsInOctave >= PROMPTS_PER_OCTAVE) {
+      // Only move to a new octave once the user is comfortable here (6+ clean answers & 2 clean in a row)
+      if (cleanInOctave >= CLEAN_PER_OCTAVE && recentCleanStreak >= 2) {
         const prevOct = currentOctave;
         const pool = (state.settings.keyboard || 'single') === 'single' ? GOLDEN_OCTAVES : [2, 3, 4, 5];
         const others = pool.filter(o => o !== currentOctave);
         currentOctave = others[Math.floor(Math.random() * others.length)];
-        promptsInOctave = 0;
+        cleanInOctave = 0;
         if (state.settings.warmup !== false && selectedMode === 'auto' && state.skill >= 1.5) {
           warmupStepsLeft = Math.max(warmupStepsLeft, 2);
         }
@@ -1921,7 +1930,12 @@
     }
 
     function recordOutcome(misses) {
-      promptsInOctave++;
+      if (misses === 0) {
+        cleanInOctave++;
+        recentCleanStreak++;
+      } else {
+        recentCleanStreak = 0;
+      }
       if (misses > 0 && currentSpec.mode !== 'rhythm-echo' && promptNotes.length >= 2) {
         missedQueue.push(promptNotes.slice());
         if (missedQueue.length > 8) missedQueue.shift();
@@ -1979,7 +1993,7 @@
     function updateActionButtons() {
       const showRescue = !freePlay && !jamActive && phase === 'listening' && currentSpec.mode !== 'rhythm-echo';
       showBtn.classList.toggle('hidden', !showRescue);
-      const showPause = !freePlay && !jamActive && (phase === 'listening' || phase === 'feedback' || phase === 'playing' || paused);
+      const showPause = !freePlay && !jamActive && (phase === 'listening' || phase === 'feedback' || phase === 'playing' || phase === 'waiting' || paused);
       pauseBtn.classList.toggle('hidden', !showPause);
       pauseBtn.textContent = paused ? 'Resume' : 'Pause';
       pauseBtn.classList.toggle('btn-active', paused);
@@ -2283,33 +2297,51 @@
       });
     }
 
+    function launchCurrentPrompt() {
+      if (freePlay || jamActive || paused) return;
+      waitingForNextRound = false;
+      inOctaveCadence = false;
+      playPromptSequence(() => {
+        phase = 'listening';
+        stepIndex = 0;
+        foundChordNotes.clear();
+        renderDots();
+        updateActionButtons();
+        setStatus(currentSpec.mode === 'rhythm-echo' ? 'Echo it' : 'Your turn', false);
+      });
+    }
+
+    function scheduleNextRound(delayMs = 1850) {
+      clearTimers();
+      waitingForNextRound = true;
+      timers.push(setTimeout(() => {
+        waitingForNextRound = false;
+        if (!paused) startNewRound();
+      }, delayMs));
+    }
+
     function startNewRound() {
       if (freePlay || jamActive || paused) return;
       clearTimers();
+      waitingForNextRound = false;
+      isRetryOfPrompt = false;
       buildPrompt();
-
-      const launch = () => {
-        playPromptSequence(() => {
-          phase = 'listening';
-          stepIndex = 0;
-          foundChordNotes.clear();
-          renderDots();
-          updateActionButtons();
-          setStatus(currentSpec.mode === 'rhythm-echo' ? 'Echo it' : 'Your turn', false);
-        });
-      };
 
       if (pendingOctaveShift) {
         const { fromOct, toOct } = pendingOctaveShift;
         pendingOctaveShift = null;
         phase = 'playing';
+        inOctaveCadence = true;
         applySpotlight();
         renderDots();
         updateActionButtons();
         playOctaveShiftCue(fromOct, toOct);
-        timers.push(setTimeout(() => { if (!paused) launch(); }, 1750));
+        timers.push(setTimeout(() => {
+          inOctaveCadence = false;
+          if (!paused) launchCurrentPrompt();
+        }, 2650));
       } else {
-        launch();
+        launchCurrentPrompt();
       }
     }
 
@@ -2391,7 +2423,47 @@
         return;
       }
 
+      // If user is still tapping keys during the pause before the next test, politely wait
+      if (phase === 'feedback' && waitingForNextRound) {
+        scheduleNextRound(1400);
+        return;
+      }
+
+      // If user taps keys while a prompt is playing (or waiting to replay), pause & restart the prompt cleanly
+      if ((phase === 'playing' && !inOctaveCadence) || phase === 'waiting') {
+        clearTimers();
+        promptRunId++;
+        phase = 'waiting';
+        setStatus('Listen…', false);
+        timers.push(setTimeout(() => {
+          if (!paused && phase === 'waiting') launchCurrentPrompt();
+        }, 1100));
+        return;
+      }
+
       if (phase !== 'listening') return;
+
+      const finishPromptSuccess = () => {
+        phase = 'feedback';
+        const hadMisses = missesThisPrompt > 0;
+        if (!isRetryOfPrompt) recordOutcome(missesThisPrompt);
+        else if (!hadMisses) {
+          // Nailing the clean retry gives a small confidence boost without double-counting tries
+          recentCleanStreak++;
+        }
+        updateActionButtons();
+        if (hadMisses && !isRetryOfPrompt && currentSpec.mode === 'hunt') {
+          isRetryOfPrompt = true;
+          missesThisPrompt = 0;
+          statusText.textContent = 'Got it — once more';
+          timers.push(setTimeout(() => {
+            if (!paused) launchCurrentPrompt();
+          }, 1350));
+        } else {
+          statusText.textContent = hadMisses ? 'Got it' : 'Nice';
+          scheduleNextRound(1850);
+        }
+      };
 
       // Chord-build mode: accept chord tones in ANY order (one-at-a-time OR pressed simultaneously!)
       if (currentSpec.kind === 'chord-build') {
@@ -2402,11 +2474,7 @@
             applySpotlight();
             renderDots();
             if (foundChordNotes.size >= promptNotes.length) {
-              phase = 'feedback';
-              recordOutcome(missesThisPrompt);
-              updateActionButtons();
-              statusText.textContent = 'Nice';
-              timers.push(setTimeout(() => { if (!paused) startNewRound(); }, 1850));
+              finishPromptSuccess();
             }
           }
           return;
@@ -2433,11 +2501,7 @@
         renderDots();
 
         if (stepIndex >= promptNotes.length) {
-          phase = 'feedback';
-          recordOutcome(missesThisPrompt);
-          updateActionButtons();
-          statusText.textContent = 'Nice';
-          timers.push(setTimeout(() => { if (!paused) startNewRound(); }, 1850));
+          finishPromptSuccess();
         } else {
           statusText.textContent = currentSpec.mode === 'rhythm-echo' ? 'Keep going' : '';
         }
@@ -2641,7 +2705,8 @@
       state.settings.varyOctaves = varyOctavesToggle.checked;
       if (!state.settings.varyOctaves) {
         currentOctave = 4;
-        promptsInOctave = 0;
+        cleanInOctave = 0;
+        recentCleanStreak = 0;
         buildKeyboard();
         applyModeSelection(selectedMode);
       }
