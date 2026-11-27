@@ -758,7 +758,7 @@
     </section>
 
     <section class="p-card">
-      <h2>Progress</h2>
+      <h2 id="progressHeading">Progress</h2>
       <div id="troubleBox" class="trouble-box hidden"></div>
       <div id="progressList" class="prog-list"></div>
     </section>
@@ -766,9 +766,21 @@
     <section class="p-card">
       <h2>Settings</h2>
       <div class="p-row">
-        <label for="portraitStageSelect">Mode</label>
+        <label for="portraitStageSelect">Level</label>
         <select id="portraitStageSelect" class="stage-select" style="max-width:230px;">
           <option value="auto">Auto · Adaptive</option>
+        </select>
+      </div>
+      <div class="p-row">
+        <label for="modeSelect">Mode</label>
+        <select id="modeSelect" class="stage-select" style="max-width:230px;">
+          <option value="major">Major (Ionian)</option>
+          <option value="dorian">Dorian</option>
+          <option value="phrygian">Phrygian</option>
+          <option value="lydian">Lydian</option>
+          <option value="mixolydian">Mixolydian</option>
+          <option value="minor">Minor (Aeolian)</option>
+          <option value="locrian">Locrian</option>
         </select>
       </div>
       <div class="p-row">
@@ -913,7 +925,7 @@
   <div class="app">
     <header class="topbar">
       <div class="top-left">
-        <select id="stageSelect" class="stage-select" aria-label="Choose mode">
+        <select id="stageSelect" class="stage-select" aria-label="Choose level">
           <option value="auto">Auto · Adaptive</option>
         </select>
         <button id="jamBtn" type="button" class="btn">Jam</button>
@@ -949,7 +961,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-27.7';
+    const APP_VERSION = '2026-11-27.8';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -1491,97 +1503,118 @@
     }
 
     // =========================================================================
-    // 3. Ear Trainer 36-Step Pitch/Melody/Chord Ladder (No Rhythm) + Cadence & Resolution
+    // 3. 33-Step Spiral Sequence + 7 Musical Modes (Major, Dorian, Minor, etc.)
     // =========================================================================
     // Each step opens in Hunt (tap freely by ear) and automatically tightens to Clean (one-shot)
-    // once it clicks, building toward two-day 90% mastery.
-    const MAJOR_STEPS = [0, 2, 4, 5, 7, 9, 11];
+    // once it clicks, building toward two-day 90% mastery. Each musical mode keeps its own progress.
+    const SCALES = {
+      major:      { name: 'Major',      steps: [0, 2, 4, 5, 7, 9, 11] },
+      dorian:     { name: 'Dorian',     steps: [0, 2, 3, 5, 7, 9, 10] },
+      phrygian:   { name: 'Phrygian',   steps: [0, 1, 3, 5, 7, 8, 10] },
+      lydian:     { name: 'Lydian',     steps: [0, 2, 4, 6, 7, 9, 11] },
+      mixolydian: { name: 'Mixolydian', steps: [0, 2, 4, 5, 7, 9, 10] },
+      minor:      { name: 'Minor',      steps: [0, 2, 3, 5, 7, 8, 10] },
+      locrian:    { name: 'Locrian',    steps: [0, 1, 3, 5, 6, 8, 10] }
+    };
     const KEY_NAMES = ['C', 'D♭', 'D', 'E♭', 'E', 'F', 'G♭', 'G', 'A♭', 'A', 'B♭', 'B'];
+    const currentScaleSteps = () => (SCALES[state.mode || 'major'] || SCALES.major).steps;
 
     const FRONTIER = [
-      // Part 1 · Home & Triad (1, 3, 5) + Phrase Stepping Stones
-      { id: 'e01', group: '1 · Home & Triad (1, 3, 5)', label: 'Single notes: 1, 3, 5',             kind: 'single', degs: [0, 2, 4], keys: [0], len: 1 },
-      { id: 'e02', group: '1 · Home & Triad (1, 3, 5)', label: 'Two notes: first key lit',          kind: 'phrase', degs: [0, 2, 4], keys: [0], len: 2, show: [0] },
-      { id: 'e03', group: '1 · Home & Triad (1, 3, 5)', label: 'Two notes: last key lit',           kind: 'phrase', degs: [0, 2, 4], keys: [0], len: 2, show: [1] },
-      { id: 'e04', group: '1 · Home & Triad (1, 3, 5)', label: 'Two notes: 1, 3, 5',                kind: 'phrase', degs: [0, 2, 4], keys: [0], len: 2 },
-      { id: 'e05', group: '1 · Home & Triad (1, 3, 5)', label: 'Three notes: first two lit',        kind: 'phrase', degs: [0, 2, 4], keys: [0], len: 3, show: [0, 1] },
-      { id: 'e06', group: '1 · Home & Triad (1, 3, 5)', label: 'Three notes: last two lit',         kind: 'phrase', degs: [0, 2, 4], keys: [0], len: 3, show: [1, 2] },
-      { id: 'e07', group: '1 · Home & Triad (1, 3, 5)', label: 'Three notes: first & last lit',     kind: 'phrase', degs: [0, 2, 4], keys: [0], len: 3, show: [0, 2] },
-      { id: 'e08', group: '1 · Home & Triad (1, 3, 5)', label: 'Three notes: first key lit',        kind: 'phrase', degs: [0, 2, 4], keys: [0], len: 3, show: [0] },
-      { id: 'e09', group: '1 · Home & Triad (1, 3, 5)', label: 'Three notes: last key lit',         kind: 'phrase', degs: [0, 2, 4], keys: [0], len: 3, show: [2] },
-      { id: 'e10', group: '1 · Home & Triad (1, 3, 5)', label: 'Three notes: 1, 3, 5',              kind: 'phrase', degs: [0, 2, 4], keys: [0], len: 3 },
+      // Chapter 1 · Home & Triad (1, 3, 5) — Octaves before phrases (C3–C5)
+      { id: 'm01', group: '1 · Home & Triad (1, 3, 5) · C3–C5', label: 'Single notes: 1, 3, 5',             kind: 'single', degs: [0, 2, 4], keys: [0], octs: [4], len: 1 },
+      { id: 'm02', group: '1 · Home & Triad (1, 3, 5) · C3–C5', label: 'Single notes: 1, 3, 5 · octaves',   kind: 'single', degs: [0, 2, 4], keys: [0], octs: [3, 4, 5], multiOctave: true, len: 1 },
+      { id: 'm03', group: '1 · Home & Triad (1, 3, 5) · C3–C5', label: 'Single notes: 1, 3, 5 · C, F, G',   kind: 'single', degs: [0, 2, 4], keys: [0, 5, 7], octs: [3, 4, 5], len: 1 },
+      { id: 'm04', group: '1 · Home & Triad (1, 3, 5) · C3–C5', label: 'Two notes: first key lit',          kind: 'phrase', degs: [0, 2, 4], keys: [0], octs: [3, 4, 5], len: 2, show: [0] },
+      { id: 'm05', group: '1 · Home & Triad (1, 3, 5) · C3–C5', label: 'Two notes: last key lit',           kind: 'phrase', degs: [0, 2, 4], keys: [0], octs: [3, 4, 5], len: 2, show: [1] },
+      { id: 'm06', group: '1 · Home & Triad (1, 3, 5) · C3–C5', label: 'Two notes: 1, 3, 5',                kind: 'phrase', degs: [0, 2, 4], keys: [0, 5, 7], octs: [3, 4, 5], len: 2 },
+      { id: 'm07', group: '1 · Home & Triad (1, 3, 5) · C3–C5', label: 'Three notes: first two lit',        kind: 'phrase', degs: [0, 2, 4], keys: [0], octs: [3, 4, 5], len: 3, show: [0, 1] },
+      { id: 'm08', group: '1 · Home & Triad (1, 3, 5) · C3–C5', label: 'Three notes: last two lit',         kind: 'phrase', degs: [0, 2, 4], keys: [0], octs: [3, 4, 5], len: 3, show: [1, 2] },
+      { id: 'm09', group: '1 · Home & Triad (1, 3, 5) · C3–C5', label: 'Three notes: first & last lit',     kind: 'phrase', degs: [0, 2, 4], keys: [0], octs: [3, 4, 5], len: 3, show: [0, 2] },
+      { id: 'm10', group: '1 · Home & Triad (1, 3, 5) · C3–C5', label: 'Three notes: first key lit',        kind: 'phrase', degs: [0, 2, 4], keys: [0], octs: [3, 4, 5], len: 3, show: [0] },
+      { id: 'm11', group: '1 · Home & Triad (1, 3, 5) · C3–C5', label: 'Three notes: last key lit',         kind: 'phrase', degs: [0, 2, 4], keys: [0], octs: [3, 4, 5], len: 3, show: [2] },
+      { id: 'm12', group: '1 · Home & Triad (1, 3, 5) · C3–C5', label: 'Three notes: 1, 3, 5',              kind: 'phrase', degs: [0, 2, 4], keys: [0, 5, 7], octs: [3, 4, 5], len: 3 },
 
-      // Part 2 · Expanding the Scale & Keys (Single Notes with Stepwise Resolution)
-      { id: 'e12', group: '2 · Full Scale & Keys',      label: 'Single notes: add 2 & 6',           kind: 'single', degs: [0, 1, 2, 4, 5], keys: [0], len: 1 },
-      { id: 'e13', group: '2 · Full Scale & Keys',      label: 'Single notes: add 4',               kind: 'single', degs: [0, 1, 2, 3, 4, 5], keys: [0], len: 1 },
-      { id: 'e14', group: '2 · Full Scale & Keys',      label: 'Single notes: add 7, full scale',   kind: 'single', degs: [0, 1, 2, 3, 4, 5, 6], keys: [0], len: 1 },
-      { id: 'e15', group: '2 · Full Scale & Keys',      label: 'Single notes: new key every round', kind: 'single', degs: [0, 1, 2, 3, 4, 5, 6], keys: 'all', newKeyEveryRound: true, len: 1 },
-      { id: 'e16', group: '2 · Full Scale & Keys',      label: 'Single notes: multi-octave',        kind: 'single', degs: [0, 1, 2, 3, 4, 5, 6], keys: 'all', multiOctave: true, len: 1 },
+      // Chapter 2 · Pentatonic (1, 2, 3, 5, 6) — C3–C5 (first black-key tonics at Step 17)
+      { id: 'm13', group: '2 · Pentatonic (1, 2, 3, 5, 6) · C3–C5', label: 'Single notes: add 2 & 6',       kind: 'single', degs: [0, 1, 2, 4, 5], keys: [0], octs: [3, 4, 5], len: 1 },
+      { id: 'm14', group: '2 · Pentatonic (1, 2, 3, 5, 6) · C3–C5', label: 'Single notes: C, F, G',         kind: 'single', degs: [0, 1, 2, 4, 5], keys: [0, 5, 7], octs: [3, 4, 5], len: 1 },
+      { id: 'm15', group: '2 · Pentatonic (1, 2, 3, 5, 6) · C3–C5', label: 'Two-note pentatonic phrases',   kind: 'phrase', degs: [0, 1, 2, 4, 5], keys: [0, 5, 7], octs: [3, 4, 5], len: 2 },
+      { id: 'm16', group: '2 · Pentatonic (1, 2, 3, 5, 6) · C3–C5', label: 'Three-note pentatonic phrases', kind: 'phrase', degs: [0, 1, 2, 4, 5], keys: [0, 5, 7], octs: [3, 4, 5], len: 3, hooks: true },
+      { id: 'm17', group: '2 · Pentatonic (1, 2, 3, 5, 6) · C3–C5', label: 'Single notes: D, B♭, A, E♭',   kind: 'single', degs: [0, 1, 2, 4, 5], keys: [2, 10, 9, 3], octs: [3, 4, 5], len: 1 },
 
-      // Part 3 · Melodies & Phrases in Any Key
-      { id: 'e17', group: '3 · Melodies & Phrases',     label: 'Two notes: 1, 3, 5, any key',       kind: 'phrase', degs: [0, 2, 4], keys: 'all', len: 2 },
-      { id: 'e18', group: '3 · Melodies & Phrases',     label: 'Three notes: 1, 3, 5, any key',     kind: 'phrase', degs: [0, 2, 4], keys: 'all', len: 3 },
-      { id: 'e19', group: '3 · Melodies & Phrases',     label: 'Two notes: full scale',             kind: 'phrase', degs: [0, 1, 2, 3, 4, 5, 6], keys: 'all', len: 2 },
-      { id: 'e20', group: '3 · Melodies & Phrases',     label: 'Three notes: full scale',           kind: 'phrase', degs: [0, 1, 2, 3, 4, 5, 6], keys: 'all', len: 3, hooks: true },
-      { id: 'e21', group: '3 · Melodies & Phrases',     label: 'Four-note melodies',                kind: 'phrase', degs: [0, 1, 2, 3, 4, 5, 6], keys: 'all', len: 4, hooks: true },
-      { id: 'e22', group: '3 · Melodies & Phrases',     label: 'Five-note melodies',                kind: 'phrase', degs: [0, 1, 2, 3, 4, 5, 6], keys: 'all', len: 5, hooks: true },
-      { id: 'e23', group: '3 · Melodies & Phrases',     label: 'Six-note melodies',                 kind: 'phrase', degs: [0, 1, 2, 3, 4, 5, 6], keys: 'all', len: 6 },
+      // Chapter 3 · Full Scale & Melodies — Full Octaves C2–C7
+      { id: 'm18', group: '3 · Full Scale & Melodies · C2–C7',  label: 'Single notes: add 4',               kind: 'single', degs: [0, 1, 2, 3, 4, 5], keys: [0], octs: [2, 3, 4, 5, 6], len: 1 },
+      { id: 'm19', group: '3 · Full Scale & Melodies · C2–C7',  label: 'Single notes: add 7, full scale',   kind: 'single', degs: [0, 1, 2, 3, 4, 5, 6], keys: [0], octs: [2, 3, 4, 5, 6], len: 1 },
+      { id: 'm20', group: '3 · Full Scale & Melodies · C2–C7',  label: 'Single notes: all 12 keys',         kind: 'single', degs: [0, 1, 2, 3, 4, 5, 6], keys: 'all', newKeyEveryRound: true, octs: [2, 3, 4, 5, 6], len: 1 },
+      { id: 'm21', group: '3 · Full Scale & Melodies · C2–C7',  label: 'Two notes: full scale, any key',    kind: 'phrase', degs: [0, 1, 2, 3, 4, 5, 6], keys: 'all', octs: [2, 3, 4, 5, 6], len: 2 },
+      { id: 'm22', group: '3 · Full Scale & Melodies · C2–C7',  label: 'Three notes: full scale, any key',  kind: 'phrase', degs: [0, 1, 2, 3, 4, 5, 6], keys: 'all', octs: [2, 3, 4, 5, 6], len: 3, hooks: true },
+      { id: 'm23', group: '3 · Full Scale & Melodies · C2–C7',  label: 'Four-note melodies',                kind: 'phrase', degs: [0, 1, 2, 3, 4, 5, 6], keys: 'all', octs: [2, 3, 4, 5, 6], len: 4, hooks: true },
+      { id: 'm24', group: '3 · Full Scale & Melodies · C2–C7',  label: 'Five-note melodies',                kind: 'phrase', degs: [0, 1, 2, 3, 4, 5, 6], keys: 'all', octs: [2, 3, 4, 5, 6], len: 5, hooks: true },
+      { id: 'm25', group: '3 · Full Scale & Melodies · C2–C7',  label: 'Six-note melodies',                 kind: 'phrase', degs: [0, 1, 2, 3, 4, 5, 6], keys: 'all', octs: [2, 3, 4, 5, 6], len: 6 },
 
-      // Part 4 · Chromatic / Outside Notes (with Half-Step Resolution)
-      { id: 'e24', group: '4 · Chromatic Notes',        label: 'Chromatic: 1 outside note',         kind: 'single', degs: [0, 1, 2, 3, 4, 5, 6], outs: [6], keys: 'all', len: 1 },
-      { id: 'e25', group: '4 · Chromatic Notes',        label: 'Chromatic: 2 outside notes',        kind: 'single', degs: [0, 1, 2, 3, 4, 5, 6], outs: [6, 10], keys: 'all', len: 1 },
-      { id: 'e26', group: '4 · Chromatic Notes',        label: 'Chromatic: 4 outside notes',        kind: 'single', degs: [0, 1, 2, 3, 4, 5, 6], outs: [6, 10, 3, 8], keys: 'all', len: 1 },
-      { id: 'e27', group: '4 · Chromatic Notes',        label: 'Chromatic: all 12 notes',           kind: 'single', degs: [0, 1, 2, 3, 4, 5, 6], outs: [1, 3, 6, 8, 10], keys: 'all', len: 1 },
-      { id: 'e28', group: '4 · Chromatic Notes',        label: 'Chromatic: three-note phrases',     kind: 'phrase', degs: [0, 1, 2, 3, 4, 5, 6], outs: [1, 3, 6, 8, 10], keys: 'all', len: 3, hooks: true },
-
-      // Part 5 · Chords & Harmony
-      { id: 'e29', group: '5 · Chords & Harmony',       label: 'Chord roots: I and V',              kind: 'chord-root',   chordDegs: [0, 4], keys: 'all', len: 1 },
-      { id: 'e30', group: '5 · Chords & Harmony',       label: 'Chord roots: I, IV, V',             kind: 'chord-root',   chordDegs: [0, 3, 4], keys: 'all', len: 1 },
-      { id: 'e31', group: '5 · Chords & Harmony',       label: 'Chord roots: all seven',            kind: 'chord-root',   chordDegs: [0, 1, 2, 3, 4, 5, 6], keys: 'all', len: 1 },
-      { id: 'e32', group: '5 · Chords & Harmony',       label: 'Chord roots: inversions',           kind: 'chord-root',   chordDegs: [0, 1, 2, 3, 4, 5, 6], inversions: true, keys: 'all', len: 1 },
-      { id: 'e33', group: '5 · Chords & Harmony',       label: 'Chord tones: one at a time',        kind: 'chord-build',  chordDegs: [0, 3, 4], arpeggio: true, keys: 'all', len: 3 },
-      { id: 'e34', group: '5 · Chords & Harmony',       label: 'Chord tones: together, I IV V',     kind: 'chord-build',  chordDegs: [0, 3, 4], keys: 'all', len: 3 },
-      { id: 'e35', group: '5 · Chords & Harmony',       label: 'Chord tones: together, any chord',  kind: 'chord-build',  chordDegs: [0, 1, 2, 3, 4, 5, 6], keys: 'all', len: 3 },
-      { id: 'e36', group: '5 · Chords & Harmony',       label: 'Chord changes',                     kind: 'chord-change', chordDegs: [0, 1, 2, 3, 4, 5], keys: 'all', len: 2 }
+      // Chapter 4 · Chords & Harmony — All 12 Keys · Full Octaves C2–C7
+      { id: 'm26', group: '4 · Chords & Harmony · C2–C7',       label: 'Chord roots: I and V',              kind: 'chord-root',   chordDegs: [0, 4], keys: 'all', octs: [2, 3, 4, 5, 6], len: 1 },
+      { id: 'm27', group: '4 · Chords & Harmony · C2–C7',       label: 'Chord roots: I, IV, V',             kind: 'chord-root',   chordDegs: [0, 3, 4], keys: 'all', octs: [2, 3, 4, 5, 6], len: 1 },
+      { id: 'm28', group: '4 · Chords & Harmony · C2–C7',       label: 'Chord roots: all seven',            kind: 'chord-root',   chordDegs: [0, 1, 2, 3, 4, 5, 6], keys: 'all', octs: [2, 3, 4, 5, 6], len: 1 },
+      { id: 'm29', group: '4 · Chords & Harmony · C2–C7',       label: 'Chord roots: inversions',           kind: 'chord-root',   chordDegs: [0, 1, 2, 3, 4, 5, 6], inversions: true, keys: 'all', octs: [2, 3, 4, 5, 6], len: 1 },
+      { id: 'm30', group: '4 · Chords & Harmony · C2–C7',       label: 'Chord tones: one at a time',        kind: 'chord-build',  chordDegs: [0, 3, 4], arpeggio: true, keys: 'all', octs: [2, 3, 4, 5, 6], len: 3 },
+      { id: 'm31', group: '4 · Chords & Harmony · C2–C7',       label: 'Chord tones: together, I IV V',     kind: 'chord-build',  chordDegs: [0, 3, 4], keys: 'all', octs: [2, 3, 4, 5, 6], len: 3 },
+      { id: 'm32', group: '4 · Chords & Harmony · C2–C7',       label: 'Chord tones: together, any chord',  kind: 'chord-build',  chordDegs: [0, 1, 2, 3, 4, 5, 6], keys: 'all', octs: [2, 3, 4, 5, 6], len: 3 },
+      { id: 'm33', group: '4 · Chords & Harmony · C2–C7',       label: 'Chord changes',                     kind: 'chord-change', chordDegs: [0, 1, 2, 3, 4, 5], keys: 'all', octs: [2, 3, 4, 5, 6], len: 2 }
     ];
 
     const STAGE_BY_ID = Object.fromEntries(FRONTIER.map(s => [s.id, s]));
 
-    // Build Ear Trainer-style cadence chords anchored on tonicMidi (e.g. C4 = 60)
-    function buildCadenceChords(tonicMidi, type = 'I-IV-V-I') {
+    // Build Ear Trainer-style cadence chords anchored on tonicMidi in the active musical mode
+    function buildCadenceChords(tonicMidi, type = 'I-IV-V-I', mode = state.mode || 'major') {
       const t = tonicMidi;
-      const tonic = [t - 12, t, t + 4, t + 7];
-      const IV = [t - 7, t, t + 5, t + 9];
-      const V = [t - 5, t - 1, t + 2, t + 7];
-      const V7 = [t - 5, t - 1, t + 2, t + 5, t + 7];
-      const ii7 = [t - 10, t, t + 2, t + 5, t + 9];
-      const IM7 = [t - 12, t, t + 4, t + 7, t + 11];
-      switch (type) {
-        case 'several tonics': return [[t - 12, t, t + 12]];
-        case 'tonic': return [[t]];
-        case 'I': return [tonic];
-        case 'IM7': return [IM7];
-        case 'I-V-I': return [tonic, V, tonic];
-        case 'V7-I': return [V7, tonic];
-        case 'ii7-V7-I': return [ii7, V7, tonic];
-        default: return [tonic, IV, V, tonic];
+      const minorish = mode === 'minor' || mode === 'dorian' || mode === 'phrygian' || mode === 'locrian';
+      const tonic = mode === 'locrian'
+        ? [t - 12, t, t + 3, t + 6]
+        : (minorish ? [t - 12, t, t + 3, t + 7] : [t - 12, t, t + 4, t + 7]);
+      if (type === 'several tonics') return [[t - 12, t, t + 12]];
+      if (type === 'tonic') return [[t]];
+      if (type === 'I') return [tonic];
+      if (mode === 'major' || mode === 'minor') {
+        const isMin = mode === 'minor';
+        const IV = isMin ? [t - 7, t, t + 5, t + 8] : [t - 7, t, t + 5, t + 9];
+        const V = [t - 5, t - 1, t + 2, t + 7];
+        const V7 = [t - 5, t - 1, t + 2, t + 5, t + 7];
+        const ii7 = isMin ? [t - 10, t, t + 2, t + 5, t + 8] : [t - 10, t, t + 2, t + 5, t + 9];
+        const IM7 = isMin ? [t - 12, t, t + 3, t + 7, t + 10] : [t - 12, t, t + 4, t + 7, t + 11];
+        switch (type) {
+          case 'I-V-I': return [tonic, V, tonic];
+          case 'V7-I': return [V7, tonic];
+          case 'ii7-V7-I': return [ii7, V7, tonic];
+          case 'IM7': return [IM7];
+          default: return [tonic, IV, V, tonic];
+        }
       }
+      // Characteristic modal colour chord -> tonic (matching Ear Trainer)
+      const colour = {
+        dorian:     [t - 7, t, t + 5, t + 9],
+        mixolydian: [t - 14, t - 2, t + 2, t + 5],
+        lydian:     [t - 10, t + 2, t + 6, t + 9],
+        phrygian:   [t - 11, t + 1, t + 5, t + 8],
+        locrian:    [t - 6, t - 2, t + 1, t + 6]
+      }[mode] || [t - 7, t, t + 5, t + 9];
+      return [tonic, colour, tonic];
     }
 
-    // Build stepwise resolution MIDI path from any note (diatonic or chromatic) to the tonic
-    function buildResolutionMidis(midi, tonicMidi, style = 'nearest') {
+    // Build stepwise resolution MIDI path along the active musical mode back to the nearest home key
+    function buildResolutionMidis(midi, tonicMidi, style = 'nearest', mode = state.mode || 'major') {
+      const steps = (SCALES[mode] || SCALES.major).steps;
       const off = ((midi - tonicMidi) % 12 + 12) % 12;
-      const baseTonic = midi - off; // tonic at or below midi
+      const baseTonic = midi - off;
       if (off === 0) return [midi];
-      const degIdx = MAJOR_STEPS.indexOf(off);
+      const degIdx = steps.indexOf(off);
       const walkDown = (startDeg) => {
         const out = [];
-        for (let d = startDeg; d >= 0; d--) out.push(baseTonic + MAJOR_STEPS[d]);
+        for (let d = startDeg; d >= 0; d--) out.push(baseTonic + steps[d]);
         return out;
       };
       const walkUp = (startDeg) => {
         const out = [];
-        for (let d = startDeg; d <= 6; d++) out.push(baseTonic + MAJOR_STEPS[d]);
+        for (let d = startDeg; d <= 6; d++) out.push(baseTonic + steps[d]);
         out.push(baseTonic + 12);
         return out;
       };
@@ -1591,17 +1624,7 @@
         if (style === 'jump') return [midi, degIdx <= 3 ? baseTonic : baseTonic + 12];
         return degIdx <= 3 ? walkDown(degIdx) : walkUp(degIdx);
       }
-      // Chromatic outside note: resolve by half-step to nearest diatonic neighbor, then walk home
-      let belowDeg = 0;
-      for (let i = 0; i < MAJOR_STEPS.length; i++) {
-        if (MAJOR_STEPS[i] < off) belowDeg = i;
-      }
-      const aboveDeg = belowDeg + 1;
-      const dnPath = walkDown(belowDeg);
-      const upPath = aboveDeg <= 6 ? walkUp(aboveDeg) : [baseTonic + 12];
-      let chosen = style === 'down' ? dnPath : (style === 'up' ? upPath : (dnPath.length <= upPath.length ? dnPath : upPath));
-      if (style === 'jump') chosen = [chosen[chosen.length - 1]];
-      return [midi, ...chosen];
+      return [midi, off <= 6 ? baseTonic : baseTonic + 12];
     }
 
     // Deep library of recognizable short melody fragments (semitone offsets from the starting note)
@@ -1673,16 +1696,20 @@
 
     const STORE_KEY = 'keys.state.v2';
     let state = {
+      mode: 'major',
+      modeStore: {},
       skill: 0,
       lastPlayed: 0,
-      stats: {}, // specId -> { tries, clean }
-      hist: {},  // specId -> [{ ok: 0|1, day: 'YYYY-MM-DD' }] (rolling window)
-      ready: {}, // specId -> 'YYYY-MM-DD' (Day 1 >=90% over full window)
-      mastered: {}, // specId -> 'YYYY-MM-DD' (confirmed >=90% on a later day)
+      stats: {},
+      hist: {},
+      ready: {},
+      mastered: {},
       settings: Object.assign({}, DEFAULT_SETTINGS)
     };
 
     function hydrateMasteryState(st) {
+      st.mode = SCALES[st.mode] ? st.mode : 'major';
+      st.modeStore = st.modeStore || {};
       st.stats = st.stats || {};
       st.hist = st.hist || {};
       st.ready = st.ready || {};
@@ -1705,10 +1732,33 @@
       return st;
     }
 
+    function switchMusicalMode(newMode) {
+      if (!SCALES[newMode] || newMode === state.mode) return;
+      // Save active mode progress into modeStore
+      state.modeStore[state.mode] = {
+        skill: state.skill,
+        stats: state.stats,
+        hist: state.hist,
+        ready: state.ready,
+        mastered: state.mastered
+      };
+      state.mode = newMode;
+      const incoming = state.modeStore[newMode] || { skill: 0, stats: {}, hist: {}, ready: {}, mastered: {} };
+      state.skill = incoming.skill || 0;
+      state.stats = incoming.stats || {};
+      state.hist = incoming.hist || {};
+      state.ready = incoming.ready || {};
+      state.mastered = incoming.mastered || {};
+      saveState();
+      applyModeSelection('auto');
+    }
+
     try {
       const saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
       if (saved && typeof saved.skill === 'number') {
         state = hydrateMasteryState({
+          mode: saved.mode || 'major',
+          modeStore: saved.modeStore || {},
           skill: saved.skill,
           lastPlayed: saved.lastPlayed || 0,
           stats: saved.stats || {},
@@ -1729,6 +1779,8 @@
     // Elements
     const stageSelect = document.getElementById('stageSelect');
     const portraitStageSelect = document.getElementById('portraitStageSelect');
+    const modeSelect = document.getElementById('modeSelect');
+    const progressHeading = document.getElementById('progressHeading');
     const cadenceStyleSelect = document.getElementById('cadenceStyleSelect');
     const cadenceEverySelect = document.getElementById('cadenceEverySelect');
     const resStyleSelect = document.getElementById('resStyleSelect');
@@ -1767,7 +1819,7 @@
     const statusText = document.getElementById('statusText');
     const stepDots = document.getElementById('stepDots');
 
-    // Populate both Mode dropdowns directly from FRONTIER so all 36 steps stay in sync
+    // Populate both Level dropdowns directly from FRONTIER so all 33 steps stay in sync
     FRONTIER.forEach((spec, i) => {
       [stageSelect, portraitStageSelect].forEach(sel => {
         const opt = document.createElement('option');
@@ -1778,6 +1830,7 @@
     });
 
     versionLabel.textContent = APP_VERSION;
+    modeSelect.value = state.mode || 'major';
     cadenceStyleSelect.value = state.settings.cadenceType || 'I-IV-V-I';
     cadenceEverySelect.value = String(state.settings.cadenceEvery !== undefined ? state.settings.cadenceEvery : 5);
     resStyleSelect.value = state.settings.resStyle || 'nearest';
@@ -1849,24 +1902,33 @@
       return { minMidi: 36, maxMidi: 96 }; // C2..C7
     }
 
+    function allowedOctavesForSpec(spec) {
+      const raw = Array.isArray(spec && spec.octs) && spec.octs.length ? spec.octs : [4];
+      if ((state.settings.keyboard || 'single') !== 'single') {
+        const capped = raw.filter(o => o <= 4);
+        return capped.length ? capped : [4];
+      }
+      return raw;
+    }
+
     function activeMidisForSpec(spec, keyPc = currentKeyPc, oct = currentOctave) {
+      const steps = currentScaleSteps();
       const t = tonicMidiFor(keyPc, oct);
       const out = new Set();
       if (spec.kind === 'chord-root' || spec.kind === 'chord-change') {
         const degs = spec.chordDegs || [0, 3, 4];
-        degs.forEach(d => out.add(t + MAJOR_STEPS[d]));
+        degs.forEach(d => out.add(t + steps[d]));
       } else if (spec.kind === 'chord-build') {
         const degs = spec.chordDegs || [0, 3, 4];
         degs.forEach(d => {
-          const r = t + MAJOR_STEPS[d];
-          const third = t + MAJOR_STEPS[(d + 2) % 7] + (d + 2 >= 7 ? 12 : 0);
-          const fifth = t + MAJOR_STEPS[(d + 4) % 7] + (d + 4 >= 7 ? 12 : 0);
+          const r = t + steps[d];
+          const third = t + steps[(d + 2) % 7] + (d + 2 >= 7 ? 12 : 0);
+          const fifth = t + steps[(d + 4) % 7] + (d + 4 >= 7 ? 12 : 0);
           out.add(r); out.add(third); out.add(fifth);
         });
       } else {
         const degs = spec.degs || [0, 2, 4];
-        degs.forEach(d => out.add(t + MAJOR_STEPS[d]));
-        if (spec.outs) spec.outs.forEach(o => out.add(t + o));
+        degs.forEach(d => out.add(t + steps[d]));
         if (degs.includes(0) && degs.length >= 6) out.add(t + 12); // upper home key for full scale
       }
       const { minMidi, maxMidi } = visibleRangeBounds();
@@ -1953,13 +2015,16 @@
         if (currentOctave !== 4) { currentOctave = 4; }
         return;
       }
-      if (!currentSpec.multiOctave && selectedMode === 'auto' && activeFrontierIndex() < 14) {
-        if (currentOctave !== 4) { currentOctave = 4; }
+      const pool = allowedOctavesForSpec(currentSpec);
+      if (pool.length <= 1) {
+        currentOctave = pool[0];
         return;
+      }
+      if (!pool.includes(currentOctave)) {
+        currentOctave = pool.includes(4) ? 4 : pool[0];
       }
       if (cleanInOctave >= CLEAN_PER_OCTAVE && recentCleanStreak >= 2) {
         const prevOct = currentOctave;
-        const pool = (state.settings.keyboard || 'single') === 'single' ? GOLDEN_OCTAVES : [2, 3, 4, 5];
         const others = pool.filter(o => o !== currentOctave);
         currentOctave = others[Math.floor(Math.random() * others.length)];
         cleanInOctave = 0;
@@ -2029,6 +2094,11 @@
     }
 
     function updateProgressSummary() {
+      const activeMode = state.mode || 'major';
+      const modeName = (SCALES[activeMode] || SCALES.major).name;
+      if (progressHeading) {
+        progressHeading.textContent = activeMode === 'major' ? 'Progress' : `Progress · ${modeName}`;
+      }
       const tried = FRONTIER.map(spec => skillMasteryInfo(spec));
       const totalBar = tried.reduce((s, x) => s + x.barPct, 0);
       const overallPct = Math.round(totalBar / FRONTIER.length);
@@ -2275,9 +2345,10 @@
     }
 
     function diatonicTriad(tonicMidi, degIdx, invert = false) {
-      const r = tonicMidi + MAJOR_STEPS[degIdx];
-      const third = tonicMidi + MAJOR_STEPS[(degIdx + 2) % 7] + (degIdx + 2 >= 7 ? 12 : 0);
-      const fifth = tonicMidi + MAJOR_STEPS[(degIdx + 4) % 7] + (degIdx + 4 >= 7 ? 12 : 0);
+      const steps = currentScaleSteps();
+      const r = tonicMidi + steps[degIdx];
+      const third = tonicMidi + steps[(degIdx + 2) % 7] + (degIdx + 2 >= 7 ? 12 : 0);
+      const fifth = tonicMidi + steps[(degIdx + 4) % 7] + (degIdx + 4 >= 7 ? 12 : 0);
       if (!invert) return [r, third, fifth];
       const inv = Math.floor(Math.random() * 3);
       if (inv === 1) return [third, fifth, r + 12];
@@ -2322,10 +2393,11 @@
     }
 
     function buildPrompt() {
+      const steps = currentScaleSteps();
       currentSpec = pickSpecForPrompt();
       maybeRotateOctave();
       if (currentSpec.multiOctave && state.settings.varyOctaves !== false) {
-        const pool = (state.settings.keyboard || 'single') === 'single' ? [3, 4, 5] : [3, 4];
+        const pool = allowedOctavesForSpec(currentSpec);
         currentOctave = pool[Math.floor(Math.random() * pool.length)];
       }
       currentKeyPc = pickKeyForSpec(currentSpec);
@@ -2341,14 +2413,7 @@
       if (currentSpec.kind === 'single') {
         let note = currentActiveNotes[0];
         for (let a = 0; a < 12; a++) {
-          // On chromatic levels, bias ~45% toward the new outside notes so they get real practice
-          let cand;
-          if (currentSpec.outs && Math.random() < 0.45) {
-            const outMidis = currentSpec.outs.map(o => tonicMidi + o).filter(m => activeSet.has(m));
-            cand = outMidis.length ? outMidis[Math.floor(Math.random() * outMidis.length)] : currentActiveNotes[Math.floor(Math.random() * currentActiveNotes.length)];
-          } else {
-            cand = currentActiveNotes[Math.floor(Math.random() * currentActiveNotes.length)];
-          }
+          const cand = currentActiveNotes[Math.floor(Math.random() * currentActiveNotes.length)];
           if (`sn:${cand}` !== recentSignatures[recentSignatures.length - 1] || a === 11) {
             note = cand;
             break;
@@ -2370,7 +2435,7 @@
           const cand = degs[Math.floor(Math.random() * degs.length)];
           if (`cr:${currentKeyPc}-${cand}` !== recentSignatures[recentSignatures.length - 1] || a === 9) { deg = cand; break; }
         }
-        const rootMidi = tonicMidi + MAJOR_STEPS[deg];
+        const rootMidi = tonicMidi + steps[deg];
         const chord = diatonicTriad(tonicMidi, deg, !!currentSpec.inversions);
         currentRoot = rootMidi;
         promptChords = [chord];
@@ -2411,8 +2476,8 @@
           d1 = c1; d2 = c2;
           if (sig !== recentSignatures[recentSignatures.length - 1] && (!recentSignatures.includes(sig) || a >= 8)) break;
         }
-        const r1 = tonicMidi + MAJOR_STEPS[d1];
-        const r2 = tonicMidi + MAJOR_STEPS[d2];
+        const r1 = tonicMidi + steps[d1];
+        const r2 = tonicMidi + steps[d2];
         currentRoot = r1;
         promptChords = [diatonicTriad(tonicMidi, d1, false), diatonicTriad(tonicMidi, d2, false)];
         promptNotes = [r1, r2];
@@ -2470,8 +2535,9 @@
     }
 
     function playLivingBacking(tonicMidi, when) {
+      const steps = currentScaleSteps();
       const base = tonicMidi - 12 >= 36 ? tonicMidi - 12 : tonicMidi;
-      AudioEngine.chord([base, base + 4, base + 7], when, 2.0, 0.22);
+      AudioEngine.chord([base, base + steps[2], base + steps[4]], when, 2.0, 0.22);
     }
 
     let promptRunId = 0;
@@ -2907,6 +2973,8 @@
           return;
         }
         state = hydrateMasteryState({
+          mode: (incoming.mode && SCALES[incoming.mode]) ? incoming.mode : 'major',
+          modeStore: incoming.modeStore || {},
           skill: Math.max(0, Math.min(FRONTIER.length - 0.05, incoming.skill)),
           lastPlayed: incoming.lastPlayed || Date.now(),
           stats: incoming.stats || {},
@@ -2915,6 +2983,7 @@
           mastered: incoming.mastered || {},
           settings: Object.assign({}, DEFAULT_SETTINGS, incoming.settings || {})
         });
+        modeSelect.value = state.mode || 'major';
         cadenceStyleSelect.value = state.settings.cadenceType || 'I-IV-V-I';
         cadenceEverySelect.value = String(state.settings.cadenceEvery !== undefined ? state.settings.cadenceEvery : 5);
         resStyleSelect.value = state.settings.resStyle || 'nearest';
@@ -2938,6 +3007,7 @@
       }
     });
 
+    modeSelect.addEventListener('change', () => switchMusicalMode(modeSelect.value));
     stageSelect.addEventListener('change', () => applyModeSelection(stageSelect.value));
     portraitStageSelect.addEventListener('change', () => applyModeSelection(portraitStageSelect.value));
 
