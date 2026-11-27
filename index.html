@@ -961,7 +961,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-27.11';
+    const APP_VERSION = '2026-11-27.12';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -1329,11 +1329,19 @@
       return hit ? hit.closest('.wkey, .bkey') : null;
     }
 
+    function isKeyPlayable(midi) {
+      if (freePlay || jamActive) return true;
+      if (state.settings.showActive === false) return true;
+      if (!currentActiveNotes || !currentActiveNotes.length) return true;
+      return currentActiveNotes.includes(midi);
+    }
+
     pianoEl.addEventListener('pointerdown', (e) => {
       const keyEl = e.target.closest('.wkey, .bkey');
       if (!keyEl) return;
       e.preventDefault();
       const midi = Number(keyEl.dataset.midi);
+      if (!isKeyPlayable(midi)) return;
       const voice = AudioEngine.noteOn(midi, 0.88);
       activePointers.set(e.pointerId, { midi, el: keyEl, voice });
       keyEl.classList.add('pressed');
@@ -1345,9 +1353,10 @@
       if (!cur) return;
       const nextEl = keyAtPoint(e.clientX, e.clientY);
       if (!nextEl || nextEl === cur.el) return;
+      const nextMidi = Number(nextEl.dataset.midi);
+      if (!isKeyPlayable(nextMidi)) return;
       const prevEl = cur.el;
       if (cur.voice) cur.voice.stop();
-      const nextMidi = Number(nextEl.dataset.midi);
       const nextVoice = AudioEngine.noteOn(nextMidi, 0.88);
       activePointers.set(e.pointerId, { midi: nextMidi, el: nextEl, voice: nextVoice });
       refreshPressedVisual(prevEl);
