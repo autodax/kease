@@ -141,6 +141,10 @@
     .hidden { display: none !important; }
 
     .status-text {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 11px;
       font-size: 17px;
       font-weight: 600;
       color: #edf3ff;
@@ -155,6 +159,12 @@
       font-weight: 700;
       color: var(--text);
       letter-spacing: -0.02em;
+    }
+    .p-ico {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
     }
 
     .step-dots {
@@ -1008,7 +1018,6 @@
 
       <div class="top-right">
         <button id="showBtn" type="button" class="btn btn-subtle hidden">Show Me</button>
-        <button id="pauseBtn" type="button" class="btn btn-subtle hidden">Pause</button>
         <button id="playBtn" type="button" class="btn btn-primary">Play</button>
         <button id="freeBtn" type="button" class="btn">Free Play</button>
       </div>
@@ -1035,7 +1044,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-27.21';
+    const APP_VERSION = '2026-11-27.22';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -1937,7 +1946,6 @@
     const backupMsg = document.getElementById('backupMsg');
     const versionLabel = document.getElementById('versionLabel');
     const playBtn = document.getElementById('playBtn');
-    const pauseBtn = document.getElementById('pauseBtn');
     const showBtn = document.getElementById('showBtn');
     const freeBtn = document.getElementById('freeBtn');
     const jamBtn = document.getElementById('jamBtn');
@@ -2087,26 +2095,40 @@
     const isReturnSession = state.skill >= 2 && (Date.now() - state.lastPlayed > 10 * 60 * 1000 || state.lastPlayed === 0);
     let warmupStepsLeft = (state.settings.warmup && isReturnSession) ? 3 : 0;
 
-    function specIcon(spec = currentSpec) {
-      if (!spec) return '🎵';
-      if (spec.kind === 'single') return '🎵';
-      if (spec.kind === 'phrase') return '🎶';
-      return '🎹';
+    const PROMPT_ICONS = {
+      single: `<span class="p-ico" style="color:#8ec5ff;"><svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><path d="M11 3v12.2A3.5 3.5 0 1 0 13 18.4V7.5l6-1.2V3l-8 1.6z"/></svg></span>`,
+      phrase: `<span class="p-ico" style="color:#8ec5ff;"><svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor"><path d="M9 4v11.2A3.5 3.5 0 1 0 11 18.4V8.5l8-1.6v6.3A3.5 3.5 0 1 0 21 16.4V2L9 4.4z"/></svg></span>`,
+      chord:  `<span class="p-ico" style="color:#8ec5ff;"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M4 5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H4zm0 2h3v6h2V7h2v6h2V7h2v6h2V7h3v10H4V7z"/></svg></span>`,
+      hunt:   `<span class="p-ico" style="color:#f0b48d;" aria-label="Hunt"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M10.5 3a7.5 7.5 0 1 0 4.6 13.4l4.2 4.2a1.2 1.2 0 0 0 1.7-1.7l-4.2-4.2A7.5 7.5 0 0 0 10.5 3zm0 2.5a5 5 0 1 1 0 10 5 5 0 0 1 0-10z"/></svg></span>`,
+      listen: `<span class="p-ico" style="color:#8ec5ff;"><svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 4V5L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4zm-2.5-8.8v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z"/></svg></span>`,
+      ear:    `<span class="p-ico" style="color:#f0b48d;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 10a6 6 0 1 1 11.4 2.6c-.7 1.4-1.9 2.2-2.6 3.5-.6 1.2-.8 2.9-2.5 2.9a2.3 2.3 0 0 1-2.3-2.3"/><path d="M10 10a2.5 2.5 0 0 1 5 0c0 1.3-.9 1.9-1.6 2.7-.5.6-.7 1.2-.7 1.8"/></svg></span>`
+    };
+
+    function specIconKey(spec = currentSpec) {
+      if (!spec) return 'single';
+      if (spec.kind === 'single') return 'single';
+      if (spec.kind === 'phrase') return 'phrase';
+      return 'chord';
     }
 
-    function listeningPromptText() {
-      const ico = specIcon(currentSpec);
-      const huntSuffix = effectiveMode(currentSpec) === 'hunt' ? ' 🔍' : '';
+    function listeningPromptState() {
+      const icon = specIconKey(currentSpec);
+      const trail = effectiveMode(currentSpec) === 'hunt' ? 'hunt' : null;
       const total = promptNotes.length || 1;
       if (currentSpec && currentSpec.kind === 'chord-build') {
         const done = foundChordNotes.size;
-        return done > 0 ? `${ico} ${done} of ${total} notes${huntSuffix}` : `${ico} Play chord${huntSuffix}`;
+        return { text: done > 0 ? `${done} of ${total} notes` : 'Play chord', icon, trail };
       }
       if (total > 1) {
         const cur = Math.min(total, stepIndex + 1);
-        return `${ico} Note ${cur} of ${total}${huntSuffix}`;
+        return { text: `Note ${cur} of ${total}`, icon, trail };
       }
-      return `${ico} Your turn${huntSuffix}`;
+      return { text: 'Your turn', icon, trail };
+    }
+
+    function setListeningStatus() {
+      const st = listeningPromptState();
+      setStatus(st.text, false, st.icon, st.trail);
     }
 
     function pauseSession() {
@@ -2120,9 +2142,19 @@
       updateActionButtons();
     }
 
-    function setStatus(text, isNotePop = false) {
-      statusText.textContent = text || listeningPromptText();
+    function setStatus(text, isNotePop = false, iconKey = null, trailKey = null) {
+      let label = text;
+      let lead = iconKey;
+      let trail = trailKey;
+      if (!label) {
+        const st = listeningPromptState();
+        label = st.text; lead = st.icon; trail = st.trail;
+      }
       statusText.classList.toggle('note-pop', !!isNotePop);
+      const leadHtml = lead && PROMPT_ICONS[lead] ? PROMPT_ICONS[lead] : '';
+      const trailHtml = trail && PROMPT_ICONS[trail] ? PROMPT_ICONS[trail] : '';
+      const safeText = String(label).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      statusText.innerHTML = `${leadHtml}<span>${safeText}</span>${trailHtml}`;
     }
 
     function tonicMidiFor(keyPc = currentKeyPc, oct = currentOctave) {
@@ -2202,7 +2234,7 @@
       inOctaveCadence = true;
       phase = 'playing';
       syncTrackPosition();
-      setStatus(labelText || `Key of ${KEY_NAMES[currentKeyPc]}`, false);
+      setStatus(labelText || `Key of ${KEY_NAMES[currentKeyPc]}`, false, 'listen');
 
       AudioEngine.whenReady((ctx) => {
         if (paused || freePlay || jamActive) return;
@@ -2585,10 +2617,6 @@
       const showRescue = !freePlay && !jamActive && phase === 'listening';
       showBtn.classList.toggle('hidden', !showRescue);
       cadenceBtn.classList.toggle('hidden', freePlay);
-      const showPause = !freePlay && !jamActive && (phase === 'listening' || phase === 'feedback' || phase === 'playing' || phase === 'waiting' || paused);
-      pauseBtn.classList.toggle('hidden', !showPause);
-      pauseBtn.textContent = paused ? 'Resume' : 'Pause';
-      pauseBtn.classList.toggle('btn-active', paused);
       const showOctBtns = freePlay && (state.settings.keyboard || 'single') === 'single';
       octShiftGroup.classList.toggle('hidden', !showOctBtns);
     }
@@ -2835,7 +2863,7 @@
       applySpotlight();
       renderDots();
       updateActionButtons();
-      setStatus('👂 Listen…', false);
+      setStatus('Listen…', false, 'listen');
       playBtn.textContent = 'Replay';
 
       AudioEngine.whenReady((ctx) => {
@@ -2885,7 +2913,7 @@
         foundChordNotes.clear();
         renderDots();
         updateActionButtons();
-        setStatus(listeningPromptText(), false);
+        setListeningStatus();
       });
     }
 
@@ -3020,7 +3048,7 @@
         clearTimers();
         promptRunId++;
         phase = 'waiting';
-        setStatus('👂 Listen…', false);
+        setStatus('Listen…', false, 'listen');
         timers.push(setTimeout(() => {
           if (!paused && phase === 'waiting') launchCurrentPrompt();
         }, 1100));
@@ -3042,7 +3070,7 @@
           if (hadMisses && !isRetryOfPrompt && curMode === 'hunt') {
             isRetryOfPrompt = true;
             missesThisPrompt = 0;
-            setStatus(`${specIcon(currentSpec)} Got it — once more`, false);
+            setStatus('Got it — once more', false, specIconKey(currentSpec));
             timers.push(setTimeout(() => {
               if (!paused) launchCurrentPrompt();
             }, 1250));
@@ -3051,14 +3079,14 @@
               showGoalModal();
               return;
             }
-            setStatus(lastMilestoneMsg || (hadMisses ? 'Got it' : 'Nice'), false);
+            setStatus(lastMilestoneMsg || (hadMisses ? 'Got it' : 'Nice'), false, specIconKey(currentSpec));
             scheduleNextRound(lastMilestoneMsg ? 2300 : 1450);
           }
         };
 
         // On single-note lessons, play & light up the stepwise resolution from the next note toward home!
         if (currentSpec.kind === 'single' && promptNotes.length === 1) {
-          setStatus(lastMilestoneMsg || (hadMisses ? '🎵 Resolving…' : '🎵 Nice · resolving'), false);
+          setStatus(lastMilestoneMsg || (hadMisses ? 'Resolving…' : 'Nice · resolving'), false, 'single');
           playResolution(promptNotes[0], tonicMidiFor(currentKeyPc, currentOctave), advanceAfter, { skipFirst: true, leadSec: 0.62 });
         } else {
           advanceAfter();
@@ -3076,7 +3104,7 @@
             if (foundChordNotes.size >= promptNotes.length) {
               finishPromptSuccess();
             } else {
-              setStatus(listeningPromptText(), false);
+              setListeningStatus();
             }
           }
           return;
@@ -3089,7 +3117,7 @@
           recordOutcome(2);
           updateActionButtons();
           flashKey(midi, 'nudge', 360);
-          setStatus('👀 Watch & listen', false);
+          setStatus('Watch & listen', false, 'ear');
           timers.push(setTimeout(() => revealAndRetry(), 780));
         }
         return;
@@ -3105,7 +3133,7 @@
         if (stepIndex >= promptNotes.length) {
           finishPromptSuccess();
         } else {
-          setStatus(listeningPromptText(), false);
+          setListeningStatus();
         }
       } else {
         missesThisPrompt++;
@@ -3117,7 +3145,7 @@
           recordOutcome(2);
           updateActionButtons();
           flashKey(midi, 'nudge', 360);
-          setStatus('👀 Watch & listen', false);
+          setStatus('Watch & listen', false, 'ear');
           if (currentSpec.kind === 'single' && promptNotes.length === 1) {
             timers.push(setTimeout(() => { if (!paused) AudioEngine.error(); }, 280));
             timers.push(setTimeout(() => revealAndRetry(), 780));
@@ -3140,7 +3168,7 @@
         applySpotlight();
         renderDots();
         updateActionButtons();
-        setStatus(`${specIcon(currentSpec)} Try again`, false);
+        setStatus('Try again', false, specIconKey(currentSpec));
       };
 
       if (promptChords.length > 0) {
@@ -3446,17 +3474,8 @@
           phase = 'listening';
           renderDots();
           updateActionButtons();
-          setStatus(listeningPromptText(), false);
+          setListeningStatus();
         });
-      }
-    });
-
-    pauseBtn.addEventListener('click', () => {
-      if (paused) {
-        paused = false;
-        startNewRound();
-      } else {
-        pauseSession();
       }
     });
 
@@ -3466,7 +3485,7 @@
       missesThisPrompt = Math.max(2, missesThisPrompt + 1);
       recordOutcome(2);
       updateActionButtons();
-      setStatus('👀 Watch & listen', false);
+      setStatus('Watch & listen', false, 'ear');
       revealAndRetry();
     });
 
@@ -3482,12 +3501,13 @@
       if (jamActive) stopJam();
       const returnPhase = (phase === 'idle' || paused || !promptNotes.length) ? 'idle' : 'listening';
       clearTimers();
-      playCadence(tonicMidiFor(currentKeyPc, currentOctave), `👂 Key of ${KEY_NAMES[currentKeyPc]}`, () => {
+      playCadence(tonicMidiFor(currentKeyPc, currentOctave), `Key of ${KEY_NAMES[currentKeyPc]}`, () => {
         if (paused || freePlay || jamActive) return;
         phase = returnPhase;
         renderDots();
         updateActionButtons();
-        setStatus(returnPhase === 'listening' ? listeningPromptText() : `${specIcon(currentSpec)} Tap Play`, false);
+        if (returnPhase === 'listening') setListeningStatus();
+        else setStatus('Tap Play', false, specIconKey(currentSpec));
       });
       updateActionButtons();
     });
@@ -3507,7 +3527,8 @@
       applySpotlight();
       renderDots();
       updateActionButtons();
-      setStatus(freePlay ? 'Free Play' : `${specIcon(currentSpec)} Tap Play`, false);
+      if (freePlay) setStatus('Free Play', false);
+      else setStatus('Tap Play', false, specIconKey(currentSpec));
     });
 
     // Auto-pause cleanly when rotating to portrait or leaving the app mid-lesson
