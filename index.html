@@ -832,19 +832,19 @@
           <option value="locrian">Locrian</option>
         </select>
       </div>
-      <div class="p-row">
-        <label for="goalModeSelect">Daily goal</label>
-        <select id="goalModeSelect" class="stage-select" style="max-width:230px;">
-          <option value="rounds">Rounds (10 – 100)</option>
-          <option value="time">Time (10 – 60 min)</option>
-          <option value="off">Off</option>
-        </select>
-      </div>
-      <div id="goalSliderRow" class="p-row">
-        <div class="goal-slider-wrap">
-          <input id="goalSlider" class="goal-slider" type="range" min="10" max="100" step="5" value="40" aria-label="Daily goal target" />
-          <span id="goalSliderVal" class="goal-val">40 rounds</span>
+      <div class="p-row" style="flex-direction:column;align-items:stretch;gap:6px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <label for="goalRoundsSlider">Daily rounds</label>
+          <span id="goalRoundsVal" class="goal-val">40 rounds</span>
         </div>
+        <input id="goalRoundsSlider" class="goal-slider" type="range" min="5" max="100" step="5" value="40" aria-label="Daily rounds goal" />
+      </div>
+      <div class="p-row" style="flex-direction:column;align-items:stretch;gap:6px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <label for="goalTimeSlider">Daily duration</label>
+          <span id="goalTimeVal" class="goal-val">15 min</span>
+        </div>
+        <input id="goalTimeSlider" class="goal-slider" type="range" min="5" max="60" step="5" value="15" aria-label="Daily duration goal" />
       </div>
       <div class="p-row">
         <label for="cadenceStyleSelect">Cadence style</label>
@@ -1036,7 +1036,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-27.13';
+    const APP_VERSION = '2026-11-27.14';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -1880,10 +1880,10 @@
     const modeSelect = document.getElementById('modeSelect');
     const progressHeading = document.getElementById('progressHeading');
     const todaySummary = document.getElementById('todaySummary');
-    const goalModeSelect = document.getElementById('goalModeSelect');
-    const goalSliderRow = document.getElementById('goalSliderRow');
-    const goalSlider = document.getElementById('goalSlider');
-    const goalSliderVal = document.getElementById('goalSliderVal');
+    const goalRoundsSlider = document.getElementById('goalRoundsSlider');
+    const goalRoundsVal = document.getElementById('goalRoundsVal');
+    const goalTimeSlider = document.getElementById('goalTimeSlider');
+    const goalTimeVal = document.getElementById('goalTimeVal');
     const goalModal = document.getElementById('goalModal');
     const goalModalText = document.getElementById('goalModalText');
     const goalKeepGoingBtn = document.getElementById('goalKeepGoingBtn');
@@ -1928,28 +1928,26 @@
 
     let lastPracticeTick = 0;
 
+    function normalizedGoalRounds() {
+      const v = Number(state.settings.goalRounds);
+      if (!v || v < 10) return 0; // 0 = Off
+      return Math.min(100, v);
+    }
+
+    function normalizedGoalMinutes() {
+      const v = Number(state.settings.goalMinutes);
+      if (!v || v < 10) return 0; // 0 = Off
+      return Math.min(60, v);
+    }
+
     function syncGoalControls() {
-      const gm = state.settings.goalMode || 'rounds';
-      goalModeSelect.value = gm;
-      if (gm === 'off') {
-        goalSliderRow.classList.add('hidden');
-      } else if (gm === 'time') {
-        goalSliderRow.classList.remove('hidden');
-        const mins = Math.max(10, Math.min(60, Number(state.settings.goalMinutes) || 15));
-        goalSlider.min = '10';
-        goalSlider.max = '60';
-        goalSlider.step = '5';
-        goalSlider.value = String(mins);
-        goalSliderVal.textContent = `${mins} min`;
-      } else {
-        goalSliderRow.classList.remove('hidden');
-        const rnds = Math.max(10, Math.min(100, Number(state.settings.goalRounds) || 40));
-        goalSlider.min = '10';
-        goalSlider.max = '100';
-        goalSlider.step = '5';
-        goalSlider.value = String(rnds);
-        goalSliderVal.textContent = `${rnds} rounds`;
-      }
+      const rnds = normalizedGoalRounds();
+      goalRoundsSlider.value = String(rnds >= 10 ? rnds : 5);
+      goalRoundsVal.textContent = rnds >= 10 ? `${rnds} rounds` : 'Off';
+
+      const mins = normalizedGoalMinutes();
+      goalTimeSlider.value = String(mins >= 10 ? mins : 5);
+      goalTimeVal.textContent = mins >= 10 ? `${mins} min` : 'Off';
     }
 
     function trackPracticeTime() {
@@ -1964,16 +1962,17 @@
       lastPracticeTick = now;
     }
 
-    function isGoalReached() {
+    function goalHitKind() {
       const d = ensureTodayDaily();
-      const gm = state.settings.goalMode || 'rounds';
-      if (gm === 'off') return false;
-      if (gm === 'time') {
-        const targetSec = Math.max(10, Math.min(60, Number(state.settings.goalMinutes) || 15)) * 60;
-        return d.seconds >= targetSec;
-      }
-      const targetRounds = Math.max(10, Math.min(100, Number(state.settings.goalRounds) || 40));
-      return d.rounds >= targetRounds;
+      const targetRounds = normalizedGoalRounds();
+      const targetMins = normalizedGoalMinutes();
+      if (targetRounds >= 10 && d.rounds >= targetRounds) return 'rounds';
+      if (targetMins >= 10 && d.seconds >= targetMins * 60) return 'time';
+      return null;
+    }
+
+    function isGoalReached() {
+      return goalHitKind() !== null;
     }
 
     function shouldCelebrateGoal() {
@@ -1983,6 +1982,7 @@
 
     function showGoalModal() {
       const d = ensureTodayDaily();
+      const hit = goalHitKind();
       d.celebrated = true;
       saveState();
       clearTimers();
@@ -1990,8 +1990,7 @@
       phase = 'idle';
       lastPracticeTick = 0;
       const mins = Math.max(1, Math.round(d.seconds / 60));
-      const gm = state.settings.goalMode || 'rounds';
-      if (gm === 'time') {
+      if (hit === 'time') {
         goalModalText.textContent = `You’ve practiced ${mins} minute${mins === 1 ? '' : 's'} today (${d.rounds} round${d.rounds === 1 ? '' : 's'}). Nice work!`;
       } else {
         goalModalText.textContent = `You’ve completed ${d.rounds} round${d.rounds === 1 ? '' : 's'} today (${mins} min practiced). Nice work!`;
@@ -2195,16 +2194,24 @@
       });
     }
 
+    let lastOctaveSpecId = null;
+
     function maybeRotateOctave() {
       pendingOctaveShift = null;
       if (state.settings.varyOctaves === false) {
-        if (currentOctave !== 4) { currentOctave = 4; cleanInOctave = 0; }
+        if (currentOctave !== 4) { currentOctave = 4; }
+        cleanInOctave = 0;
         return;
       }
       const octSpec = selectedMode === 'auto' ? FRONTIER[activeFrontierIndex()] : currentSpec;
+      if (octSpec && octSpec.id !== lastOctaveSpecId) {
+        lastOctaveSpecId = octSpec.id;
+        cleanInOctave = 0;
+      }
       const pool = allowedOctavesForSpec(octSpec);
       if (pool.length <= 1) {
-        if (currentOctave !== pool[0]) { currentOctave = pool[0]; cleanInOctave = 0; }
+        if (currentOctave !== pool[0]) { currentOctave = pool[0]; }
+        cleanInOctave = 0;
         return;
       }
       if (!pool.includes(currentOctave)) {
@@ -2292,22 +2299,18 @@
       }
       if (todaySummary) {
         const d = ensureTodayDaily();
-        const gm = state.settings.goalMode || 'rounds';
         const mins = Math.floor(d.seconds / 60);
-        if (gm === 'off') {
-          todaySummary.textContent = d.rounds > 0 ? `Today: ${d.rounds} round${d.rounds === 1 ? '' : 's'} · ${mins} min` : '';
-        } else if (gm === 'time') {
-          const target = Math.max(10, Math.min(60, Number(state.settings.goalMinutes) || 15));
-          const done = d.seconds >= target * 60;
-          todaySummary.textContent = done
-            ? `Today: ${mins} / ${target} min · goal reached ✓`
-            : `Today: ${mins} / ${target} min (${d.rounds} rounds)`;
+        const targetRounds = normalizedGoalRounds();
+        const targetMins = normalizedGoalMinutes();
+        const parts = [];
+        if (targetRounds >= 10) parts.push(`${d.rounds} / ${targetRounds} rounds`);
+        if (targetMins >= 10) parts.push(`${mins} / ${targetMins} min`);
+        if (parts.length > 0) {
+          todaySummary.textContent = isGoalReached()
+            ? `Today: ${parts.join(' · ')} · goal reached ✓`
+            : `Today: ${parts.join(' · ')}`;
         } else {
-          const target = Math.max(10, Math.min(100, Number(state.settings.goalRounds) || 40));
-          const done = d.rounds >= target;
-          todaySummary.textContent = done
-            ? `Today: ${d.rounds} / ${target} rounds · goal reached ✓`
-            : `Today: ${d.rounds} / ${target} rounds`;
+          todaySummary.textContent = d.rounds > 0 ? `Today: ${d.rounds} round${d.rounds === 1 ? '' : 's'} · ${mins} min` : '';
         }
       }
       const tried = FRONTIER.map(spec => skillMasteryInfo(spec));
@@ -2841,8 +2844,8 @@
       buildPrompt();
 
       const cadEvery = Number(state.settings.cadenceEvery !== undefined ? state.settings.cadenceEvery : 5);
-      const keyChanged = cadKeyPc !== currentKeyPc;
-      const octChanged = cadOct !== currentOctave || !!pendingOctaveShift;
+      const keyChanged = cadKeyPc !== null && cadKeyPc !== currentKeyPc;
+      const octChanged = cadOct !== null && (cadOct !== currentOctave || !!pendingOctaveShift);
       const periodicDue = cadEvery > 0 && sinceCad >= cadEvery;
       const needCadence = cadKeyPc === null || keyChanged || octChanged || periodicDue;
 
@@ -3240,21 +3243,17 @@
     });
 
     modeSelect.addEventListener('change', () => switchMusicalMode(modeSelect.value));
-    goalModeSelect.addEventListener('change', () => {
-      state.settings.goalMode = goalModeSelect.value;
-      syncGoalControls();
+    goalRoundsSlider.addEventListener('input', () => {
+      const raw = Number(goalRoundsSlider.value);
+      state.settings.goalRounds = raw >= 10 ? raw : 0;
+      goalRoundsVal.textContent = raw >= 10 ? `${raw} rounds` : 'Off';
       if (!isGoalReached()) ensureTodayDaily().celebrated = false;
       saveState();
     });
-    goalSlider.addEventListener('input', () => {
-      const val = Number(goalSlider.value);
-      if (state.settings.goalMode === 'time') {
-        state.settings.goalMinutes = val;
-        goalSliderVal.textContent = `${val} min`;
-      } else {
-        state.settings.goalRounds = val;
-        goalSliderVal.textContent = `${val} rounds`;
-      }
+    goalTimeSlider.addEventListener('input', () => {
+      const raw = Number(goalTimeSlider.value);
+      state.settings.goalMinutes = raw >= 10 ? raw : 0;
+      goalTimeVal.textContent = raw >= 10 ? `${raw} min` : 'Off';
       if (!isGoalReached()) ensureTodayDaily().celebrated = false;
       saveState();
     });
