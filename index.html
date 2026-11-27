@@ -734,8 +734,8 @@
         <label for="portraitStageSelect">Mode</label>
         <select id="portraitStageSelect" class="stage-select" style="max-width:230px;">
           <option value="auto">Auto · Adaptive</option>
-          <option value="s0">1 · One-Note Echo</option>
-          <option value="s1">2 · Two Notes (2 Keys)</option>
+          <option value="s0">1 · White Key Echo</option>
+          <option value="s1">2 · Two Notes (3 White Keys)</option>
           <option value="s2">3 · Two Notes (Trio)</option>
           <option value="s3">4 · Two Notes (5 Keys)</option>
           <option value="s5">5 · Three Notes (Hunt)</option>
@@ -837,8 +837,8 @@
       <div class="top-left">
         <select id="stageSelect" class="stage-select" aria-label="Choose mode">
           <option value="auto">Auto · Adaptive</option>
-          <option value="s0">1 · One-Note Echo</option>
-          <option value="s1">2 · Two Notes (2 Keys)</option>
+          <option value="s0">1 · White Key Echo</option>
+          <option value="s1">2 · Two Notes (3 White Keys)</option>
           <option value="s2">3 · Two Notes (Trio)</option>
           <option value="s3">4 · Two Notes (5 Keys)</option>
           <option value="s5">5 · Three Notes (Hunt)</option>
@@ -887,7 +887,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-26.23';
+    const APP_VERSION = '2026-11-26.24';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -1433,8 +1433,8 @@
     // =========================================================================
     // Every new skill briefly re-enables hunting before tightening to one-shot.
     const FRONTIER = [
-      { id: 's0',  label: 'One-Note Echo',          mode: 'rhythm-echo', root: 60, active: [60],                                         len: 1 },
-      { id: 's1',  label: 'Two Notes · 2 Keys',     mode: 'hunt',        root: 60, active: [60, 62, 67],                                 len: 2 },
+      { id: 's0',  label: 'White Key Echo',           mode: 'rhythm-echo', root: 60, active: [60],                                         len: 1 },
+      { id: 's1',  label: 'Two Notes · 3 White Keys', mode: 'hunt',        root: 60, active: [60, 62, 67],                                 len: 2 },
       { id: 's2',  label: 'Two Notes · Trio',       mode: 'hunt',        root: 60, active: [60, 64, 67],                                 len: 2 },
       { id: 's3',  label: 'Two Notes · 5 Keys',     mode: 'hunt',        root: 60, active: [60, 62, 64, 67, 69],                         len: 2 },
       { id: 's4',  label: 'Two Notes · One-Shot',   mode: 'oneshot',     root: 60, active: [60, 62, 64, 67, 69],                         len: 2 },
