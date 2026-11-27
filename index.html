@@ -1066,7 +1066,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-27.30';
+    const APP_VERSION = '2026-11-27.31';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -1328,7 +1328,7 @@
         };
       },
 
-      note(midi, when = 0, duration = 0.9, velocity = 0.85) {
+      note(midi, when = 0, duration = 0.9, velocity = 0.85, releaseSec = null) {
         const ctx = this.ensure();
         const t0 = when > 0 ? when : ctx.currentTime + 0.005;
         const sampleMidi = this.nearestSample(midi);
@@ -1340,6 +1340,15 @@
 
           const gain = ctx.createGain();
           gain.gain.setValueAtTime(velocity, t0);
+          if (releaseSec !== null) {
+            gain.gain.setValueAtTime(velocity, t0 + duration);
+            gain.gain.setTargetAtTime(0.0001, t0 + duration, Math.max(0.03, releaseSec / 4));
+            src.connect(gain);
+            gain.connect(this.master);
+            src.start(t0);
+            src.stop(t0 + duration + releaseSec * 1.6);
+            return;
+          }
           const rel = Math.max(0.35, Math.min(1.6, 1.15 - (midi - 48) * 0.015));
           gain.gain.setValueAtTime(velocity, t0 + duration * 0.65);
           gain.gain.exponentialRampToValueAtTime(0.0008, t0 + duration + rel);
@@ -1355,7 +1364,7 @@
         const env = ctx.createGain();
         env.gain.setValueAtTime(0.0001, t0);
         env.gain.linearRampToValueAtTime(0.28 * velocity, t0 + 0.008);
-        const decay = Math.max(0.45, Math.min(2.0, duration * 1.25));
+        const decay = releaseSec !== null ? (duration + releaseSec) : Math.max(0.45, Math.min(2.0, duration * 1.25));
         env.gain.exponentialRampToValueAtTime(0.0008, t0 + decay);
 
         const filter = ctx.createBiquadFilter();
@@ -1383,10 +1392,10 @@
         env.connect(this.master);
       },
 
-      chord(midis, when = 0, duration = 1.8, velocity = 0.28) {
+      chord(midis, when = 0, duration = 1.8, velocity = 0.28, releaseSec = null) {
         const ctx = this.ensure();
         const t0 = when > 0 ? when : ctx.currentTime + 0.005;
-        midis.forEach((m, i) => this.note(m, t0 + i * 0.014, duration, velocity));
+        midis.forEach(m => this.note(m, t0, duration, velocity, releaseSec));
       },
 
       // Ear Trainer's short low "wrong" tone: two slightly clashing low saw waves through a low-pass filter
@@ -2280,9 +2289,10 @@
         const base = ctx.currentTime + 0.08;
         chords.forEach((notes, i) => {
           const isLast = i === chords.length - 1;
-          const dur = (isLast ? 0.95 : 0.48) / tempo;
+          const dur = (isLast ? 0.85 : 0.44) / tempo;
+          const rel = isLast ? 0.72 : 0.14;
           const vel = notes.length === 1 ? 0.56 : (isLast ? 0.40 : 0.36);
-          AudioEngine.chord(notes, base + i * stepSec, dur, vel);
+          AudioEngine.chord(notes, base + i * stepSec, dur, vel, rel);
         });
         const lastMs = Math.round(((chords.length - 1) * stepSec) * 1000 + 80);
         timers.push(setTimeout(() => flashKey(tonicMidi, 'res', Math.round(520 / tempo)), lastMs));
