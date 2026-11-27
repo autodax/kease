@@ -949,7 +949,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-27.4';
+    const APP_VERSION = '2026-11-27.5';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -1151,8 +1151,8 @@
             stop() {
               if (stopped || !AudioEngine.ctx || AudioEngine.ctx.state === 'closed') return;
               stopped = true;
-              const now = Math.max(t0 + 0.05, AudioEngine.ctx.currentTime);
-              const rel = 0.34;
+              const now = Math.max(t0 + 0.35, AudioEngine.ctx.currentTime);
+              const rel = 0.55;
               try {
                 gain.gain.cancelScheduledValues(now);
                 gain.gain.setValueAtTime(Math.max(0.001, gain.gain.value), now);
@@ -1933,7 +1933,7 @@
         timers.push(setTimeout(() => { if (!paused && onDone) onDone(); }, Math.round(750 / tempo)));
         return;
       }
-      const leadSec = 0.38;
+      const leadSec = 0.72;
       const stepSec = 0.42 / tempo; // matches Ear Trainer's calm stepwise resolution pace
       AudioEngine.whenReady((ctx) => {
         if (paused || freePlay || jamActive) return;
@@ -2735,7 +2735,7 @@
           updateActionButtons();
           flashKey(midi, 'nudge', 360);
           statusText.textContent = 'Watch & listen';
-          timers.push(setTimeout(() => revealAndRetry(), 440));
+          timers.push(setTimeout(() => revealAndRetry(), 780));
         }
         return;
       }
@@ -2763,7 +2763,7 @@
           updateActionButtons();
           flashKey(midi, 'nudge', 360);
           statusText.textContent = 'Watch & listen';
-          timers.push(setTimeout(() => revealAndRetry(), 440));
+          timers.push(setTimeout(() => revealAndRetry(), 780));
         }
       }
     }
