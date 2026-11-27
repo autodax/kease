@@ -992,6 +992,7 @@
           <option value="auto">Auto · Adaptive</option>
         </select>
         <button id="jamBtn" type="button" class="btn">Jam</button>
+        <button id="cadenceBtn" type="button" class="btn btn-subtle">Cadence</button>
         <div id="octShiftGroup" class="oct-pair hidden">
           <button id="octDownBtn" type="button" class="btn btn-icon" aria-label="Octave down">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
@@ -1036,7 +1037,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-27.16';
+    const APP_VERSION = '2026-11-27.17';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -1943,6 +1944,7 @@
     const showBtn = document.getElementById('showBtn');
     const freeBtn = document.getElementById('freeBtn');
     const jamBtn = document.getElementById('jamBtn');
+    const cadenceBtn = document.getElementById('cadenceBtn');
     const octShiftGroup = document.getElementById('octShiftGroup');
     const octDownBtn = document.getElementById('octDownBtn');
     const octUpBtn = document.getElementById('octUpBtn');
@@ -2554,6 +2556,8 @@
     function updateActionButtons() {
       const showRescue = !freePlay && !jamActive && phase === 'listening';
       showBtn.classList.toggle('hidden', !showRescue);
+      const showCadence = !freePlay && !jamActive && (phase === 'listening' || phase === 'idle');
+      cadenceBtn.classList.toggle('hidden', !showCadence);
       const showPause = !freePlay && !jamActive && (phase === 'listening' || phase === 'feedback' || phase === 'playing' || phase === 'waiting' || paused);
       pauseBtn.classList.toggle('hidden', !showPause);
       pauseBtn.textContent = paused ? 'Resume' : 'Pause';
@@ -3447,6 +3451,22 @@
       AudioEngine.ensure();
       if (jamActive) stopJam();
       else startJam();
+    });
+
+    cadenceBtn.addEventListener('click', () => {
+      if (freePlay || jamActive) return;
+      if (phase !== 'listening' && phase !== 'idle') return;
+      AudioEngine.ensure();
+      const returnPhase = phase;
+      clearTimers();
+      playCadence(tonicMidiFor(currentKeyPc, currentOctave), `Key of ${KEY_NAMES[currentKeyPc]}`, () => {
+        if (paused || freePlay || jamActive) return;
+        phase = returnPhase;
+        renderDots();
+        updateActionButtons();
+        setStatus(returnPhase === 'listening' ? 'Your turn' : 'Tap Play', false);
+      });
+      updateActionButtons();
     });
 
     octDownBtn.addEventListener('click', () => shiftFreePlayOctave(-1));
