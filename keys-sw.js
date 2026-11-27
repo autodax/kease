@@ -1,4 +1,4 @@
-const CACHE = 'keys-cache-v61';
+const CACHE = 'keys-cache-v62';
 const ASSETS = [
   './',
   './index.html',
@@ -52,13 +52,16 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
   if (url.origin !== location.origin) return;
-  if (e.request.mode === 'navigate' || url.pathname.endsWith('/index.html')) {
+  if (url.searchParams.has('check')) return;
+  if (e.request.mode === 'navigate' || url.pathname.endsWith('/index.html') || url.pathname.endsWith('/kease/')) {
     e.respondWith(
-      fetch(e.request).then(r => {
-        const copy = r.clone();
-        caches.open(CACHE).then(c => c.put(e.request, copy));
+      fetch(e.request, { cache: 'no-store' }).then(r => {
+        if (r && r.ok) {
+          const copy = r.clone();
+          caches.open(CACHE).then(c => c.put('./', copy));
+        }
         return r;
-      }).catch(() => caches.match(e.request))
+      }).catch(() => caches.match(e.request, { ignoreSearch: true }) || caches.match('./'))
     );
     return;
   }

@@ -1066,7 +1066,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-27.29';
+    const APP_VERSION = '2026-11-27.30';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -3573,8 +3573,9 @@
     // Auto-pause cleanly when rotating to portrait or leaving the app mid-lesson
     const portraitMQ = window.matchMedia('(orientation: portrait)');
     const handlePortraitAutoPause = (e) => {
-      if (e.matches && !freePlay && !jamActive && phase !== 'idle') {
-        pauseSession();
+      if (e.matches) {
+        if (!freePlay && !jamActive && phase !== 'idle') pauseSession();
+        checkForUpdate();
       }
     };
     if (portraitMQ.addEventListener) portraitMQ.addEventListener('change', handlePortraitAutoPause);
@@ -3585,10 +3586,10 @@
     applyModeSelection('auto');
     updateProgressSummary();
 
-    // Auto-update check: when opened or brought back to the front, compare APP_VERSION on GitHub
-    // and load the new version via ?v=<version> when idle (once per version to avoid iOS cache loops).
+    // Auto-update check: when opened, rotated upright, brought back to the front, or periodically,
+    // compare APP_VERSION on GitHub and load the new version via ?v=<version> when idle.
     let pendingUpdate = null;
-    async function checkForUpdate() {
+    async function checkForUpdate(manual = false) {
       try {
         const r = await fetch(location.pathname + '?check=' + Date.now(), { cache: 'no-store' });
         if (!r.ok) return;
@@ -3596,22 +3597,30 @@
         if (m && m[1] !== APP_VERSION) {
           let tried = null;
           try { tried = sessionStorage.getItem('keys.updateTried'); } catch (e) {}
-          if (tried === m[1]) return;
+          if (!manual && tried === m[1]) return;
           pendingUpdate = m[1];
           applyUpdateIfIdle();
+        } else if (manual && versionLabel) {
+          versionLabel.textContent = `${APP_VERSION} · up to date`;
+          setTimeout(() => { versionLabel.textContent = APP_VERSION; }, 2200);
         }
       } catch (e) {}
     }
     function applyUpdateIfIdle() {
       if (!pendingUpdate) return;
       if (phase !== 'idle' || jamActive) return;
-      statusText.textContent = 'Updating…';
+      if (versionLabel) versionLabel.textContent = `Updating to ${pendingUpdate}…`;
+      setStatus('Updating…', false);
       const target = pendingUpdate;
       pendingUpdate = null;
       setTimeout(() => {
         try { sessionStorage.setItem('keys.updateTried', target); } catch (e) {}
         location.replace(location.pathname + '?v=' + encodeURIComponent(target));
       }, 650);
+    }
+    if (versionLabel && versionLabel.parentElement) {
+      versionLabel.parentElement.style.cursor = 'pointer';
+      versionLabel.parentElement.addEventListener('click', () => checkForUpdate(true));
     }
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
@@ -3621,6 +3630,7 @@
       }
     });
     setTimeout(checkForUpdate, 1500);
+    setInterval(() => { if (!document.hidden && phase === 'idle' && !jamActive) checkForUpdate(); }, 60000);
     setInterval(applyUpdateIfIdle, 5000);
 
     if ('serviceWorker' in navigator) {
