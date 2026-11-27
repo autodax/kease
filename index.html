@@ -1001,7 +1001,6 @@
       </div>
 
       <div class="top-center">
-        <div id="stepDots" class="step-dots"></div>
         <span id="statusText" class="status-text">Tap Play</span>
       </div>
 
@@ -1034,7 +1033,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-27.18';
+    const APP_VERSION = '2026-11-27.19';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -2560,6 +2559,7 @@
     }
 
     function renderDots() {
+      if (!stepDots) return;
       stepDots.innerHTML = '';
       if (freePlay || jamActive) return;
       const total = promptNotes.length || 0;
@@ -2916,7 +2916,7 @@
       foundChordNotes.clear();
       applySpotlight();
       updateActionButtons();
-      stepDots.innerHTML = '<span id="beatDot" class="step-dot active"></span>';
+      if (stepDots) stepDots.innerHTML = '<span id="beatDot" class="step-dot active"></span>';
       statusText.textContent = 'Jam along';
 
       const t = tonicMidiFor(currentKeyPc, 3);
@@ -2950,7 +2950,7 @@
       jamActive = false;
       jamBtn.classList.remove('btn-active');
       phase = 'idle';
-      stepDots.innerHTML = '';
+      if (stepDots) stepDots.innerHTML = '';
       statusText.textContent = 'Tap Play';
       updateActionButtons();
     }
