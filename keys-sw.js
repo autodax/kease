@@ -1,4 +1,4 @@
-const CACHE = 'keys-cache-v25';
+const CACHE = 'keys-cache-v26';
 const ASSETS = [
   './',
   './index.html',

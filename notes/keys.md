@@ -1,20 +1,21 @@
-# Keys — Design Notes
+# Kease — Design Notes
 
-Standalone play-by-ear piano app (`autodax/keys`, target URL `https://autodax.github.io/keys/`).
+Standalone play-by-ear piano app (`autodax/keys`, live URL `https://autodax.github.io/keys/`).
 Companion to Steve's Ear Trainer (`autodax/ear`), but a clean-slate standalone app focused on playing directly on a piano keyboard by ear.
 
 ## Files
 
 - `index.html`: standalone landscape iPhone web app (`APP_VERSION` in script).
-- `manifest.json`: landscape home-screen web app settings (`scope: /keys/`).
-- `keys-sw.js`: offline service worker caching the page, icons, and Salamander piano samples for the four-octave range.
+- `manifest.json`: landscape home-screen web app settings (`name: Kease`, `scope: /keys/`).
+- `keys-sw.js`: offline service worker caching the page, icons, and Salamander piano samples for the full 88-key range.
 - `icon-180.png`, `icon-512.png`: Option B chosen by Steve Nov 26 2026 — periwinkle piano keys with one burnt orange lit home key and deep indigo sharp keys on a pure black background (`?v=1`). Also set as `MediaMetadata` artwork in `AudioEngine` for the Dynamic Island and lock screen while playing.
 - `piano/`: Salamander Grand Piano `.m4a` samples (CC BY 3.0, Alexander Holm, copied from `autodax/ear`).
 - `assets/piano-warm-ivory.png`: reference keyboard artwork showing two keys pressed (one white, one black).
 - `assets/piano-warm-ivory-template.png`: clean two-octave warm ivory template (15 white keys, 10 black keys, aspect ratio ~3.02:1).
 
-## Decisions (Steve's, Nov 25 2026)
+## Decisions (Steve's, Nov 25–26 2026)
 
+- **Name & opening screen:** Named **Kease** with catchphrase *"Learn Keyboard with Ease"* (Nov 26 2026). Portrait opening screen leads with the centered app icon, large **Kease** title, and catchphrase directly above **How it works** (with the landscape/lying-down guidance combined as the first bullet with an inline landscape phone icon) and larger section headings.
 - **Standalone app:** Clean slate, separate from `ear`, focused purely on playing the piano by ear and internalizing the sounds of all the keys to pick out melodies quickly and ultimately chords.
 - **Landscape orientation, minimal top strip:** The app operates in landscape orientation on the iPhone with really minimal information in the space above the keyboard.
 - **GarageBand-style 3D keys:** Clean ivory-white keys with a subtle top cast shadow and recessed grey pressed state, paired with sculpted 3D black keys (raised satin top face, angled glossy bottom bevel, darker flattened pressed state) modeled after Steve's GarageBand reference screenshot.
