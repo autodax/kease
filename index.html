@@ -1033,7 +1033,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-27.19';
+    const APP_VERSION = '2026-11-27.20';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -2240,10 +2240,10 @@
         cleanInOctave = 0;
         return;
       }
-      const isMultiKey = !Array.isArray(currentSpec.keys) || currentSpec.keys.length > 1;
+      const isMultiKey = !Array.isArray(octSpec.keys) || octSpec.keys.length > 1;
       const cadEvery = Number(state.settings.cadenceEvery !== undefined ? state.settings.cadenceEvery : 5);
       const rotateEvery = cadEvery > 0 ? cadEvery : 5;
-      const atKeyBoundary = !isMultiKey || currentSpec.newKeyEveryRound || cadKeyPc === null || sinceCad >= rotateEvery;
+      const atKeyBoundary = !isMultiKey || octSpec.newKeyEveryRound || cadKeyPc === null || sinceCad >= rotateEvery;
       const minClean = isMultiKey ? Math.max(5, Math.min(CLEAN_PER_OCTAVE, rotateEvery)) : CLEAN_PER_OCTAVE;
       if (atKeyBoundary && cleanInOctave >= minClean && recentCleanStreak >= 2) {
         const prevOct = currentOctave;
@@ -2591,13 +2591,14 @@
     let lastChordBuildKeyDeg = null;
 
     function pickKeyForSpec(spec) {
-      const pool = Array.isArray(spec.keys)
-        ? spec.keys
+      const keySpec = selectedMode === 'auto' ? FRONTIER[activeFrontierIndex()] : spec;
+      const pool = Array.isArray(keySpec.keys)
+        ? keySpec.keys
         : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
       if (pool.length <= 1) return pool[0];
       const cadEvery = Number(state.settings.cadenceEvery !== undefined ? state.settings.cadenceEvery : 5);
       const rotateEvery = cadEvery > 0 ? cadEvery : 5;
-      const mustSwitch = spec.newKeyEveryRound || cadKeyPc === null || !pool.includes(currentKeyPc) || sinceCad >= rotateEvery;
+      const mustSwitch = keySpec.newKeyEveryRound || cadKeyPc === null || !pool.includes(currentKeyPc) || sinceCad >= rotateEvery;
       if (mustSwitch) {
         return pickNoRepeat(pool, currentKeyPc);
       }
