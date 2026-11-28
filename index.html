@@ -166,6 +166,53 @@
       justify-content: center;
       flex-shrink: 0;
     }
+    .mic-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      transition: background 140ms ease, border-color 140ms ease, color 140ms ease, box-shadow 140ms ease;
+    }
+    .mic-dot {
+      display: none;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #8ec5ff;
+      box-shadow: 0 0 6px #8ec5ff;
+    }
+    .mic-btn.mic-on {
+      background: rgba(126, 171, 255, 0.18);
+      border-color: #7eabff;
+      color: #bfe3ff;
+      box-shadow: 0 0 12px rgba(126, 171, 255, 0.28);
+    }
+    .mic-btn.mic-on .mic-dot {
+      display: inline-block;
+      animation: micPulse 1.4s ease-in-out infinite;
+    }
+    .mic-btn.mic-wait {
+      background: rgba(240, 180, 141, 0.11);
+      border-color: rgba(240, 180, 141, 0.38);
+      color: #f0b48d;
+      box-shadow: none;
+    }
+    .mic-btn.mic-wait .mic-dot {
+      display: none;
+    }
+    @keyframes micPulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(0.82); }
+    }
+    .roll-tag {
+      font-size: 12px;
+      font-weight: 600;
+      color: #f0b48d;
+      background: rgba(240, 180, 141, 0.12);
+      border: 1px solid rgba(240, 180, 141, 0.34);
+      border-radius: 8px;
+      padding: 2px 8px;
+    }
 
     .step-dots {
       display: flex;
@@ -991,6 +1038,38 @@
         </label>
       </div>
       <div class="p-row">
+        <div>
+          <label for="micOnToggle">Listen to real piano</label>
+          <div class="p-muted" style="font-size:12px;">Touchscreen still works anytime</div>
+        </div>
+        <label class="switch">
+          <input id="micOnToggle" type="checkbox" />
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="p-row" style="flex-direction:column;align-items:stretch;gap:6px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <label for="micBoostSlider">Note loudness with mic</label>
+          <span id="micBoostVal" class="goal-val">1.8×</span>
+        </div>
+        <div class="p-muted" style="font-size:12px;">iPhone plays quieter while the mic is on</div>
+        <input id="micBoostSlider" class="goal-slider" type="range" min="1" max="4" step="0.1" value="1.8" aria-label="Note loudness with mic" />
+      </div>
+      <div class="p-row">
+        <div>
+          <div style="font-size:16px;color:var(--text);">Match volume</div>
+          <div id="micMatchMsg" class="p-muted" style="font-size:12px;">Plays chord with mic off, then on</div>
+        </div>
+        <button id="micMatchBtn" type="button" class="btn btn-mini">Match</button>
+      </div>
+      <div class="p-row">
+        <div>
+          <div style="font-size:16px;color:var(--text);">Test piano mic</div>
+          <div id="micTestMsg" class="p-muted" style="font-size:12px;">Tap Test, then play any piano key</div>
+        </div>
+        <button id="micTestBtn" type="button" class="btn btn-mini">Test</button>
+      </div>
+      <div class="p-row">
         <span class="p-muted">Progress backup</span>
         <div style="display:flex;gap:6px;">
           <button id="exportBtn" type="button" class="btn btn-mini">Export</button>
@@ -1024,6 +1103,10 @@
       <div class="top-left">
         <button id="jamBtn" type="button" class="btn">Jam</button>
         <button id="cadenceBtn" type="button" class="btn btn-subtle">Cadence</button>
+        <button id="micBtn" type="button" class="btn btn-subtle mic-btn" aria-label="Listen to real piano" title="Listen to real piano">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a1 1 0 1 0-2 0 3 3 0 0 1-6 0 1 1 0 1 0-2 0 5 5 0 0 0 4 4.9V19H9a1 1 0 1 0 0 2h6a1 1 0 1 0 0-2h-2v-3.1A5 5 0 0 0 17 11z"/></svg>
+          <span class="mic-dot"></span>
+        </button>
         <div id="octShiftGroup" class="oct-pair hidden">
           <button id="octDownBtn" type="button" class="btn btn-icon" aria-label="Octave down">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
@@ -1066,7 +1149,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-27.32';
+    const APP_VERSION = '2026-11-28.1';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -1084,8 +1167,28 @@
 
       midiToFreq(m) { return 440 * Math.pow(2, (m - 69) / 12); },
 
+      audioType() {
+        const micActive = (typeof PianoMic !== 'undefined' && PianoMic.wantSession())
+          || (typeof state !== 'undefined' && state.settings && state.settings.micOn);
+        return micActive ? 'play-and-record' : 'playback';
+      },
+
+      masterGain() {
+        const micOn = (typeof state !== 'undefined' && state.settings && state.settings.micOn)
+          || (typeof PianoMic !== 'undefined' && PianoMic.testActive);
+        const boost = (typeof state !== 'undefined' && state.settings && Number(state.settings.micBoost)) || 1.8;
+        return 0.95 * (micOn ? boost : 1);
+      },
+
+      updateGain() {
+        try { if (navigator.audioSession) navigator.audioSession.type = this.audioType(); } catch (e) {}
+        if (this.master && this.ctx && this.ctx.state !== 'closed') {
+          this.master.gain.value = this.masterGain();
+        }
+      },
+
       initContext() {
-        try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+        try { if (navigator.audioSession) navigator.audioSession.type = this.audioType(); } catch (e) {}
         if (!this.ctx || this.ctx.state === 'closed') {
           const AC = window.AudioContext || window.webkitAudioContext;
           if (!AC) return null;
@@ -1096,9 +1199,12 @@
               this.runningSince = performance.now();
             }
           };
+          const comp = this.ctx.createDynamicsCompressor();
+          comp.threshold.value = -14;
+          comp.ratio.value = 3;
           this.master = this.ctx.createGain();
-          this.master.gain.value = 0.95;
-          this.master.connect(this.ctx.destination);
+          this.master.gain.value = this.masterGain();
+          this.master.connect(comp).connect(this.ctx.destination);
         }
         return this.ctx;
       },
@@ -1161,7 +1267,7 @@
       },
 
       unlockIOS() {
-        try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+        try { if (navigator.audioSession) navigator.audioSession.type = this.audioType(); } catch (e) {}
         this.setMediaSession();
         if (!this.silentEl) {
           try {
@@ -1186,6 +1292,7 @@
       },
 
       release() {
+        if (typeof PianoMic !== 'undefined') PianoMic.stop(true);
         if (this.silentEl) {
           try { this.silentEl.pause(); this.silentEl.removeAttribute('src'); this.silentEl.load(); } catch (e) {}
           try { if (this.silentUrl) URL.revokeObjectURL(this.silentUrl); } catch (e) {}
@@ -1400,6 +1507,7 @@
 
       // Ear Trainer's short low "wrong" tone: two slightly clashing low saw waves through a low-pass filter
       error(when = 0) {
+        if (typeof PianoMic !== 'undefined') PianoMic.muteFor(600);
         const ctx = this.ensure();
         const t0 = when > 0 ? when : ctx.currentTime + 0.04;
         const g = ctx.createGain();
@@ -1422,6 +1530,280 @@
       }
     };
 
+    // Real-piano microphone pitch detector (any-octave active-key matching + speaker mute window)
+    const PianoMic = {
+      active: false,
+      testActive: false,
+      stream: null,
+      source: null,
+      analyser: null,
+      buf: null,
+      raf: null,
+      muteUntil: 0,
+      stableMidi: null,
+      stableCount: 0,
+      lastAcceptedMidi: null,
+      lastAcceptedAt: 0,
+      lastRms: 0,
+      minAfterAccepted: 1,
+      recentPeakRms: 0,
+
+      supported() {
+        return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+      },
+
+      wantSession() {
+        return !!(this.active || this.testActive);
+      },
+
+      muteFor(ms = 550) {
+        const until = performance.now() + ms;
+        if (until > this.muteUntil) this.muteUntil = until;
+        this.stableMidi = null;
+        this.stableCount = 0;
+      },
+
+      updateButton() {
+        const btn = document.getElementById('micBtn');
+        if (!btn) return;
+        const on = !!(typeof state !== 'undefined' && state.settings && state.settings.micOn);
+        const canListenNow = this.active && performance.now() >= this.muteUntil
+          && (this.testActive || freePlay || (typeof phase !== 'undefined' && phase === 'listening'));
+        btn.classList.toggle('mic-on', on);
+        btn.classList.toggle('mic-wait', on && !canListenNow);
+      },
+
+      detectPitch(buf, sampleRate) {
+        const n = buf.length;
+        let sumSq = 0;
+        for (let i = 0; i < n; i++) sumSq += buf[i] * buf[i];
+        const rms = Math.sqrt(sumSq / n);
+        if (rms < 0.011) return { rms, freq: null, midi: null, clarity: 0 };
+
+        // McLeod Pitch Method (NSDF) over C2 (~65 Hz) .. C7 (~2100 Hz)
+        const minLag = Math.max(16, Math.floor(sampleRate / 2150));
+        const scanMin = Math.max(4, Math.floor(sampleRate / 4500));
+        const maxLag = Math.min(n - 64, Math.floor(sampleRate / 60));
+        const nsdf = new Float32Array(maxLag + 1);
+        for (let tau = scanMin; tau <= maxLag; tau++) {
+          let acf = 0, div = 0;
+          const lim = n - tau;
+          for (let i = 0; i < lim; i++) {
+            const a = buf[i], b = buf[i + tau];
+            acf += a * b;
+            div += a * a + b * b;
+          }
+          nsdf[tau] = div > 0 ? (2 * acf) / div : 0;
+        }
+
+        // Find positive lobes after the initial zero-lag drop (prevents low notes from locking on minLag)
+        const peaks = [];
+        let globalMax = 0;
+        let seenNeg = false, inPos = false, bestLag = 0, bestVal = -1;
+        for (let tau = scanMin; tau <= maxLag; tau++) {
+          const v = nsdf[tau];
+          if (!seenNeg) {
+            if (v <= 0) seenNeg = true;
+            continue;
+          }
+          if (v > 0) {
+            if (!inPos) { inPos = true; bestLag = tau; bestVal = v; }
+            else if (v > bestVal) { bestVal = v; bestLag = tau; }
+          } else if (inPos) {
+            inPos = false;
+            if (bestLag >= minLag) {
+              peaks.push([bestLag, bestVal]);
+              if (bestVal > globalMax) globalMax = bestVal;
+            }
+          }
+        }
+        if (inPos && bestLag >= minLag) {
+          peaks.push([bestLag, bestVal]);
+          if (bestVal > globalMax) globalMax = bestVal;
+        }
+        if (globalMax < 0.70 || !peaks.length) return { rms, freq: null, midi: null, clarity: globalMax };
+
+        const cutoff = globalMax * 0.88;
+        let chosenLag = peaks[0][0], chosenClarity = peaks[0][1];
+        for (const [lag, val] of peaks) {
+          if (val >= cutoff) { chosenLag = lag; chosenClarity = val; break; }
+        }
+
+        // Parabolic interpolation around chosenLag
+        let refinedLag = chosenLag;
+        if (chosenLag > minLag && chosenLag < maxLag) {
+          const y0 = nsdf[chosenLag - 1], y1 = nsdf[chosenLag], y2 = nsdf[chosenLag + 1];
+          const denom = 2 * (2 * y1 - y0 - y2);
+          if (Math.abs(denom) > 1e-6) refinedLag = chosenLag + (y0 - y2) / denom;
+        }
+
+        const freq = sampleRate / refinedLag;
+        const midi = Math.round(69 + 12 * Math.log2(freq / 440));
+        if (midi < 36 || midi > 96) return { rms, freq: null, midi: null, clarity: chosenClarity };
+        return { rms, freq, midi, clarity: chosenClarity };
+      },
+
+      resolveMidiForLesson(rawMidi) {
+        if (this.testActive || freePlay || (typeof state !== 'undefined' && state.settings && state.settings.showActive === false)) {
+          return rawMidi;
+        }
+        if (!Array.isArray(currentActiveNotes) || !currentActiveNotes.length) return rawMidi;
+        if (currentActiveNotes.includes(rawMidi)) return rawMidi;
+        const pc = ((rawMidi % 12) + 12) % 12;
+        const matches = currentActiveNotes.filter(m => ((m % 12) + 12) % 12 === pc);
+        if (!matches.length) return null;
+        matches.sort((a, b) => Math.abs(a - rawMidi) - Math.abs(b - rawMidi));
+        return matches[0];
+      },
+
+      async start({ test = false } = {}) {
+        if (test) this.testActive = true;
+        if (!this.supported()) {
+          this.testActive = false;
+          return { ok: false, reason: 'Microphone is not supported in this browser.' };
+        }
+        try { if (navigator.audioSession) navigator.audioSession.type = 'play-and-record'; } catch (e) {}
+        if (this.stream && this.analyser) {
+          this.active = true;
+          AudioEngine.updateGain();
+          this.loop();
+          this.updateButton();
+          return { ok: true };
+        }
+        try {
+          let stream;
+          try {
+            stream = await navigator.mediaDevices.getUserMedia({
+              audio: { echoCancellation: true, noiseSuppression: false, autoGainControl: false }
+            });
+          } catch (e) {
+            stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          }
+          const ctx = AudioEngine.ensure();
+          if (!ctx) {
+            stream.getTracks().forEach(t => t.stop());
+            return { ok: false, reason: 'Audio engine is unavailable.' };
+          }
+          this.stream = stream;
+          this.source = ctx.createMediaStreamSource(stream);
+          this.analyser = ctx.createAnalyser();
+          this.analyser.fftSize = 4096;
+          this.analyser.smoothingTimeConstant = 0;
+          this.buf = new Float32Array(this.analyser.fftSize);
+          this.source.connect(this.analyser);
+          this.active = true;
+          this.stableMidi = null;
+          this.stableCount = 0;
+          AudioEngine.updateGain();
+          this.loop();
+          this.updateButton();
+          return { ok: true };
+        } catch (err) {
+          this.testActive = false;
+          this.active = false;
+          AudioEngine.updateGain();
+          this.updateButton();
+          const denied = err && (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError');
+          return { ok: false, reason: denied ? 'Microphone permission was refused.' : 'Could not open microphone.' };
+        }
+      },
+
+      stop(keepSetting = false) {
+        this.active = false;
+        this.testActive = false;
+        if (this.raf) { cancelAnimationFrame(this.raf); this.raf = null; }
+        if (this.source) { try { this.source.disconnect(); } catch (e) {} this.source = null; }
+        if (this.analyser) { try { this.analyser.disconnect(); } catch (e) {} this.analyser = null; }
+        if (this.stream) { try { this.stream.getTracks().forEach(t => t.stop()); } catch (e) {} this.stream = null; }
+        this.buf = null;
+        this.stableMidi = null;
+        this.stableCount = 0;
+        if (!keepSetting && typeof state !== 'undefined' && state.settings) {
+          state.settings.micOn = false;
+        }
+        AudioEngine.updateGain();
+        this.updateButton();
+      },
+
+      loop() {
+        if (!this.active || !this.analyser || !this.buf) return;
+        this.updateButton();
+        const now = performance.now();
+        const readyToHear = this.testActive || (!paused && (freePlay || phase === 'listening'));
+
+        if (!readyToHear || now < this.muteUntil) {
+          this.stableMidi = null;
+          this.stableCount = 0;
+          this.raf = requestAnimationFrame(() => this.loop());
+          return;
+        }
+
+        this.analyser.getFloatTimeDomainData(this.buf);
+        const res = this.detectPitch(this.buf, (AudioEngine.ctx && AudioEngine.ctx.sampleRate) || 44100);
+
+        if (res.rms < this.minAfterAccepted) this.minAfterAccepted = res.rms;
+        if (!res.midi) {
+          if (res.rms < 0.008) {
+            this.stableMidi = null;
+            this.stableCount = 0;
+          }
+          this.lastRms = res.rms;
+          this.raf = requestAnimationFrame(() => this.loop());
+          return;
+        }
+
+        const mappedMidi = this.resolveMidiForLesson(res.midi);
+        if (mappedMidi === null) {
+          // Outside blue-highlighted keys: ignore silently just like touch mode
+          this.stableMidi = null;
+          this.stableCount = 0;
+          this.lastRms = res.rms;
+          this.raf = requestAnimationFrame(() => this.loop());
+          return;
+        }
+
+        if (this.stableMidi === mappedMidi) {
+          this.stableCount++;
+        } else {
+          this.stableMidi = mappedMidi;
+          this.stableCount = 1;
+        }
+
+        if (this.stableCount >= 2) {
+          const dt = now - this.lastAcceptedAt;
+          const isSame = this.lastAcceptedMidi === mappedMidi;
+          const reAttack = res.rms > Math.max(0.015, this.minAfterAccepted * 1.45) && dt >= 220;
+          const okRepeat = !isSame ? (dt >= 130) : (reAttack || dt >= 540);
+          if (okRepeat) {
+            this.lastAcceptedMidi = mappedMidi;
+            this.lastAcceptedAt = now;
+            this.minAfterAccepted = res.rms;
+            this.recentPeakRms = res.rms;
+            this.stableCount = 0;
+            this.onDetectedNote(res.midi, mappedMidi);
+          }
+        }
+
+        this.lastRms = res.rms;
+        this.raf = requestAnimationFrame(() => this.loop());
+      },
+
+      onDetectedNote(rawMidi, mappedMidi) {
+        if (this.testActive) {
+          const el = document.getElementById('micTestMsg');
+          if (el) el.textContent = `Heard: ${noteLabel(rawMidi)}`;
+          flashKey(rawMidi, 'hit', 280);
+          return;
+        }
+        flashKey(mappedMidi, 'pressed', 180);
+        if (freePlay) {
+          setStatus(noteLabel(mappedMidi), true);
+          return;
+        }
+        handleKeyTap(mappedMidi);
+      }
+    };
+
     AudioEngine.preload();
     ['touchstart', 'pointerdown', 'touchend', 'click'].forEach(ev => {
       window.addEventListener(ev, () => AudioEngine.ensure(), { passive: true });
@@ -1429,10 +1811,14 @@
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
         stopJam();
+        if (typeof stopMicTestUI === 'function') stopMicTestUI(false);
         AudioEngine.release();
       } else {
         AudioEngine.initContext();
         AudioEngine.decodeCached();
+        if (typeof state !== 'undefined' && state.settings && state.settings.micOn) {
+          PianoMic.start();
+        }
       }
     });
 
@@ -1479,6 +1865,7 @@
       e.preventDefault();
       const midi = Number(keyEl.dataset.midi);
       if (!isKeyPlayable(midi)) return;
+      PianoMic.muteFor(600);
       const voice = AudioEngine.noteOn(midi, 0.88);
       activePointers.set(e.pointerId, { midi, el: keyEl, voice });
       keyEl.classList.add('pressed');
@@ -1494,6 +1881,7 @@
       if (!isKeyPlayable(nextMidi)) return;
       const prevEl = cur.el;
       if (cur.voice) cur.voice.stop();
+      PianoMic.muteFor(600);
       const nextVoice = AudioEngine.noteOn(nextMidi, 0.88);
       activePointers.set(e.pointerId, { midi: nextMidi, el: nextEl, voice: nextVoice });
       refreshPressedVisual(prevEl);
@@ -1840,11 +2228,13 @@
       resTempo: 1,
       goalMode: 'rounds',
       goalRounds: 40,
-      goalMinutes: 15
+      goalMinutes: 15,
+      micOn: false,
+      micBoost: 1.8
     };
 
     const STORE_KEY = 'keys.state.v2';
-    let state = {
+    var state = {
       mode: 'major',
       modeStore: {},
       skill: 0,
@@ -1963,6 +2353,13 @@
     const backingToggle = document.getElementById('backingToggle');
     const warmupToggle = document.getElementById('warmupToggle');
     const varyOctavesToggle = document.getElementById('varyOctavesToggle');
+    const micOnToggle = document.getElementById('micOnToggle');
+    const micBoostSlider = document.getElementById('micBoostSlider');
+    const micBoostVal = document.getElementById('micBoostVal');
+    const micMatchBtn = document.getElementById('micMatchBtn');
+    const micMatchMsg = document.getElementById('micMatchMsg');
+    const micTestBtn = document.getElementById('micTestBtn');
+    const micTestMsg = document.getElementById('micTestMsg');
     const progressSummary = document.getElementById('progressSummary');
     const progressList = document.getElementById('progressList');
     const troubleBox = document.getElementById('troubleBox');
@@ -1981,6 +2378,7 @@
     const freeBtn = document.getElementById('freeBtn');
     const jamBtn = document.getElementById('jamBtn');
     const cadenceBtn = document.getElementById('cadenceBtn');
+    const micBtn = document.getElementById('micBtn');
     const octShiftGroup = document.getElementById('octShiftGroup');
     const octDownBtn = document.getElementById('octDownBtn');
     const octUpBtn = document.getElementById('octUpBtn');
@@ -1988,6 +2386,12 @@
     const stepDots = document.getElementById('stepDots');
 
     let lastPracticeTick = 0;
+
+    function normalizedMicBoost() {
+      const v = Number(state.settings && state.settings.micBoost);
+      if (!Number.isFinite(v)) return 1.8;
+      return Math.min(4.0, Math.max(1.0, Number(v.toFixed(1))));
+    }
 
     function normalizedGoalRounds() {
       const v = Number(state.settings.goalRounds);
@@ -2089,6 +2493,11 @@
     backingToggle.checked = !!state.settings.backing;
     warmupToggle.checked = state.settings.warmup !== false;
     varyOctavesToggle.checked = state.settings.varyOctaves !== false;
+    micOnToggle.checked = !!state.settings.micOn;
+    micBoostSlider.value = String(normalizedMicBoost());
+    micBoostVal.textContent = `${normalizedMicBoost().toFixed(1)}×`;
+    AudioEngine.updateGain();
+    PianoMic.updateButton();
 
     const GOLDEN_OCTAVES = [2, 3, 4, 5, 6]; // 5 full octaves: C2..C6 (lessons stay in C2..C7)
     const CLEAN_PER_OCTAVE = 6;
@@ -2162,21 +2571,22 @@
     function listeningPromptState() {
       const icon = specIconKey(currentSpec);
       const trail = effectiveMode(currentSpec) === 'hunt' ? 'hunt' : null;
+      const rollHint = !!(state.settings.micOn && currentSpec && currentSpec.kind === 'chord-build' && !currentSpec.arpeggio);
       const total = promptNotes.length || 1;
       if (currentSpec && currentSpec.kind === 'chord-build') {
         const done = foundChordNotes.size;
-        return { text: done > 0 ? `${done} of ${total} notes` : 'Play chord', icon, trail };
+        return { text: done > 0 ? `${done} of ${total} notes` : 'Play chord', icon, trail, rollHint };
       }
       if (total > 1) {
         const cur = Math.min(total, stepIndex + 1);
-        return { text: `Note ${cur} of ${total}`, icon, trail };
+        return { text: `Note ${cur} of ${total}`, icon, trail, rollHint };
       }
-      return { text: 'Your turn', icon, trail };
+      return { text: 'Your turn', icon, trail, rollHint };
     }
 
     function setListeningStatus() {
       const st = listeningPromptState();
-      setStatus(st.text, false, st.icon, st.trail);
+      setStatus(st.text, false, st.icon, st.trail, st.rollHint);
     }
 
     function pauseSession() {
@@ -2190,19 +2600,21 @@
       updateActionButtons();
     }
 
-    function setStatus(text, isNotePop = false, iconKey = null, trailKey = null) {
+    function setStatus(text, isNotePop = false, iconKey = null, trailKey = null, rollHint = false) {
       let label = text;
       let lead = iconKey;
       let trail = trailKey;
+      let roll = rollHint;
       if (!label) {
         const st = listeningPromptState();
-        label = st.text; lead = st.icon; trail = st.trail;
+        label = st.text; lead = st.icon; trail = st.trail; roll = st.rollHint;
       }
       statusText.classList.toggle('note-pop', !!isNotePop);
       const leadHtml = lead && PROMPT_ICONS[lead] ? PROMPT_ICONS[lead] : '';
       const trailHtml = trail && PROMPT_ICONS[trail] ? PROMPT_ICONS[trail] : '';
+      const rollHtml = roll ? '<span class="roll-tag">Roll chord</span>' : '';
       const safeText = String(label).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      statusText.innerHTML = `${leadHtml}<span>${safeText}</span>${trailHtml}`;
+      statusText.innerHTML = `${leadHtml}<span>${safeText}</span>${rollHtml}${trailHtml}`;
     }
 
     function tonicMidiFor(keyPc = currentKeyPc, oct = currentOctave) {
@@ -2286,6 +2698,9 @@
 
       AudioEngine.whenReady((ctx) => {
         if (paused || freePlay || jamActive) return;
+        const totalMs = Math.round(((chords.length - 1) * stepSec + 1.05 / tempo) * 1000);
+        PianoMic.muteFor(totalMs + 450);
+        PianoMic.updateButton();
         const base = ctx.currentTime + 0.08;
         chords.forEach((notes, i) => {
           const isLast = i === chords.length - 1;
@@ -2296,9 +2711,9 @@
         });
         const lastMs = Math.round(((chords.length - 1) * stepSec) * 1000 + 80);
         timers.push(setTimeout(() => flashKey(tonicMidi, 'res', Math.round(520 / tempo)), lastMs));
-        const totalMs = Math.round(((chords.length - 1) * stepSec + 1.05 / tempo) * 1000);
         timers.push(setTimeout(() => {
           inOctaveCadence = false;
+          PianoMic.updateButton();
           if (!paused && onDone) onDone();
         }, totalMs));
       });
@@ -2312,13 +2727,19 @@
       const skipFirst = !!opts.skipFirst;
       const path = skipFirst ? fullPath.slice(1) : fullPath;
       if (path.length === 0) {
-        timers.push(setTimeout(() => { if (!paused && onDone) onDone(); }, Math.round(750 / tempo)));
+        const waitMs = Math.round(750 / tempo);
+        PianoMic.muteFor(350);
+        PianoMic.updateButton();
+        timers.push(setTimeout(() => { PianoMic.updateButton(); if (!paused && onDone) onDone(); }, waitMs));
         return;
       }
       const leadSec = opts.leadSec !== undefined ? opts.leadSec : 0.72;
       const stepSec = 0.42 / tempo; // matches Ear Trainer's calm stepwise resolution pace
       AudioEngine.whenReady((ctx) => {
         if (paused || freePlay || jamActive) return;
+        const totalMs = Math.round((leadSec + (path.length - 1) * stepSec + 0.92 / tempo) * 1000);
+        PianoMic.muteFor(totalMs + 350);
+        PianoMic.updateButton();
         const base = ctx.currentTime + leadSec;
         path.forEach((m, i) => {
           const isLast = i === path.length - 1;
@@ -2326,8 +2747,7 @@
           AudioEngine.note(m, base + i * stepSec, (isLast ? 0.90 : 0.42) / tempo, isLast ? 0.76 : 0.68);
           timers.push(setTimeout(() => flashKey(m, flashCls, Math.round((isLast ? 620 : 360) / tempo)), Math.round((leadSec + i * stepSec) * 1000)));
         });
-        const totalMs = Math.round((leadSec + (path.length - 1) * stepSec + 0.92 / tempo) * 1000);
-        timers.push(setTimeout(() => { if (!paused && onDone) onDone(); }, totalMs));
+        timers.push(setTimeout(() => { PianoMic.updateButton(); if (!paused && onDone) onDone(); }, totalMs));
       });
     }
 
@@ -2921,6 +3341,10 @@
         const nt = Number(state.settings.noteTempo) || 1;
 
         if (promptChords.length > 0) {
+          const extra = (currentSpec.arpeggio ? 1.45 : 1.15) / nt;
+          const endMs = (((promptTimes[promptTimes.length - 1] || 0) / nt) + extra) * 1000;
+          PianoMic.muteFor(Math.round(endMs) + 420);
+          PianoMic.updateButton();
           promptChords.forEach((ch, idx) => {
             const dt = (promptTimes[idx] || 0) / nt;
             if (currentSpec.arpeggio) {
@@ -2929,8 +3353,6 @@
               AudioEngine.chord(ch, base + dt, 1.5 / nt, 0.62);
             }
           });
-          const extra = (currentSpec.arpeggio ? 1.45 : 1.15) / nt;
-          const endMs = (((promptTimes[promptTimes.length - 1] || 0) / nt) + extra) * 1000;
           timers.push(setTimeout(() => { if (onDone) onDone(); }, endMs));
           return;
         }
@@ -2939,6 +3361,9 @@
           playLivingBacking(tonicMidiFor(currentKeyPc, currentOctave), base);
         }
 
+        const endMs = (((promptTimes[promptTimes.length - 1] || 0) / nt) + (currentSpec.kind === 'single' ? 0.65 : 0.56) / nt) * 1000;
+        PianoMic.muteFor(Math.round(endMs) + 420);
+        PianoMic.updateButton();
         promptNotes.forEach((midi, idx) => {
           const dt = (promptTimes[idx] || 0) / nt;
           AudioEngine.note(midi, base + dt, (currentSpec.kind === 'single' ? 1.05 : 0.74) / nt, 0.86);
@@ -2947,7 +3372,6 @@
           }
         });
 
-        const endMs = (((promptTimes[promptTimes.length - 1] || 0) / nt) + (currentSpec.kind === 'single' ? 0.65 : 0.56) / nt) * 1000;
         timers.push(setTimeout(() => { if (onDone) onDone(); }, endMs));
       });
     }
@@ -2962,6 +3386,7 @@
         foundChordNotes.clear();
         renderDots();
         updateActionButtons();
+        PianoMic.updateButton();
         setListeningStatus();
       });
     }
@@ -3221,6 +3646,9 @@
       };
 
       if (promptChords.length > 0) {
+        const endMs = ((promptTimes[promptTimes.length - 1] || 0) + 1.25) * 1000;
+        PianoMic.muteFor(Math.round(endMs) + 350);
+        PianoMic.updateButton();
         promptChords.forEach((ch, idx) => {
           const dt = promptTimes[idx] || 0;
           if (currentSpec.arpeggio) {
@@ -3231,7 +3659,6 @@
           const toLight = currentSpec.kind === 'chord-build' ? ch : [ch[0]];
           toLight.forEach(m => timers.push(setTimeout(() => flashKey(m, 'hit', 520), dt * 1000 + 30)));
         });
-        const endMs = ((promptTimes[promptTimes.length - 1] || 0) + 1.25) * 1000;
         timers.push(setTimeout(backToListening, endMs));
         return;
       }
@@ -3246,12 +3673,14 @@
       if (currentSpec.overChord || state.settings.backing) {
         playLivingBacking(tonicMidiFor(currentKeyPc, currentOctave), base);
       }
+      const endMs = ((promptTimes[promptTimes.length - 1] || 0) + 0.9) * 1000;
+      PianoMic.muteFor(Math.round(endMs) + 350);
+      PianoMic.updateButton();
       promptNotes.forEach((midi, idx) => {
         const dt = promptTimes[idx] || 0;
         AudioEngine.note(midi, base + dt, 0.72, 0.82);
         timers.push(setTimeout(() => flashKey(midi, 'hit', 340), dt * 1000 + 30));
       });
-      const endMs = ((promptTimes[promptTimes.length - 1] || 0) + 0.9) * 1000;
       timers.push(setTimeout(backToListening, endMs));
     }
 
@@ -3267,6 +3696,8 @@
       paused = false;
       clearTimers();
       phase = 'idle';
+      PianoMic.muteFor(120);
+      PianoMic.updateButton();
       cadKeyPc = null;
       cadOct = null;
       sinceCad = 999;
@@ -3375,6 +3806,12 @@
         backingToggle.checked = !!state.settings.backing;
         warmupToggle.checked = state.settings.warmup !== false;
         varyOctavesToggle.checked = state.settings.varyOctaves !== false;
+        micOnToggle.checked = !!state.settings.micOn;
+        micBoostSlider.value = String(normalizedMicBoost());
+        micBoostVal.textContent = `${normalizedMicBoost().toFixed(1)}×`;
+        AudioEngine.updateGain();
+        if (state.settings.micOn) PianoMic.start();
+        else PianoMic.stop(true);
         saveState();
         buildKeyboard();
         applyModeSelection(selectedMode);
@@ -3383,6 +3820,49 @@
         flashBackupMsg('Could not read backup file');
       }
     });
+
+    function stopMicTestUI(clearMsg = false) {
+      if (PianoMic.testActive) {
+        PianoMic.testActive = false;
+        if (!state.settings.micOn) PianoMic.stop(true);
+        else PianoMic.updateButton();
+      }
+      if (micTestBtn) micTestBtn.textContent = 'Test';
+      if (clearMsg && micTestMsg) micTestMsg.textContent = '';
+    }
+
+    async function setMicMode(on, statusSource = 'bar') {
+      AudioEngine.ensure();
+      if (on) {
+        stopMicTestUI(true);
+        state.settings.micOn = true;
+        micOnToggle.checked = true;
+        saveState();
+        const res = await PianoMic.start();
+        if (!res.ok) {
+          state.settings.micOn = false;
+          micOnToggle.checked = false;
+          saveState();
+          PianoMic.updateButton();
+          if (statusSource === 'settings' && micTestMsg) {
+            micTestMsg.textContent = res.reason || 'Could not open mic.';
+          } else {
+            setStatus(res.reason || 'Mic unavailable', false);
+          }
+          return false;
+        }
+        if (phase === 'listening') setListeningStatus();
+        return true;
+      } else {
+        stopMicTestUI(true);
+        state.settings.micOn = false;
+        micOnToggle.checked = false;
+        PianoMic.stop(false);
+        saveState();
+        if (phase === 'listening') setListeningStatus();
+        return true;
+      }
+    }
 
     modeSelect.addEventListener('change', () => switchMusicalMode(modeSelect.value));
     goalRoundsSlider.addEventListener('input', () => {
@@ -3481,6 +3961,80 @@
         applyModeSelection(selectedMode);
       }
       saveState();
+    });
+
+    micOnToggle.addEventListener('change', () => {
+      setMicMode(micOnToggle.checked, 'settings');
+    });
+    micBtn.addEventListener('click', () => {
+      setMicMode(!state.settings.micOn, 'bar');
+    });
+    micBoostSlider.addEventListener('input', () => {
+      const v = Math.min(4.0, Math.max(1.0, Number(micBoostSlider.value) || 1.8));
+      state.settings.micBoost = Number(v.toFixed(1));
+      micBoostVal.textContent = `${state.settings.micBoost.toFixed(1)}×`;
+      AudioEngine.updateGain();
+      saveState();
+    });
+
+    let micMatchBusy = false;
+    micMatchBtn.addEventListener('click', async () => {
+      if (micMatchBusy) return;
+      micMatchBusy = true;
+      micMatchBtn.disabled = true;
+      stopMicTestUI(true);
+      const wasActive = PianoMic.active;
+      try {
+        const ctx = AudioEngine.ensure();
+        if (!ctx) {
+          micMatchMsg.textContent = 'Audio engine unavailable.';
+          return;
+        }
+        // 1 of 2: normal playback (mic off)
+        PianoMic.stop(true);
+        AudioEngine.updateGain();
+        micMatchMsg.textContent = '1 of 2: normal volume (mic off)…';
+        await new Promise(r => setTimeout(r, 120));
+        AudioEngine.chord([60, 64, 67], ctx.currentTime + 0.04, 1.0, 0.62);
+        await new Promise(r => setTimeout(r, 1400));
+
+        // 2 of 2: play-and-record + boosted volume
+        micMatchMsg.textContent = '2 of 2: listening mode (boosted)…';
+        const res = await PianoMic.start({ test: true });
+        if (!res.ok) {
+          micMatchMsg.textContent = res.reason || 'Could not open mic to compare.';
+          return;
+        }
+        PianoMic.muteFor(1500);
+        AudioEngine.chord([60, 64, 67], ctx.currentTime + 0.06, 1.0, 0.62);
+        await new Promise(r => setTimeout(r, 1450));
+        micMatchMsg.textContent = 'Adjust the slider above until both sound equally loud.';
+      } finally {
+        PianoMic.testActive = false;
+        if (!state.settings.micOn && !wasActive) PianoMic.stop(true);
+        else PianoMic.updateButton();
+        micMatchBtn.disabled = false;
+        micMatchBusy = false;
+      }
+    });
+
+    micTestBtn.addEventListener('click', async () => {
+      if (PianoMic.testActive) {
+        stopMicTestUI(false);
+        micTestMsg.textContent = 'Stopped.';
+        return;
+      }
+      AudioEngine.ensure();
+      micTestBtn.textContent = 'Stop';
+      micTestMsg.textContent = 'Opening microphone…';
+      const res = await PianoMic.start({ test: true });
+      if (!res.ok) {
+        micTestBtn.textContent = 'Test';
+        micTestMsg.textContent = res.reason || 'Could not open microphone.';
+        return;
+      }
+      PianoMic.muteFor(150);
+      micTestMsg.textContent = 'Listening… play any key on your piano';
     });
 
     resetProgressBtn.addEventListener('click', () => {
@@ -3586,6 +4140,8 @@
       if (e.matches) {
         if (!freePlay && !jamActive && phase !== 'idle') pauseSession();
         checkForUpdate();
+      } else {
+        stopMicTestUI(false);
       }
     };
     if (portraitMQ.addEventListener) portraitMQ.addEventListener('change', handlePortraitAutoPause);
