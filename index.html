@@ -1153,7 +1153,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-28.6';
+    const APP_VERSION = '2026-11-28.7';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -1210,12 +1210,9 @@
               this.runningSince = performance.now();
             }
           };
-          const comp = this.ctx.createDynamicsCompressor();
-          comp.threshold.value = -10;
-          comp.ratio.value = 3;
           this.master = this.ctx.createGain();
           this.master.gain.value = this.masterGain();
-          this.master.connect(comp).connect(this.ctx.destination);
+          this.master.connect(this.ctx.destination);
         }
         return this.ctx;
       },
