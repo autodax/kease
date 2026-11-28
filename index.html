@@ -1153,7 +1153,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '2026-11-28.2';
+    const APP_VERSION = '2026-11-28.3';
 
     // =========================================================================
     // 1. Real Salamander Grand Piano Audio Engine + iOS Silent-Switch Bypass
@@ -1230,7 +1230,7 @@
         if (this.ctx.state === 'running' && !this.runningSince) {
           this.runningSince = performance.now();
         }
-        if (this.ctx.state === 'suspended') {
+        if (this.ctx.state !== 'running' && this.ctx.state !== 'closed') {
           this.ctx.resume().then(() => {
             if (!this.runningSince) this.runningSince = performance.now();
           }).catch(() => {});
@@ -4026,18 +4026,25 @@
       stopMicTestUI(true);
       const keepMic = !!(state.settings.micOn || PianoMic.active);
       try {
-        const ctx = AudioEngine.ensure();
-        if (!ctx) {
+        const ctx0 = AudioEngine.ensure();
+        if (!ctx0) {
           micMatchMsg.textContent = 'Audio engine unavailable.';
           return;
         }
-        // 1 of 2: true normal playback (mic off, 1.0x gain) even if Listen to real piano is enabled
         AudioEngine.micOverride = 'off';
         PianoMic.stop(true);
         AudioEngine.updateGain();
         micMatchMsg.textContent = '1 of 2: normal volume (mic off)…';
+        // Wait briefly on cold open so Chord 1 and Chord 2 both play with decoded piano samples
+        for (let i = 0; i < 8 && !AudioEngine.buffers[60]; i++) {
+          await new Promise(r => setTimeout(r, 45));
+        }
         await new Promise(r => setTimeout(r, 260));
-        AudioEngine.chord([60, 64, 67], ctx.currentTime + 0.04, 1.0, 0.62);
+        const c1 = AudioEngine.ensure();
+        if (c1 && c1.state !== 'running' && c1.state !== 'closed') {
+          try { await c1.resume(); } catch (e) {}
+        }
+        AudioEngine.chord([60, 64, 67], (AudioEngine.ctx ? AudioEngine.ctx.currentTime : 0) + 0.04, 1.0, 0.62);
         await new Promise(r => setTimeout(r, 1400));
 
         // 2 of 2: play-and-record + mic loudness multiplier
@@ -4048,12 +4055,18 @@
           micMatchMsg.textContent = res.reason || 'Could not open mic to compare.';
           return;
         }
-        await new Promise(r => setTimeout(r, 450));
+        await new Promise(r => setTimeout(r, 650));
+        const c2 = AudioEngine.ensure();
+        if (c2 && c2.state !== 'running' && c2.state !== 'closed') {
+          try { await c2.resume(); } catch (e) {}
+        }
         AudioEngine.updateGain();
         PianoMic.muteFor(1500);
-        AudioEngine.chord([60, 64, 67], ctx.currentTime + 0.04, 1.0, 0.62);
+        AudioEngine.chord([60, 64, 67], (AudioEngine.ctx ? AudioEngine.ctx.currentTime : 0) + 0.04, 1.0, 0.62);
         await new Promise(r => setTimeout(r, 1400));
         micMatchMsg.textContent = 'Slide left for quieter, right for louder — then tap Match again.';
+      } catch (e) {
+        micMatchMsg.textContent = 'Could not compare volume — try again.';
       } finally {
         AudioEngine.micOverride = null;
         PianoMic.testActive = false;
